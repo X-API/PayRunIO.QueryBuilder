@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29905.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayRunIO.QueryBuilder", "PayRunIO.QueryBuilder\PayRunIO.QueryBuilder.csproj", "{38C10ADF-68BA-405F-8DD7-BE31934789C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayRunIO.QueryBuilder", "Solution\PayRunIO.QueryBuilder\PayRunIO.QueryBuilder.csproj", "{6C9805CF-03AD-456A-ADE0-94C2AF7DAACA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{38C10ADF-68BA-405F-8DD7-BE31934789C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{38C10ADF-68BA-405F-8DD7-BE31934789C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{38C10ADF-68BA-405F-8DD7-BE31934789C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{38C10ADF-68BA-405F-8DD7-BE31934789C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C9805CF-03AD-456A-ADE0-94C2AF7DAACA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C9805CF-03AD-456A-ADE0-94C2AF7DAACA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C9805CF-03AD-456A-ADE0-94C2AF7DAACA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C9805CF-03AD-456A-ADE0-94C2AF7DAACA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
