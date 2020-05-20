@@ -1,0 +1,39 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PayRunIO.QueryBuilder" GeneratedClassName="AppSettings">
+  <Profiles />
+  <Settings>
+    <Setting Name="WindowTop" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="WindowLeft" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="WindowWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">800</Value>
+    </Setting>
+    <Setting Name="WindowHeight" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">600</Value>
+    </Setting>
+    <Setting Name="WindowMaximised" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="LastFileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LastTreeIndex" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ApiHostUrl" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://api.test.payrun.io/</Value>
+    </Setting>
+    <Setting Name="ConsumerKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">[ConsumerKey]</Value>
+    </Setting>
+    <Setting Name="ConsumerSecret" Type="System.String" Scope="User">
+      <Value Profile="(Default)">[ConsumerSecret]</Value>
+    </Setting>
+    <Setting Name="ResponseType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">XML</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

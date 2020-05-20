@@ -1,0 +1,14 @@
+﻿<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:PayRunIO.QueryBuilder">
+    <Style x:Key="Header1" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+    <Style x:Key="GroupBoxHeaderStyle" TargetType="{x:Type TextBlock}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+</ResourceDictionary>

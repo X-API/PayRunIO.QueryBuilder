@@ -1,0 +1,1363 @@
+﻿<Window x:Class="PayRunIO.QueryBuilder.MainWindow"
+        x:Name="Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PayRunIO.QueryBuilder"
+        xmlns:reporting="clr-namespace:PayRunIO.Models.Reporting;assembly=PayRunIO.Models"
+        xmlns:outputs="clr-namespace:PayRunIO.Models.Reporting.Outputs;assembly=PayRunIO.Models"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:singular="clr-namespace:PayRunIO.Models.Reporting.Outputs.Singular;assembly=PayRunIO.Models"
+        xmlns:enums="clr-namespace:PayRunIO.Core.Enums;assembly=PayRunIO.Core.Enums"
+        xmlns:aggregate="clr-namespace:PayRunIO.Models.Reporting.Outputs.Aggregate;assembly=PayRunIO.Models"
+        xmlns:filtering="clr-namespace:PayRunIO.Models.Reporting.Filtering;assembly=PayRunIO.Models"
+        xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:viewModels="clr-namespace:PayRunIO.QueryBuilder.ViewModels"
+        mc:Ignorable="d"
+        SourceInitialized="Window_OnSourceInitialised"
+        Closing="Window_OnClosing"
+        Title="PayRun.io Query Builder" Height="450" Width="800">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <local:ObjectToTypeNameConverter x:Key="ObjectToTypeNameConverter" />
+                    <local:QueryTypeLists x:Key="QueryTypes" />
+                    <ObjectDataProvider x:Key="OutputTypes" MethodName="GetValues" ObjectType="{x:Type system:Enum}">
+                        <ObjectDataProvider.MethodParameters>
+                            <x:Type TypeName="outputs:OutputType"/>
+                        </ObjectDataProvider.MethodParameters>
+                    </ObjectDataProvider>
+                    <ObjectDataProvider x:Key="RenderTaxPeriodOptions" MethodName="GetValues" ObjectType="{x:Type system:Enum}">
+                        <ObjectDataProvider.MethodParameters>
+                            <x:Type TypeName="enums:RenderTaxPeriodOption"/>
+                        </ObjectDataProvider.MethodParameters>
+                    </ObjectDataProvider>
+                </ResourceDictionary>
+                <ResourceDictionary Source="CommonStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="MoveUp" CanExecute="MoveUpCommand_CanExecute" Executed="MoveUpCommand_Executed" />
+        <CommandBinding Command="MoveDown" CanExecute="MoveDownCommand_CanExecute" Executed="MoveDownCommand_Executed" />
+        <CommandBinding Command="Delete" CanExecute="DeleteCommand_CanExecute" Executed="DeleteCommand_Executed" />
+        <CommandBinding Command="Save" CanExecute="SaveCommand_CanExecute" Executed="SaveCommand_Executed" />
+    </Window.CommandBindings>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition Width="4*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
+            <TextBlock Text="Query " Margin="0 0 2 0" Style="{StaticResource GroupBoxHeaderStyle}"/>
+            <TextBox Width="250" Margin="0 0 2 0" Text="{Binding ElementName=Window1, Path=FileName}" IsReadOnly="True" />
+            <Button Width="100" HorizontalAlignment="Left" Margin="0 0 2 0" Click="NewQuery_OnClick">New</Button>
+            <Button Width="100" HorizontalAlignment="Left" Margin="0 0 2 0" Click="LoadQuery_OnClick">Load</Button>
+            <Button Width="100" HorizontalAlignment="Left" Margin="0 0 2 0" Command="Save">Save</Button>
+            <Button Width="100" HorizontalAlignment="Left" Margin="0 0 2 0" Click="SaveQueryAs_OnClick">Save As</Button>
+        </DockPanel>
+
+        <TreeView 
+            Name="MyTreeView" 
+            Grid.Column="0" 
+            Grid.Row="1" 
+            SelectedItemChanged="TreeView_SelectionChanged" 
+            ItemsSource="{Binding ElementName=Window1, Path=TreeViewSource}" 
+            PreviewMouseRightButtonDown="OnPreviewMouseRightButtonDown">
+            <TreeView.Resources>
+
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
+                    <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="ContextMenu">
+                        <Setter.Value>
+                            <ContextMenu>
+                                <MenuItem Command="MoveUp" Icon="{iconPacks:BoxIcons Kind=SolidUpArrow}"/>
+                                <MenuItem Command="MoveDown" Icon="{iconPacks:BoxIcons Kind=SolidDownArrow}" />
+                                <Separator />
+                                <MenuItem Command="Delete" Icon="{iconPacks:BoxIcons Kind=SolidTrashAlt}" Foreground="DarkRed" />
+                            </ContextMenu>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
+                <Style x:Key="ImageStyle" TargetType="Image">
+                    <Setter Property="Width" Value="16" />
+                    <Setter Property="Height" Value="16" />
+                    <Setter Property="Margin" Value="2" />
+                </Style>
+
+                <Style x:Key="TextBlockStyle" TargetType="TextBlock">
+                    <Setter Property="Height" Value="16" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                </Style>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:QueryViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFolderOpen}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="{Binding Element.RootNodeName}" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:GroupViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidCoin}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockStyle}">
+                            <TextBlock Text="{Binding Element.GroupName}" />
+                            <TextBlock Text=" - " />
+                            <TextBlock Text="{Binding Element.Selector}" />
+                        </TextBlock>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:ConditionCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFileFind}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Conditions" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:FilterCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFilterAlt}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Filters" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:OutputCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidPencil}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Outputs" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:OrderingCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidChevronsDown}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Ordering" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:GroupCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidCoinStack}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Groups" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <DataTemplate DataType="{x:Type viewModels:ConditionViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularFileFind}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock  Style="{StaticResource TextBlockStyle}">
+                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
+                            <TextBlock Text=":" />
+                            <TextBlock Text="{Binding Element.ValueA, StringFormat='&quot;{0}&quot;'}" />
+                            <TextBlock Text="=" />
+                            <TextBlock Text="{Binding Element.ValueB, StringFormat='&quot;{0}&quot;'}" />
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type viewModels:FilterViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularFilterAlt}" Style="{StaticResource ImageStyle}" />
+                        <ContentControl Content="{Binding Element}">
+                            <ContentControl.Resources>
+
+                                <DataTemplate DataType="{x:Type filtering:FilterBase}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:ActiveOn}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:ActiveWithin}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:Between}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        <TextBlock Text="and" />
+                                        <TextBlock Text="{Binding Value2, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:IsNull}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:IsNotNull}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:TakeFirst}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value}" />
+                                        <TextBlock Text="item(s)" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                            </ContentControl.Resources>
+                        </ContentControl>
+                    </StackPanel>
+                </DataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:OutputViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularPencil}" Style="{StaticResource ImageStyle}" />
+                        <ContentControl Content="{Binding Element}">
+                            <ContentControl.Resources>
+                                <DataTemplate DataType="{x:Type singular:SingularOutputBase}">
+                                    <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" Style="{StaticResource TextBlockStyle}" />
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type aggregate:AggregateOutputBase}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Render" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderConstant}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding ConstantName, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderDateAdd}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Date, StringFormat='[{0:yyyy-MM-dd}] +'}" />
+                                        <TextBlock Text="{Binding Increment, StringFormat='({0}'}" />
+                                        <TextBlock Text="{Binding Interval, StringFormat='* {0})'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderNextDate}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Date, StringFormat='[{0:yyyy-MM-dd}]'}" />
+                                        <TextBlock Text="{Binding PayFrequency, StringFormat='({0})'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderProperty}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderValue}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type aggregate:ExpressionCalculator}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Render" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Expression, StringFormat='&quot;{0}&quot;'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type aggregate:Count}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Render" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                            </ContentControl.Resources>
+                        </ContentControl>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <DataTemplate DataType="{x:Type viewModels:OrderingViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularChevronDown}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockStyle}">
+                            <TextBlock Text="Order By Property" />
+                            <TextBlock Text="{Binding Element.Property, StringFormat='[{0}]'}" />
+                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element, StringFormat='({0})'}" />
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+
+        <GridSplitter Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="Black" ShowsPreview="True" Width="5" />
+
+        <Grid Grid.Row="1" Grid.Column="1" Margin="5 0 0 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="1*" />
+            </Grid.RowDefinitions>
+
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
+                <ContentControl Name="ContentControl" Content="{Binding ElementName=MyTreeView, Path=SelectedItem}">
+                    <ContentControl.Resources>
+
+                        <DataTemplate DataType="{x:Type viewModels:QueryViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Query Root Element" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Root node name: "/>
+                                            <TextBox Text="{Binding Element.RootNodeName}" />
+                                        </StackPanel>
+                                        <Grid Margin="2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition />
+                                                <RowDefinition />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Suppress Metric Attributes: " VerticalAlignment="Center" />
+                                            <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding Element.SuppressMetricAttributes}" Margin="2" />
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Exclude Null Or Empty Elements: " VerticalAlignment="Center"/>
+                                            <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding Element.ExcludeNullOrEmptyElements}" Margin="2" />
+
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Initial Variables" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddVariable_OnClick" CommandParameter="{Binding ElementName=VariablesListBox}">Add New</Button>
+                                            <Button Margin="2" Padding="2" Click="RemoveVariable_OnClick" CommandParameter="{Binding ElementName=VariablesListBox}">Delete</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="2">
+                                            <TextBlock Text="Name: "/>
+                                            <TextBox Width="150" Text="{Binding ElementName=VariablesListBox, Path=SelectedItem.Name}" />
+                                            <TextBlock Text=" Value: " />
+                                            <TextBox Width="150" Text="{Binding ElementName=VariablesListBox, Path=SelectedItem.Value}"/>
+                                        </StackPanel>
+                                        <ListBox Name="VariablesListBox" ItemsSource="{Binding Element.Variables}" Margin="2" MinHeight="50">
+                                            <ListBox.Resources>
+                                                <DataTemplate DataType="{x:Type reporting:NameValuePair}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding Name}" />
+                                                        <TextBlock Text=" - '" />
+                                                        <TextBlock Text="{Binding Value}" />
+                                                        <TextBlock Text="'" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListBox.Resources>
+                                        </ListBox>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddGroup_OnClick">Add Entity Group</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:GroupViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Entity Group" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Group Name:"/>
+                                            <TextBox Text="{Binding Element.GroupName}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Item Name:"/>
+                                            <TextBox Text="{Binding Element.ItemName}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Selector:"/>
+                                            <TextBox Text="{Binding Element.Selector}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Unique Key Variable:"/>
+                                            <TextBox Text="{Binding Element.UniqueKeyVariable}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Loop Expression:"/>
+                                            <TextBox Text="{Binding Element.LoopExpression}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddCondition_OnClick" CommandParameter="{Binding ElementName=ConditionType, Path=SelectedItem}" Width="150">Add Group Condition</Button>
+                                            <ComboBox Name="ConditionType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=ConditionTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddFilter_OnClick" CommandParameter="{Binding ElementName=FilterType, Path=SelectedItem}" Width="150">Add Filter</Button>
+                                            <ComboBox Name="FilterType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=FilterTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddOutput_OnClick" CommandParameter="{Binding ElementName=OutputType, Path=SelectedItem}" Width="150">Add Output</Button>
+                                            <ComboBox Name="OutputType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=OutputTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddOrdering_OnClick" CommandParameter="{Binding ElementName=OrderingType, Path=SelectedItem}" Width="150">Add Ordering</Button>
+                                            <ComboBox Name="OrderingType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=OrderByTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveUp" Width="150">Move Up</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveDown" Width="150">Move Down</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="New" Click="AddGroup_OnClick" Width="150">Add Sub Group</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="Delete" Width="150">Delete Group</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:GroupCollectionViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Sub Groups" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddGroup_OnClick" Width="150">Add Sub Group</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:ConditionCollectionViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Conditions" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddCondition_OnClick" CommandParameter="{Binding ElementName=ConditionType, Path=SelectedItem}" Width="150">Add Group Condition</Button>
+                                            <ComboBox Name="ConditionType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=ConditionTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:FilterCollectionViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Filters" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddFilter_OnClick" CommandParameter="{Binding ElementName=FilterType, Path=SelectedItem}" Width="150">Add Filter</Button>
+                                            <ComboBox Name="FilterType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=FilterTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:OutputCollectionViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Outputs" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddOutput_OnClick" CommandParameter="{Binding ElementName=OutputType, Path=SelectedItem}" Width="150">Add Output</Button>
+                                            <ComboBox Name="OutputType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=OutputTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:OrderingCollectionViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Text="Ordering" Style="{StaticResource Header1}" />
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Click="AddOrdering_OnClick" CommandParameter="{Binding ElementName=OrderingType, Path=SelectedItem}" Width="150">Add Ordering</Button>
+                                            <ComboBox Name="OrderingType" Margin="2" ItemsSource="{Binding Source={StaticResource QueryTypes}, Path=OrderByTypes}" SelectedIndex="0" Width="170" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:ConditionViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Style="{StaticResource Header1}">
+                                <TextBlock Text="Condition - " />
+                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
+                            </TextBlock>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Value A:"/>
+                                            <TextBox Text="{Binding Path=Element.ValueA}" />
+                                        </StackPanel>
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Value B:"/>
+                                            <TextBox Text="{Binding Path=Element.ValueB}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveUp" Width="150">Move Up</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveDown" Width="150">Move Down</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="Delete" Width="150">Delete Condition</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:FilterViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Style="{StaticResource Header1}">
+                                <TextBlock Text="Filter - " />
+                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
+                            </TextBlock>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <ContentControl Content="{Binding Element}">
+                                            <ContentControl.Resources>
+
+                                                <DataTemplate DataType="{x:Type filtering:FilterBase}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:"/>
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Filter Value:"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:ActiveOn}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Date:"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:ActiveWithin}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Date Range (yyyy-MM-dd,yyyy-MM-dd):"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:OfType}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Type Name(s):"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:NotOfType}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Type Name(s):"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:Between}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:"/>
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Lower Value:"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Upper Value:"/>
+                                                            <TextBox Text="{Binding Path=Value2}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:WithinArray}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Value Array (csv):"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:NotWithinArray}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Value Array (csv):"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:IsNull}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:"/>
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:IsNotNull}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:"/>
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:TakeFirst}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Amount to take:"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:OfDerivedType}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Base Type:"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type filtering:NotOfDerivedType}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Base Type:"/>
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                            </ContentControl.Resources>
+                                        </ContentControl>
+                                    </StackPanel>
+                                </GroupBox>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveUp" Width="150">Move Up</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveDown" Width="150">Move Down</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="Delete" Width="150">Delete Filter</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:OutputViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Style="{StaticResource Header1}">
+                                <TextBlock Text="Output - " />
+                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
+                            </TextBlock>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <ContentControl Content="{Binding Element}">
+                                            <ContentControl.Resources>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderArrayHint}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="No Options:" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderNextDate}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Date:" />
+                                                            <TextBox Text="{Binding Path=Date}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Pay Frequency:" />
+                                                            <TextBox Text="{Binding Path=PayFrequency}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderIndex}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="No Options:" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderEntity}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="No Options:" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderLink}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderProperty}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:" />
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Max Length:" />
+                                                            <TextBox Text="{Binding Path=MaxLength}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderValue}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Value:" />
+                                                            <TextBox Text="{Binding Path=Value}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Max Length:" />
+                                                            <TextBox Text="{Binding Path=MaxLength}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderTypeName}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderTaxPeriodDate}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=DisplayName}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Tax Year:" />
+                                                            <TextBox Text="{Binding Path=TaxYear}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Tax Period:" />
+                                                            <TextBox Text="{Binding Path=TaxPeriod}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Pay Frequency:" />
+                                                            <TextBox Text="{Binding Path=PayFrequency}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="End Date: " />
+                                                            <CheckBox IsChecked="{Binding Path=EndDate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderConstant}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Constant Name:" />
+                                                            <TextBox Text="{Binding Path=ConstantName}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Constant Type:" />
+                                                            <TextBox Text="{Binding Path=ConstantType}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderTaxPeriod}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=DisplayName}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Pay Frequency:" />
+                                                            <TextBox Text="{Binding Path=PayFrequency}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Date:" />
+                                                            <TextBox Text="{Binding Path=Date}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Render Tax Period Option:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource RenderTaxPeriodOptions}}" SelectedValue="{Binding RenderOption}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderDateAdd}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Date:" />
+                                                            <TextBox Text="{Binding Path=Date}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Interval:" />
+                                                            <TextBox Text="{Binding Path=Interval}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Increment:" />
+                                                            <TextBox Text="{Binding Path=Increment}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type singular:RenderUniqueKeyFromLink}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Hyperlink Reference:" />
+                                                            <TextBox Text="{Binding Path=Href}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:Avg}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:" />
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:Max}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:" />
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:Min}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:" />
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:Sum}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:" />
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Default Value:" />
+                                                            <TextBox Text="{Binding Path=DefaultValue}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:Count}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:ExpressionCalculator}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Expression:" />
+                                                            <TextBox Text="{Binding Path=Expression}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2" Orientation="Horizontal">
+                                                            <TextBlock Text="Negate Value: " />
+                                                            <CheckBox IsChecked="{Binding Path=Negate}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Minimum:" />
+                                                            <TextBox Text="{Binding Path=Min}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Maximum:" />
+                                                            <TextBox Text="{Binding Path=Max}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                                <DataTemplate DataType="{x:Type aggregate:Distinct}">
+                                                    <StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Element Name:" />
+                                                            <TextBox Text="{Binding Path=Name}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Property:" />
+                                                            <TextBox Text="{Binding Path=Property}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="String Format:" />
+                                                            <TextBox Text="{Binding Path=Format}" />
+                                                        </StackPanel>
+                                                        <StackPanel Margin="2">
+                                                            <TextBlock Text="Output Type:" />
+                                                            <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </DataTemplate>
+
+                                            </ContentControl.Resources>
+                                        </ContentControl>
+                                    </StackPanel>
+                                </GroupBox>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveUp" Width="150">Move Up</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveDown" Width="150">Move Down</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="Delete" Width="150">Delete Output</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                        <DataTemplate DataType="{x:Type viewModels:OrderingViewModel}">
+                            <StackPanel Margin="5">
+                                <TextBlock Style="{StaticResource Header1}">
+                                <TextBlock Text="Ordering - " />
+                                <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
+                            </TextBlock>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Margin="2">
+                                            <TextBlock Text="Property Name:"/>
+                                            <TextBox Text="{Binding Element.Property}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                                <GroupBox Margin="5">
+                                    <GroupBox.Header>
+                                        <TextBlock Text="Actions" Style="{StaticResource GroupBoxHeaderStyle}" />
+                                    </GroupBox.Header>
+                                    <StackPanel Margin="5">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveUp" Width="150">Move Up</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="MoveDown" Width="150">Move Down</Button>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Margin="2" Padding="2" Command="Delete" Width="150">Delete Ordering</Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                        </DataTemplate>
+
+                    </ContentControl.Resources>
+                </ContentControl>
+            </ScrollViewer>
+
+            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="Black" ShowsPreview="True" Height="5" />
+
+            <TabControl Grid.Row="1" Margin="5 10 5 5">
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock Margin="2" FontSize="14" FontWeight="Bold">Execute Query</TextBlock>
+                    </TabItem.Header>
+                    <local:QueryResultViewer Query="{Binding ElementName=Window1, Path=Query}" />
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock Margin="2" FontSize="14" FontWeight="Bold">Query as XML</TextBlock>
+                    </TabItem.Header>
+                    <avalonEdit:TextEditor 
+                        FontFamily="Courier" 
+                        SyntaxHighlighting="XML" 
+                        FontSize="10pt" 
+                        ShowLineNumbers="True"
+                        Document="{Binding ElementName=Window1, Path=XmlDocument, Mode=OneWay}">
+                        <avalonEdit:TextEditor.Options>
+                            <avalonEdit:TextEditorOptions ShowSpaces="True" ShowTabs="True"/>
+                        </avalonEdit:TextEditor.Options>
+                        <avalonEdit:TextEditor.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="Undo" />
+                                <MenuItem Command="Redo" />
+                                <Separator/>
+                                <MenuItem Command="SelectAll" />
+                                <MenuItem Command="Cut" />
+                                <MenuItem Command="Copy" />
+                                <MenuItem Command="Paste" />
+                                <Separator/>
+                            </ContextMenu>
+                        </avalonEdit:TextEditor.ContextMenu>
+                    </avalonEdit:TextEditor>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock Margin="2" FontSize="14" FontWeight="Bold">Query as JSON</TextBlock>
+                    </TabItem.Header>
+                    <avalonEdit:TextEditor 
+                        FontFamily="Courier" 
+                        SyntaxHighlighting="JavaScript" 
+                        FontSize="10pt" 
+                        ShowLineNumbers="True"
+                        Document="{Binding ElementName=Window1, Path=JsonDocument, Mode=OneWay}">
+                        <avalonEdit:TextEditor.Options>
+                            <avalonEdit:TextEditorOptions ShowSpaces="True" ShowTabs="True" />
+                        </avalonEdit:TextEditor.Options>
+                        <avalonEdit:TextEditor.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Command="Undo" />
+                                <MenuItem Command="Redo" />
+                                <Separator/>
+                                <MenuItem Command="SelectAll" />
+                                <MenuItem Command="Cut" />
+                                <MenuItem Command="Copy" />
+                                <MenuItem Command="Paste" />
+                                <Separator/>
+                            </ContextMenu>
+                        </avalonEdit:TextEditor.ContextMenu>
+                    </avalonEdit:TextEditor>
+                </TabItem>
+            </TabControl>
+
+        </Grid>
+
+    </Grid>
+</Window>
