@@ -1,0 +1,317 @@
+﻿<UserControl x:Class="PayRunIO.QueryBuilder.QueryTreeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:PayRunIO.QueryBuilder"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:viewModels="clr-namespace:PayRunIO.QueryBuilder.ViewModels"
+             xmlns:filtering="clr-namespace:PayRunIO.Models.Reporting.Filtering;assembly=PayRunIO.Models"
+             xmlns:singular="clr-namespace:PayRunIO.Models.Reporting.Outputs.Singular;assembly=PayRunIO.Models"
+             xmlns:aggregate="clr-namespace:PayRunIO.Models.Reporting.Outputs.Aggregate;assembly=PayRunIO.Models"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             Name="UserControlRoot">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <local:ObjectToTypeNameConverter x:Key="ObjectToTypeNameConverter" />
+                </ResourceDictionary>
+                <ResourceDictionary Source="CommonStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <UserControl.CommandBindings>
+        <CommandBinding Command="MoveUp" CanExecute="MoveUpCommand_CanExecute" Executed="MoveUpCommand_Executed" />
+        <CommandBinding Command="MoveDown" CanExecute="MoveDownCommand_CanExecute" Executed="MoveDownCommand_Executed" />
+        <CommandBinding Command="Delete" CanExecute="DeleteCommand_CanExecute" Executed="DeleteCommand_Executed" />
+    </UserControl.CommandBindings>
+
+    <Grid>
+        <TreeView 
+            Name="MyTreeView" 
+            SelectedItemChanged="TreeView_SelectionChanged" 
+            ItemsSource="{Binding ElementName=UserControlRoot, Path=TreeViewSource}" 
+            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+            PreviewMouseRightButtonDown="OnPreviewMouseRightButtonDown">
+            <TreeView.Resources>
+
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
+                    <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="ContextMenu">
+                        <Setter.Value>
+                            <ContextMenu>
+                                <MenuItem Command="MoveUp" Icon="{iconPacks:BoxIcons Kind=SolidUpArrow}"/>
+                                <MenuItem Command="MoveDown" Icon="{iconPacks:BoxIcons Kind=SolidDownArrow}" />
+                                <Separator />
+                                <MenuItem Command="Delete" Icon="{iconPacks:BoxIcons Kind=SolidTrashAlt}" Foreground="DarkRed" />
+                            </ContextMenu>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+
+                <Style x:Key="ImageStyle" TargetType="Image">
+                    <Setter Property="Width" Value="16" />
+                    <Setter Property="Height" Value="16" />
+                    <Setter Property="Margin" Value="2" />
+                </Style>
+
+                <Style x:Key="TextBlockStyle" TargetType="TextBlock">
+                    <Setter Property="Height" Value="16" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                </Style>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:QueryViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFolderOpen}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="{Binding Element.RootNodeName}" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:GroupViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidCoin}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockStyle}">
+                            <TextBlock Text="{Binding Element.GroupName}" />
+                            <TextBlock Text=" - " />
+                            <TextBlock Text="{Binding Element.Selector}" />
+                        </TextBlock>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:ConditionCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFileFind}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Conditions" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:FilterCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFilterAlt}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Filters" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:OutputCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidPencil}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Outputs" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:OrderingCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidChevronsDown}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Ordering" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:GroupCollectionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidCoinStack}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="Groups" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <DataTemplate DataType="{x:Type viewModels:ConditionViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularFileFind}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock  Style="{StaticResource TextBlockStyle}">
+                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
+                            <TextBlock Text=":" />
+                            <TextBlock Text="{Binding Element.ValueA, StringFormat='&quot;{0}&quot;'}" />
+                            <TextBlock Text="=" />
+                            <TextBlock Text="{Binding Element.ValueB, StringFormat='&quot;{0}&quot;'}" />
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type viewModels:FilterViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularFilterAlt}" Style="{StaticResource ImageStyle}" />
+                        <ContentControl Content="{Binding Element}">
+                            <ContentControl.Resources>
+
+                                <DataTemplate DataType="{x:Type filtering:FilterBase}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:ActiveOn}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:ActiveWithin}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:Between}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter By" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        <TextBlock Text="and" />
+                                        <TextBlock Text="{Binding Value2, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:IsNull}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:IsNotNull}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Filter" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type filtering:TakeFirst}">
+                                    <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        <TextBlock Text="{Binding Value}" />
+                                        <TextBlock Text="item(s)" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                            </ContentControl.Resources>
+                        </ContentControl>
+                    </StackPanel>
+                </DataTemplate>
+
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:OutputViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularPencil}" Style="{StaticResource ImageStyle}" />
+                        <ContentControl Content="{Binding Element}">
+                            <ContentControl.Resources>
+                                <DataTemplate DataType="{x:Type singular:SingularOutputBase}">
+                                    <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" Style="{StaticResource TextBlockStyle}" />
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type aggregate:AggregateOutputBase}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Render" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderConstant}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding ConstantName, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderDateAdd}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Date, StringFormat='[{0:yyyy-MM-dd}] +'}" />
+                                        <TextBlock Text="{Binding Increment, StringFormat='({0}'}" />
+                                        <TextBlock Text="{Binding Interval, StringFormat='* {0})'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderNextDate}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Date, StringFormat='[{0:yyyy-MM-dd}]'}" />
+                                        <TextBlock Text="{Binding PayFrequency, StringFormat='({0})'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderProperty}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type singular:RenderValue}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type aggregate:ExpressionCalculator}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Render" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="{Binding Expression, StringFormat='&quot;{0}&quot;'}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                                <DataTemplate DataType="{x:Type aggregate:Count}">
+                                    <TextBlock Style="{StaticResource TextBlockStyle}">
+                                        <TextBlock Text="Render" />
+                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
+                                        <TextBlock Text="to" />
+                                        <TextBlock Text="{Binding Output}" />
+                                        <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
+                                    </TextBlock>
+                                </DataTemplate>
+
+                            </ContentControl.Resources>
+                        </ContentControl>
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
+                <DataTemplate DataType="{x:Type viewModels:OrderingViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=RegularChevronDown}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockStyle}">
+                            <TextBlock Text="Order By Property" />
+                            <TextBlock Text="{Binding Element.Property, StringFormat='[{0}]'}" />
+                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element, StringFormat='({0})'}" />
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.Resources>
+        </TreeView>
+    </Grid>
+</UserControl>

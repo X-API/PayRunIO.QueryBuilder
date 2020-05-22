@@ -1,28 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Text.Json;
-using System.Windows;
-using System.Xml;
-
-using PayRunIO.CSharp.SDK;
-using PayRunIO.Models.Reporting;
-using PayRunIO.QueryBuilder;
-
-namespace PayRunIO.QueryBuilder
+﻿namespace PayRunIO.QueryBuilder
 {
     using System;
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
-    using System.Text.Json;
     using System.Windows;
-    using System.Windows.Controls;
     using System.Windows.Input;
-    using System.Windows.Media;
     using System.Xml;
 
     using ICSharpCode.AvalonEdit.Document;
-    using ICSharpCode.AvalonEdit.Folding;
 
     using PayRunIO.CSharp.SDK;
     using PayRunIO.Models;
@@ -54,11 +40,30 @@ namespace PayRunIO.QueryBuilder
 
         private Query query;
 
-        private object[] treeViewSource;
+        private SelectableBase[] treeViewSource;
 
         public MainWindow()
         {
             this.InitializeComponent();
+        }
+
+        public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register("SelectedItem", typeof(SelectableBase), typeof(MainWindow), new PropertyMetadata(default(SelectableBase), OnSelectedItemChanged));
+
+        private static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var mainWindow = (MainWindow)Application.Current.MainWindow;
+
+            if (mainWindow != null)
+            {
+                mainWindow.OnPropertyChanged(nameof(MainWindow.XmlDocument));
+                mainWindow.OnPropertyChanged(nameof(MainWindow.JsonDocument));
+            }
+        }
+
+        public SelectableBase SelectedItem
+        {
+            get => (SelectableBase)this.GetValue(SelectedItemProperty);
+            set => this.SetValue(SelectedItemProperty, value);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -97,7 +102,7 @@ namespace PayRunIO.QueryBuilder
             }
         }
 
-        public object[] TreeViewSource
+        public SelectableBase[] TreeViewSource
         {
             get => this.treeViewSource;
             set
@@ -205,66 +210,27 @@ namespace PayRunIO.QueryBuilder
 
         private void AddCondition_OnClick(object sender, RoutedEventArgs e)
         {
-            ElementFactory.CreateCondition(sender, this.MyTreeView.SelectedItem);
+            ElementFactory.CreateCondition(sender, this.QueryTreeView.SelectedItem);
         }
 
         private void AddGroup_OnClick(object sender, RoutedEventArgs e)
         {
-            ElementFactory.CreateNewEntityGroup(this.MyTreeView.SelectedItem);
+            ElementFactory.CreateNewEntityGroup(this.QueryTreeView.SelectedItem);
         }
 
         private void AddFilter_OnClick(object sender, RoutedEventArgs e)
         {
-            ElementFactory.CreateFilter(sender, this.MyTreeView.SelectedItem);
+            ElementFactory.CreateFilter(sender, this.QueryTreeView.SelectedItem);
         }
 
         private void AddOutput_OnClick(object sender, RoutedEventArgs e)
         {
-            ElementFactory.CreateOutput(sender, this.MyTreeView.SelectedItem);
+            ElementFactory.CreateOutput(sender, this.QueryTreeView.SelectedItem);
         }
 
         private void AddOrdering_OnClick(object sender, RoutedEventArgs e)
         {
-            ElementFactory.CreateOrdering(sender, this.MyTreeView.SelectedItem);
-        }
-
-        private void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel collectionViewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            e.CanExecute = collectionViewModel.SourceCollection.Contains(viewModel.Source);
-        }
-
-        private void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (selectedItem is SelectableObjectViewModel viewModel && viewModel.Parent is SelectableCollectionViewModel collectionViewModel)
-            {
-                collectionViewModel.SourceCollection.Remove(viewModel.Source);
-
-                collectionViewModel.Children.Remove(viewModel);
-
-                collectionViewModel.IsSelected = true;
-            }
-        }
-
-        private void TreeView_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            this.OnPropertyChanged(nameof(this.XmlDocument));
-            this.OnPropertyChanged(nameof(this.JsonDocument));
+            ElementFactory.CreateOrdering(sender, this.QueryTreeView.SelectedItem);
         }
 
         private void NewQuery_OnClick(object sender, RoutedEventArgs e)
@@ -279,7 +245,7 @@ namespace PayRunIO.QueryBuilder
             this.FileName = string.Empty;
             this.OriginalState = string.Empty;
 
-            this.TreeViewSource = new object[] { new QueryViewModel(this.Query) };
+            this.TreeViewSource = new SelectableBase[] { new QueryViewModel(this.Query) };
 
             this.OnPropertyChanged(nameof(this.XmlDocument));
             this.OnPropertyChanged(nameof(this.JsonDocument));
@@ -359,145 +325,6 @@ namespace PayRunIO.QueryBuilder
             this.SaveQuery(this.fileName);
         }
 
-        private void MoveUpCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf < 1)
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            e.CanExecute = true;
-        }
-
-        private void MoveUpCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf < 1)
-            {
-                return;
-            }
-
-            indexOf--;
-
-            parent.Children.Remove(viewModel);
-            parent.Children.Insert(indexOf, viewModel);
-            parent.SourceCollection.Remove(viewModel.Source);
-            parent.SourceCollection.Insert(indexOf, viewModel.Source);
-
-            this.OnPropertyChanged(nameof(this.XmlDocument));
-            this.OnPropertyChanged(nameof(this.JsonDocument));
-        }
-
-        private void MoveDownCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf >= parent.Children.Count - 1)
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            e.CanExecute = true;
-        }
-
-        private void MoveDownCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf >= parent.Children.Count - 1)
-            {
-                return;
-            }
-
-            indexOf++;
-
-            parent.Children.Remove(viewModel);
-            parent.Children.Insert(indexOf, viewModel);
-            parent.SourceCollection.Remove(viewModel.Source);
-            parent.SourceCollection.Insert(indexOf, viewModel.Source);
-
-            this.OnPropertyChanged(nameof(this.XmlDocument));
-            this.OnPropertyChanged(nameof(this.JsonDocument));
-        }
-
-        private void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            var treeViewItem = VisualUpwardSearch(e.OriginalSource as DependencyObject);
-
-            if (treeViewItem != null)
-            {
-                treeViewItem.Focus();
-                e.Handled = true;
-            }
-        }
-
-        static TreeViewItem VisualUpwardSearch(DependencyObject source)
-        {
-            while (source != null && !(source is TreeViewItem))
-            {
-                source = VisualTreeHelper.GetParent(source);
-            }
-
-            return source as TreeViewItem;
-        }
-
         private void Window_OnSourceInitialised(object? sender, EventArgs e)
         {
             if (AppSettings.Default.WindowTop > 0)
@@ -555,7 +382,7 @@ namespace PayRunIO.QueryBuilder
                 selectedItem.IsExpanded = true;
             }
 
-            this.TreeViewSource = new object[] { root };
+            this.TreeViewSource = new SelectableBase[] { root };
 
             this.OnPropertyChanged(nameof(this.FileName));
             this.OnPropertyChanged(nameof(this.TreeViewSource));
@@ -608,15 +435,14 @@ namespace PayRunIO.QueryBuilder
             if (!string.IsNullOrEmpty(this.FileName))
             {
                 AppSettings.Default.LastFileName = this.FileName;
-                var fileInfo = new FileInfo(this.FileName);
             }
 
-            if (this.MyTreeView.SelectedItem != null)
+            if (this.QueryTreeView.SelectedItem != null)
             {
-                AppSettings.Default.LastTreeIndex = ((SelectableBase)this.MyTreeView.SelectedItem).Index;
+                AppSettings.Default.LastTreeIndex = ((SelectableBase)this.QueryTreeView.SelectedItem).Index;
             }
 
-            AppSettings.Default.Save();
+            ApiProfiles.Instance.Save();
         }
 
         private void LoadQueryFromFile(string filePath)
@@ -649,7 +475,7 @@ namespace PayRunIO.QueryBuilder
             }
 
             this.OriginalState = XmlSerialiserHelper.SerialiseToXmlDoc(this.Query).InnerXml;
-            this.TreeViewSource = new object[] { new QueryViewModel(this.Query) };
+            this.TreeViewSource = new SelectableBase[] { new QueryViewModel(this.Query) };
             this.FileName = filePath;
 
             this.OnPropertyChanged(nameof(this.XmlDocument));
@@ -676,6 +502,12 @@ namespace PayRunIO.QueryBuilder
 
             this.FileName = filePath;
             this.OriginalState = XmlSerialiserHelper.SerialiseToXmlDoc(this.Query).InnerXml;
+        }
+
+        private void RefreshQuery_OnClick(object sender, RoutedEventArgs e)
+        {
+            this.OnPropertyChanged(nameof(this.XmlDocument));
+            this.OnPropertyChanged(nameof(this.JsonDocument));
         }
     }
 }

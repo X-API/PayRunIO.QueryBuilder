@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:PayRunIO.QueryBuilder"
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              Name="UserControlRoot"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -20,6 +21,8 @@
     </UserControl.Resources>
     <UserControl.CommandBindings>
         <CommandBinding Command="Refresh" CanExecute="RefreshCommand_CanExecute" Executed="RefreshCommand_Executed" />
+        <CommandBinding Command="Delete" CanExecute="DeleteCommand_CanExecute" Executed="DeleteCommand_Executed" />
+        <CommandBinding Command="New" CanExecute="NewCommand_CanExecute" Executed="NewCommand_Executed" />
     </UserControl.CommandBindings>
     <Grid>
         <Grid.RowDefinitions>
@@ -27,9 +30,42 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Expander Grid.Row="0" HorizontalAlignment="Stretch">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5" HorizontalAlignment="Center">
+            <Button Width="75" Margin="2" Padding="5" Command="New">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="{iconPacks:BoxIconsImage Kind=RegularPlus}" Width="14" Height="14"  Margin="0 0 5 0"/>
+                    <TextBlock FontSize="16" FontWeight="Bold">
+                        <TextBlock Text="New" />
+                    </TextBlock>
+                </StackPanel>
+            </Button>
+            <ComboBox 
+                Margin="2" 
+                Width="250" 
+                HorizontalAlignment="Stretch" 
+                ItemsSource="{Binding ElementName=UserControlRoot, Path=Profiles}" 
+                SelectedItem="{Binding ElementName=UserControlRoot, Path=SelectedProfile}">
+                <ComboBox.Resources>
+                    <DataTemplate DataType="{x:Type local:ApiProfile}">
+                        <TextBlock VerticalAlignment="Center">
+                            <TextBlock FontSize="14" Text="Profile:"></TextBlock>
+                            <TextBlock FontSize="14" Text="{Binding Name}" FontWeight="Bold" />
+                            <LineBreak />
+                            <TextBlock FontSize="10" Text="{Binding ApiHostUrl}" FontWeight="Light" />
+                            <TextBlock FontSize="10" Text="{Binding ResponseType, StringFormat='({0})'}" FontWeight="Light" />
+                        </TextBlock>
+                    </DataTemplate>
+                </ComboBox.Resources>
+            </ComboBox>
+            <Button Margin="2" Command="Refresh" Padding="5">
+                <TextBlock FontSize="16" FontWeight="Bold">
+                    <TextBlock Text="Load Query Results" />
+                </TextBlock>
+            </Button>
+        </StackPanel>
+        <Expander Grid.Row="1" HorizontalAlignment="Stretch" Name="Expander">
             <Expander.Header>
-                <TextBlock Style="{StaticResource GroupBoxHeaderStyle}">Options</TextBlock>
+                <TextBlock Style="{StaticResource GroupBoxHeaderStyle}">Profile Options</TextBlock>
             </Expander.Header>
             <GroupBox Margin="5">
                 <GroupBox.Header>
@@ -37,16 +73,20 @@
                 </GroupBox.Header>
                 <StackPanel Margin="5">
                     <StackPanel Margin="2">
+                        <TextBlock>Profile Name</TextBlock>
+                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=SelectedProfile.Name}" />
+                    </StackPanel>
+                    <StackPanel Margin="2">
                         <TextBlock>API Root URL</TextBlock>
-                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=ApiHostUrl}" />
+                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=SelectedProfile.ApiHostUrl}" />
                     </StackPanel>
                     <StackPanel Margin="2">
                         <TextBlock>Consumer Key</TextBlock>
-                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=ConsumerKey}" />
+                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=SelectedProfile.ConsumerKey}" />
                     </StackPanel>
                     <StackPanel Margin="2">
                         <TextBlock>Consumer Secret</TextBlock>
-                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=ConsumerSecret}" />
+                        <TextBox Text="{Binding ElementName=UserControlRoot, Path=SelectedProfile.ConsumerSecret}" />
                     </StackPanel>
                     <StackPanel Margin="2">
                         <TextBlock>Response Format</TextBlock>
@@ -55,20 +95,14 @@
                             SelectedValue="XML" 
                             Name="ResponseTypeComboBox"
                             ItemsSource="{Binding ElementName=UserControlRoot, Path=ResponseTypes, Mode=OneTime}" 
-                            SelectedItem="{Binding ElementName=UserControlRoot, Path=ResponseType}" />
+                            SelectedItem="{Binding ElementName=UserControlRoot, Path=SelectedProfile.ResponseType}" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                        <Button Width="200" Margin="5" Command="Delete">Delete Profile</Button>
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
         </Expander>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="5" HorizontalAlignment="Center">
-            <Button Margin="2" Command="Refresh" Padding="5">
-                <TextBlock FontSize="16" FontWeight="Bold">
-                    <TextBlock Text="Get" />
-                    <TextBlock Text="{Binding ElementName=ResponseTypeComboBox, Path=SelectedItem, StringFormat='&quot;{0}&quot;'}" />
-                    <TextBlock Text="Query Results" />
-                </TextBlock>
-            </Button>
-        </StackPanel>
         <avalonedit:TextEditor 
                             Grid.Row="2"
                             FontFamily="Courier" 
