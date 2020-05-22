@@ -208,6 +208,12 @@
                 result.AppendLine(string.Empty);
                 result.AppendLine(ex.ToString());
 
+                if (this.foldingManager != null)
+                {
+                    FoldingManager.Uninstall(this.foldingManager);
+                    this.foldingManager = null;
+                }
+
                 this.QueryResponseDocument = new TextDocument(result.ToString());
             }
         }

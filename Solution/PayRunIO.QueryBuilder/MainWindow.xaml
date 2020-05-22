@@ -64,17 +64,17 @@
             <Button Width="100" HorizontalAlignment="Left" Margin="0 0 2 0" Command="Save">Save</Button>
             <Button Width="100" HorizontalAlignment="Left" Margin="0 0 2 0" Click="SaveQueryAs_OnClick">Save As</Button>
         </DockPanel>
-       
+
         <local:QueryTreeView Grid.Column="0" Grid.Row="1" x:Name="QueryTreeView" TreeViewSource="{Binding ElementName=Window1, Path=TreeViewSource}" SelectedItem="{Binding ElementName=Window1, Path=SelectedItem, Mode=TwoWay}">
 
         </local:QueryTreeView>
 
-        <GridSplitter Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="Black" ShowsPreview="True" Width="5" />
+        <GridSplitter Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="Black" ShowsPreview="True" Width="5" />
 
         <Grid Grid.Row="1" Grid.Column="1" Margin="5 0 0 0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="2*" />
-                <RowDefinition Height="1*" />
+                <RowDefinition Height="50*"/>
+                <RowDefinition Height="50*" />
             </Grid.RowDefinitions>
 
             <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled">
@@ -1010,9 +1010,9 @@
                 </ContentControl>
             </ScrollViewer>
 
-            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="Black" ShowsPreview="True" Height="5" />
+            <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="Black" ShowsPreview="True" Height="5"/>
 
-            <TabControl Grid.Row="1" Margin="5 10 5 5">
+            <TabControl Grid.Row="1" Margin="5,10,5,5">
                 <TabItem>
                     <TabItem.Header>
                         <TextBlock Margin="2" FontSize="14" FontWeight="Bold">Execute Query</TextBlock>
