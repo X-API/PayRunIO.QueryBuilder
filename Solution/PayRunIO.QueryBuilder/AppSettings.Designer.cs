@@ -109,49 +109,37 @@ namespace PayRunIO.QueryBuilder {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://api.test.payrun.io/")]
-        public string ApiHostUrl {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ApiProfiles {
             get {
-                return ((string)(this["ApiHostUrl"]));
+                return ((string)(this["ApiProfiles"]));
             }
             set {
-                this["ApiHostUrl"] = value;
+                this["ApiProfiles"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("[ConsumerKey]")]
-        public string ConsumerKey {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SelectedProfileName {
             get {
-                return ((string)(this["ConsumerKey"]));
+                return ((string)(this["SelectedProfileName"]));
             }
             set {
-                this["ConsumerKey"] = value;
+                this["SelectedProfileName"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("[ConsumerSecret]")]
-        public string ConsumerSecret {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastProfileName {
             get {
-                return ((string)(this["ConsumerSecret"]));
+                return ((string)(this["LastProfileName"]));
             }
             set {
-                this["ConsumerSecret"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("XML")]
-        public string ResponseType {
-            get {
-                return ((string)(this["ResponseType"]));
-            }
-            set {
-                this["ResponseType"] = value;
+                this["LastProfileName"] = value;
             }
         }
     }

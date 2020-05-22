@@ -23,17 +23,14 @@
     <Setting Name="LastTreeIndex" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="ApiHostUrl" Type="System.String" Scope="User">
-      <Value Profile="(Default)">https://api.test.payrun.io/</Value>
+    <Setting Name="ApiProfiles" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ConsumerKey" Type="System.String" Scope="User">
-      <Value Profile="(Default)">[ConsumerKey]</Value>
+    <Setting Name="SelectedProfileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ConsumerSecret" Type="System.String" Scope="User">
-      <Value Profile="(Default)">[ConsumerSecret]</Value>
-    </Setting>
-    <Setting Name="ResponseType" Type="System.String" Scope="User">
-      <Value Profile="(Default)">XML</Value>
+    <Setting Name="LastProfileName" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>
