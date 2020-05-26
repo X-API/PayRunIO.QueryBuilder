@@ -45,6 +45,9 @@
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="Save" CanExecute="SaveCommand_CanExecute" Executed="SaveCommand_Executed" />
+        <CommandBinding Command="MoveUp" CanExecute="MoveUpCommand_CanExecute" Executed="MoveUpCommand_Executed" />
+        <CommandBinding Command="MoveDown" CanExecute="MoveDownCommand_CanExecute" Executed="MoveDownCommand_Executed" />
+        <CommandBinding Command="Delete" CanExecute="DeleteCommand_CanExecute" Executed="DeleteCommand_Executed" />
     </Window.CommandBindings>
     <Grid>
         <Grid.ColumnDefinitions>

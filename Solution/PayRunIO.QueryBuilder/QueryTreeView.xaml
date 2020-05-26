@@ -140,7 +140,7 @@
                                 <DataTemplate DataType="{x:Type filtering:FilterBase}">
                                     <TextBlock  Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="Filter By" />
-                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
                                         <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
                                     </TextBlock>
@@ -165,7 +165,7 @@
                                 <DataTemplate DataType="{x:Type filtering:Between}">
                                     <TextBlock  Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="Filter By" />
-                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
                                         <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
                                         <TextBlock Text="and" />
@@ -176,7 +176,7 @@
                                 <DataTemplate DataType="{x:Type filtering:IsNull}">
                                     <TextBlock  Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="Filter" />
-                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
                                     </TextBlock>
                                 </DataTemplate>
@@ -184,7 +184,7 @@
                                 <DataTemplate DataType="{x:Type filtering:IsNotNull}">
                                     <TextBlock  Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="Filter" />
-                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
                                     </TextBlock>
                                 </DataTemplate>
@@ -215,7 +215,7 @@
                                     <TextBlock Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="Render" />
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
-                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="to" />
                                         <TextBlock Text="{Binding Output}" />
                                         <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
@@ -225,7 +225,7 @@
                                 <DataTemplate DataType="{x:Type singular:RenderConstant}">
                                     <TextBlock Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
-                                        <TextBlock Text="{Binding ConstantName, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding ConstantName, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="to" />
                                         <TextBlock Text="{Binding Output}" />
                                         <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
@@ -258,7 +258,7 @@
                                 <DataTemplate DataType="{x:Type singular:RenderProperty}">
                                     <TextBlock Style="{StaticResource TextBlockStyle}">
                                         <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}}" />
-                                        <TextBlock Text="{Binding Property, StringFormat='[{0}]'}" />
+                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
                                         <TextBlock Text="to" />
                                         <TextBlock Text="{Binding Output}" />
                                         <TextBlock Text="{Binding Name, StringFormat='&quot;{0}&quot;'}" />
@@ -306,7 +306,7 @@
                         <Image Source="{iconPacks:BoxIconsImage Kind=RegularChevronDown}" Style="{StaticResource ImageStyle}" />
                         <TextBlock Style="{StaticResource TextBlockStyle}">
                             <TextBlock Text="Order By Property" />
-                            <TextBlock Text="{Binding Element.Property, StringFormat='[{0}]'}" />
+                            <TextBlock Text="{Binding Element.Property, StringFormat='\{{{0}}\}'}" />
                             <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element, StringFormat='({0})'}" />
                         </TextBlock>
                     </StackPanel>

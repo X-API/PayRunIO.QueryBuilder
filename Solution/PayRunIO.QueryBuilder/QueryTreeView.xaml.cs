@@ -51,148 +51,32 @@
 
         private void MoveUpCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf < 1)
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            e.CanExecute = true;
+            CommonTreeViewItemCommands.CanMoveSelectedItemUp(e);
         }
 
         private void MoveUpCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf < 1)
-            {
-                return;
-            }
-
-            indexOf--;
-
-            parent.Children.Remove(viewModel);
-            parent.Children.Insert(indexOf, viewModel);
-            parent.SourceCollection.Remove(viewModel.Source);
-            parent.SourceCollection.Insert(indexOf, viewModel.Source);
+            CommonTreeViewItemCommands.MoveSelectedItemUp(e);
         }
 
         private void MoveDownCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf >= parent.Children.Count - 1)
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            e.CanExecute = true;
+            CommonTreeViewItemCommands.CanMoveSelectedItemDown(e);
         }
 
         private void MoveDownCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel parent))
-            {
-                return;
-            }
-
-            var indexOf = parent.Children.IndexOf(viewModel);
-
-            if (indexOf >= parent.Children.Count - 1)
-            {
-                return;
-            }
-
-            indexOf++;
-
-            parent.Children.Remove(viewModel);
-            parent.Children.Insert(indexOf, viewModel);
-            parent.SourceCollection.Remove(viewModel.Source);
-            parent.SourceCollection.Insert(indexOf, viewModel.Source);
+            CommonTreeViewItemCommands.MoveSelectedItemDown(e);
         }
-
 
         private void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (!(selectedItem is SelectableObjectViewModel viewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            if (!(viewModel.Parent is SelectableCollectionViewModel collectionViewModel))
-            {
-                e.CanExecute = false;
-                return;
-            }
-
-            e.CanExecute = collectionViewModel.SourceCollection.Contains(viewModel.Source);
+            CommonTreeViewItemCommands.CanDeleteSelectedItem(e);
         }
 
         private void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            var selectedItem = this.MyTreeView.SelectedItem;
-
-            if (selectedItem is SelectableObjectViewModel viewModel && viewModel.Parent is SelectableCollectionViewModel collectionViewModel)
-            {
-                collectionViewModel.SourceCollection.Remove(viewModel.Source);
-
-                collectionViewModel.Children.Remove(viewModel);
-
-                collectionViewModel.IsSelected = true;
-            }
+            CommonTreeViewItemCommands.DeleteSelectedItem(e);
         }
 
         private void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)

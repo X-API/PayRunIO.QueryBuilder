@@ -509,5 +509,35 @@
             this.OnPropertyChanged(nameof(this.XmlDocument));
             this.OnPropertyChanged(nameof(this.JsonDocument));
         }
+
+        private void MoveUpCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            CommonTreeViewItemCommands.CanMoveSelectedItemUp(e);
+        }
+
+        private void MoveUpCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            CommonTreeViewItemCommands.MoveSelectedItemUp(e);
+        }
+
+        private void MoveDownCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            CommonTreeViewItemCommands.MoveSelectedItemDown(e);
+        }
+
+        private void MoveDownCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            CommonTreeViewItemCommands.CanMoveSelectedItemDown(e);
+        }
+
+        private void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            CommonTreeViewItemCommands.CanDeleteSelectedItem(e);
+        }
+
+        private void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            CommonTreeViewItemCommands.DeleteSelectedItem(e);
+        }
     }
 }
