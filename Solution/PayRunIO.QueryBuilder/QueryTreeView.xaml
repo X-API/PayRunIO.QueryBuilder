@@ -65,6 +65,13 @@
                     <Setter Property="IsHitTestVisible" Value="False" />
                 </Style>
 
+                <HierarchicalDataTemplate DataType="{x:Type viewModels:ReportDefinitionViewModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{iconPacks:BoxIconsImage Kind=SolidFolderOpen}" Style="{StaticResource ImageStyle}" />
+                        <TextBlock Text="{Binding Element.Title}" Style="{StaticResource TextBlockStyle}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+
                 <HierarchicalDataTemplate DataType="{x:Type viewModels:QueryViewModel}" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="{iconPacks:BoxIconsImage Kind=SolidFolderOpen}" Style="{StaticResource ImageStyle}" />
