@@ -33,14 +33,6 @@
             this.oAuthSignatureGenerator = new OAuthSignatureGenerator();
         }
 
-        public static readonly DependencyProperty ApiHostUrlProperty = DependencyProperty.Register("ApiHostUrl", typeof(string), typeof(QueryResultViewer), new PropertyMetadata(ApiProfiles.Instance.SelectedProfile.ApiHostUrl, OnSettingChanged));
-
-        public static readonly DependencyProperty ConsumerKeyProperty = DependencyProperty.Register("ConsumerKey", typeof(string), typeof(QueryResultViewer), new PropertyMetadata(ApiProfiles.Instance.SelectedProfile.ConsumerKey, OnSettingChanged));
-
-        public static readonly DependencyProperty ConsumerSecretProperty = DependencyProperty.Register("ConsumerSecret", typeof(string), typeof(QueryResultViewer), new PropertyMetadata(ApiProfiles.Instance.SelectedProfile.ConsumerSecret, OnSettingChanged));
-
-        public static readonly DependencyProperty ResponseTypeProperty = DependencyProperty.Register("ResponseType", typeof(string), typeof(QueryResultViewer), new PropertyMetadata(ApiProfiles.Instance.SelectedProfile.ResponseType, OnSettingChanged));
-
         public static readonly DependencyProperty QueryProperty = DependencyProperty.Register("Query", typeof(Query), typeof(QueryResultViewer), new PropertyMetadata(default(Query)));
 
         public static readonly DependencyProperty QueryResponseDocumentProperty = DependencyProperty.Register("QueryResponseDocument", typeof(TextDocument), typeof(QueryResultViewer), new PropertyMetadata(default(TextDocument)));
@@ -73,66 +65,18 @@
             set => this.SetValue(QueryProperty, value);
         }
 
-        public string ResponseType
-        {
-            get => (string)this.GetValue(ResponseTypeProperty);
-            set => this.SetValue(ResponseTypeProperty, value);
-        }
-
-        public string ConsumerSecret
-        {
-            get => (string)this.GetValue(ConsumerSecretProperty);
-            set => this.SetValue(ConsumerSecretProperty, value);
-        }
-
-        public string ConsumerKey
-        {
-            get => (string)this.GetValue(ConsumerKeyProperty);
-            set => this.SetValue(ConsumerKeyProperty, value);
-        }
-
-        public string ApiHostUrl
-        {
-            get => (string)this.GetValue(ApiHostUrlProperty);
-            set => this.SetValue(ApiHostUrlProperty, value);
-        }
-
         public string[] ResponseTypes { get; } = { "XML", "JSON" };
 
         private static void OnSelectedProfileChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             ApiProfiles.Instance.SelectedProfile = (ApiProfile)e.NewValue;
-        }
-
-        private static void OnSettingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            switch (e.Property.Name)
-            {
-                case nameof(ApiProfile.Name):
-                    ApiProfiles.Instance.SelectedProfile.Name = (string)e.NewValue;
-                    break;
-                case nameof(ApiProfile.ApiHostUrl):
-                    ApiProfiles.Instance.SelectedProfile.ApiHostUrl = (string)e.NewValue;
-                    break;
-                case nameof(ApiProfile.ConsumerKey):
-                    ApiProfiles.Instance.SelectedProfile.ConsumerKey = (string)e.NewValue;
-                    break;
-                case nameof(ApiProfile.ConsumerSecret):
-                    ApiProfiles.Instance.SelectedProfile.ConsumerSecret = (string)e.NewValue;
-                    break;
-                case nameof(ApiProfile.ResponseType):
-                    ApiProfiles.Instance.SelectedProfile.ResponseType = (string)e.NewValue;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(e.Property.Name, $"Api Profile Property {e.Property.Name} not supported");
-            }
-
             ApiProfiles.Instance.Save();
         }
 
         private void RefreshCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = this.SelectedProfile != null
+            e.CanExecute = this.Query != null 
+                && this.SelectedProfile != null
                 && Uri.TryCreate(this.SelectedProfile.ApiHostUrl, UriKind.Absolute, out var uri)
                 && !string.IsNullOrEmpty(this.SelectedProfile.ConsumerKey)
                 && !string.IsNullOrEmpty(this.SelectedProfile.ConsumerSecret);
@@ -182,7 +126,7 @@
                         }
                     }
 
-                    textResult = GetQueryResult(queryAsJson, restApiHelper.PostRawXml);
+                    textResult = GetQueryResult(queryAsJson, restApiHelper.PostRawJson);
                 }
 
                 if (this.foldingManager != null)
