@@ -1,11 +1,15 @@
 ﻿namespace PayRunIO.QueryBuilder
 {
     using System;
+    using System.Collections.ObjectModel;
+    using System.Collections.Specialized;
     using System.ComponentModel;
+    using System.Diagnostics.Eventing.Reader;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Windows;
+    using System.Windows.Controls;
     using System.Windows.Input;
     using System.Xml;
 
@@ -88,6 +92,8 @@
                 this.OnPropertyChanged(nameof(this.OriginalState));
             }
         }
+
+        public ObservableCollection<string> FileHistory { get; } = new ObservableCollection<string>();
 
         public TextDocument XmlDocument => new TextDocument(this.SourceAsXmlDoc().OuterXml);
 
@@ -375,6 +381,13 @@
                 this.WindowState = WindowState.Maximized;
             }
 
+            var fileHistory = AppSettings.Default.FileHistory?.OfType<string>() ?? new string[0];
+
+            foreach (var file in fileHistory)
+            {
+                this.FileHistory.Add(file);
+            }
+
             if (!string.IsNullOrEmpty(AppSettings.Default.LastFileName))
             {
                 this.FileName = AppSettings.Default.LastFileName;
@@ -473,9 +486,16 @@
                 AppSettings.Default.LastFileName = this.FileName;
             }
 
+            AppSettings.Default.FileHistory = new StringCollection();
+
+            foreach (var file in this.FileHistory.Distinct().Take(10))
+            {
+                AppSettings.Default.FileHistory.Add(file);
+            }
+
             if (this.QueryTreeView.SelectedItem != null)
             {
-                AppSettings.Default.LastTreeIndex = ((SelectableBase)this.QueryTreeView.SelectedItem).Index;
+                AppSettings.Default.LastTreeIndex = this.QueryTreeView.SelectedItem.Index;
             }
 
             ApiProfiles.Instance.Save();
@@ -485,6 +505,11 @@
         {
             if (!File.Exists(filePath))
             {
+                if (this.FileHistory.Contains(filePath))
+                {
+                    this.FileHistory.Remove(filePath);
+                }
+
                 return;
             }
 
@@ -534,6 +559,22 @@
                 this.TreeViewSource = new SelectableBase[] { new QueryViewModel(sourceQuery) };
             }
 
+            AppSettings.Default.LastFileName = filePath;
+
+            if (this.FileHistory.Contains(filePath))
+            {
+                var oldIndex = this.FileHistory.IndexOf(filePath);
+
+                if (oldIndex != 0)
+                {
+                    this.FileHistory.Move(oldIndex, 0);
+                }
+            }
+            else
+            {
+                this.FileHistory.Insert(0, filePath);
+            }
+
             this.FileName = filePath;
 
             this.OnPropertyChanged(nameof(this.XmlDocument));
@@ -556,6 +597,20 @@
             else
             {
                 xmlDoc.Save(filePath);
+            }
+
+            if (this.FileHistory.Contains(filePath))
+            {
+                var oldIndex = this.FileHistory.IndexOf(filePath);
+
+                if (oldIndex != 0)
+                {
+                    this.FileHistory.Move(oldIndex, 0);
+                }
+            }
+            else
+            {
+                this.FileHistory.Insert(0, filePath);
             }
 
             this.FileName = filePath;
@@ -642,6 +697,21 @@
                 $"About - {fullName}",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
+        }
+
+        private void FileSelection_OnChange(object sender, SelectionChangedEventArgs e)
+        {
+            if (AppSettings.Default.LastFileName != this.FileName)
+            {
+                if (!this.ConfirmReplaceSource())
+                {
+                    this.FileName = AppSettings.Default.LastFileName;
+                }
+                else
+                {
+                    this.LoadFromFile(this.FileName);
+                }
+            }
         }
     }
 }

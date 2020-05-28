@@ -142,5 +142,16 @@ namespace PayRunIO.QueryBuilder {
                 this["LastProfileName"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection FileHistory {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["FileHistory"]));
+            }
+            set {
+                this["FileHistory"] = value;
+            }
+        }
     }
 }
