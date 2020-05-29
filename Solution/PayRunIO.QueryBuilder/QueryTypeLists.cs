@@ -1,7 +1,9 @@
 ﻿namespace PayRunIO.QueryBuilder
 {
+    using System;
     using System.Linq;
 
+    using PayRunIO.Models;
     using PayRunIO.Models.Reporting.Conditions;
     using PayRunIO.Models.Reporting.Filtering;
     using PayRunIO.Models.Reporting.Outputs;
@@ -9,6 +11,13 @@
 
     public class QueryTypeLists
     {
+        public static Type[] QueryTypes { get; } =
+            AppDomain.CurrentDomain.GetAssemblies()
+                .Where(asm => asm.FullName.StartsWith("PayRunIO."))
+                .SelectMany(asm => asm.GetTypes())
+                .Where(t => !t.IsAbstract && t.Namespace != null && t.Namespace.StartsWith("PayRunIO.Models.Reporting"))
+                .ToArray();
+
         public string[] ConditionTypes { get; } =
             typeof(CompareConditionBase).Assembly
                 .GetTypes()

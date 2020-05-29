@@ -1,22 +1,37 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using System.Linq;
+    using System;
 
     using PayRunIO.Models.Reporting;
+    using PayRunIO.Models.Reporting.Outputs;
 
     public class OutputCollectionViewModel : SelectableCollectionViewModel
     {
         public OutputCollectionViewModel(EntityGroup entityGroup, SelectableBase parent)
             : base(parent)
         {
-            var viewModels = entityGroup.Outputs.Select(x => new OutputViewModel(x, this));
-
-            foreach (var viewModel in viewModels)
-            {
-                this.Children.Add(viewModel);
-            }
-
             this.SourceCollection = entityGroup.Outputs;
+            foreach (var child in this.SourceCollection)
+            {
+                this.AddChild(child);
+            }
+        }
+
+        public override Type ChildType { get; } = typeof(OutputBase);
+
+        public override void AddChild(object child)
+        {
+            if (child is OutputBase childToAdd)
+            {
+                var viewModel = new OutputViewModel(childToAdd, this);
+
+                this.Children.Add(viewModel);
+
+                if (!this.SourceCollection.Contains(childToAdd))
+                {
+                    this.SourceCollection.Add(childToAdd);
+                }
+            }
         }
     }
 }

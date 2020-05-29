@@ -291,7 +291,7 @@
                                                 <Button Margin="2" Padding="2" Command="MoveDown" Width="150">Move Down</Button>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal">
-                                                <Button Margin="2" Padding="2" Command="New" Click="AddGroup_OnClick" Width="150">Add Sub Group</Button>
+                                                <Button Margin="2" Padding="2" Click="AddGroup_OnClick" Width="150">Add Sub Group</Button>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <Button Margin="2" Padding="2" Command="Delete" Width="150">Delete Group</Button>
