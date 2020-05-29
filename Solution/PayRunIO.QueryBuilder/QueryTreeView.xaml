@@ -26,6 +26,9 @@
     <UserControl.CommandBindings>
         <CommandBinding Command="MoveUp" CanExecute="MoveUpCommand_CanExecute" Executed="MoveUpCommand_Executed" />
         <CommandBinding Command="MoveDown" CanExecute="MoveDownCommand_CanExecute" Executed="MoveDownCommand_Executed" />
+        <CommandBinding Command="Copy" CanExecute="CopyCommand_CanExecute" Executed="CopyCommand_Executed" />
+        <CommandBinding Command="Cut" CanExecute="CutCommand_CanExecute" Executed="CutCommand_Executed" />
+        <CommandBinding Command="Paste" CanExecute="PasteCommand_CanExecute" Executed="PasteCommand_Executed" />
         <CommandBinding Command="Delete" CanExecute="DeleteCommand_CanExecute" Executed="DeleteCommand_Executed" />
     </UserControl.CommandBindings>
 
@@ -46,6 +49,11 @@
                 <TreeView.Resources>
 
                     <Style TargetType="TreeViewItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=IsSelected, Mode=TwoWay}" Value="True">
+                                <Setter Property="Foreground" Value="Blue" />
+                            </DataTrigger>
+                        </Style.Triggers>
                         <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}" />
                         <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}" />
                         <Setter Property="ContextMenu">
@@ -53,6 +61,9 @@
                                 <ContextMenu>
                                     <MenuItem Command="MoveUp" Icon="{iconPacks:BoxIcons Kind=SolidUpArrow}"/>
                                     <MenuItem Command="MoveDown" Icon="{iconPacks:BoxIcons Kind=SolidDownArrow}" />
+                                    <MenuItem Command="Copy" Icon="{iconPacks:BoxIcons Kind=SolidCopy}" />
+                                    <MenuItem Command="Cut" Icon="{iconPacks:BoxIcons Kind=RegularCut}" />
+                                    <MenuItem Command="Paste" Icon="{iconPacks:BoxIcons Kind=SolidPaste}" />
                                     <Separator />
                                     <MenuItem Command="Delete" Icon="{iconPacks:BoxIcons Kind=SolidTrashAlt}" Foreground="DarkRed" />
                                 </ContextMenu>
