@@ -1,6 +1,7 @@
 ﻿namespace PayRunIO.QueryBuilder
 {
     using System;
+    using System.Text.RegularExpressions;
     using System.Windows.Data;
 
     [ValueConversion(typeof(object), typeof(string))]
@@ -8,7 +9,11 @@
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            return value?.GetType().Name;
+            var typeName = value?.GetType().Name;
+
+            typeName = Regex.Replace(typeName, "(\\B[A-Z])", " $1");
+
+            return typeName;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)

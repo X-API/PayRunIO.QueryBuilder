@@ -164,62 +164,94 @@
 
                                     <DataTemplate DataType="{x:Type filtering:FilterBase}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="Filter By" />
-                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
-                                    </TextBlock>
+                                            <TextBlock Text="Filter by" />
+                                            <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                     <DataTemplate DataType="{x:Type filtering:ActiveOn}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="Filter By" />
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
-                                    </TextBlock>
+                                            <TextBlock Text="Filter by" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                     <DataTemplate DataType="{x:Type filtering:ActiveWithin}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="Filter By" />
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
-                                    </TextBlock>
+                                            <TextBlock Text="Filter by" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                     <DataTemplate DataType="{x:Type filtering:Between}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="Filter By" />
-                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                        <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
-                                        <TextBlock Text="and" />
-                                        <TextBlock Text="{Binding Value2, StringFormat='&quot;{0}&quot;'}" />
-                                    </TextBlock>
+                                            <TextBlock Text="Filter by" />
+                                            <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                            <TextBlock Text="and" />
+                                            <TextBlock Text="{Binding Value2, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                     <DataTemplate DataType="{x:Type filtering:IsNull}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="Filter" />
-                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                    </TextBlock>
+                                            <TextBlock Text="Filter" />
+                                            <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                     <DataTemplate DataType="{x:Type filtering:IsNotNull}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="Filter" />
-                                        <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                    </TextBlock>
+                                            <TextBlock Text="Filter" />
+                                            <TextBlock Text="{Binding Property, StringFormat='\{{{0}}\}'}" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type filtering:OfType}">
+                                        <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                            <TextBlock Text="Filter by items" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type filtering:NotOfType}">
+                                        <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                            <TextBlock Text="Filter by items" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type filtering:OfDerivedType}">
+                                        <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                            <TextBlock Text="Filter by items" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+
+                                    <DataTemplate DataType="{x:Type filtering:NotOfDerivedType}">
+                                        <TextBlock  Style="{StaticResource TextBlockStyle}">
+                                            <TextBlock Text="Filter by items" />
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value, StringFormat='&quot;{0}&quot;'}" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                     <DataTemplate DataType="{x:Type filtering:TakeFirst}">
                                         <TextBlock  Style="{StaticResource TextBlockStyle}">
-                                        <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
-                                        <TextBlock Text="{Binding Value}" />
-                                        <TextBlock Text="item(s)" />
-                                    </TextBlock>
+                                            <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=.}" />
+                                            <TextBlock Text="{Binding Value}" />
+                                            <TextBlock Text="item(s)" />
+                                        </TextBlock>
                                     </DataTemplate>
 
                                 </ContentControl.Resources>

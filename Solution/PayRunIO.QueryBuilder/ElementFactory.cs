@@ -301,7 +301,7 @@
                     entity = RenderDateAdd.New("Name", "0001-01-01", "Day", "1");
                     break;
                 case nameof(RenderUniqueKeyFromLink):
-                    entity = RenderUniqueKeyFromLink.New("Name", "Href");
+                    entity = RenderUniqueKeyFromLink.New("Name", "[Link]");
                     break;
                 case nameof(Avg):
                     entity = Avg.New("Name", "Property");
