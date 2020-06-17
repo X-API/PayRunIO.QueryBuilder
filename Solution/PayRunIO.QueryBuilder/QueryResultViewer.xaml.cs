@@ -4,6 +4,7 @@
     using System.Collections.ObjectModel;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Text;
     using System.Windows;
     using System.Windows.Controls;
@@ -142,6 +143,24 @@
                     this.foldingManager = FoldingManager.Install(this.ResultViewTextEditor.TextArea);
                     var foldingStrategy = new XmlFoldingStrategy();
                     foldingStrategy.UpdateFoldings(this.foldingManager, this.ResultViewTextEditor.Document);
+                }
+            }
+            catch (WebException ex)
+            {
+                if (ex.Response is HttpWebResponse response)
+                {
+                    using (var responseStream = response.GetResponseStream())
+                    {
+                        if (responseStream == null)
+                        {
+                            throw;
+                        }
+
+                        using (var sr = new StreamReader(responseStream))
+                        {
+                            this.QueryResponseDocument = new TextDocument(sr.ReadToEnd());
+                        }
+                    }
                 }
             }
             catch (Exception ex)

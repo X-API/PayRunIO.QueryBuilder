@@ -11,6 +11,7 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
+    using System.Windows.Media.TextFormatting;
     using System.Xml;
 
     using ICSharpCode.AvalonEdit.Document;
@@ -197,6 +198,7 @@
 
             this.Source = new ReportDefinition { Title = "MyReport", Readonly = false, ReportQuery = this.CreateNewQuery() };
 
+            AppSettings.Default.LastFileName = string.Empty;
             this.FileName = string.Empty;
             this.OriginalState = string.Empty;
 
@@ -288,6 +290,7 @@
 
             this.Source = this.CreateNewQuery();
 
+            AppSettings.Default.LastFileName = string.Empty;
             this.FileName = string.Empty;
             this.OriginalState = string.Empty;
 
@@ -552,7 +555,21 @@
 
             if (this.Source is ReportDefinition reportDefinition)
             {
-                this.TreeViewSource = new SelectableBase[] { new ReportDefinitionViewModel(reportDefinition) };
+                var reportQuery = reportDefinition.ReportQuery;
+
+                var queryViewModel = new QueryViewModel(reportQuery);
+
+                var reportDefinitionViewModel = new ReportDefinitionViewModel(reportDefinition);
+
+                reportDefinitionViewModel.Children.Clear();
+                reportDefinitionViewModel.Children.Add(queryViewModel);
+
+                this.TreeViewSource = new SelectableBase[] { reportDefinitionViewModel };
+
+                var queryA = (this.treeViewSource[0] as ReportDefinitionViewModel)?.Element.ReportQuery;
+                var queryB = reportQuery;
+                var queryC = ((ReportDefinition)this.Source).ReportQuery;
+
             }
             else if (this.Source is Query sourceQuery)
             {
@@ -701,16 +718,21 @@
 
         private void FileSelection_OnChange(object sender, SelectionChangedEventArgs e)
         {
-            if (AppSettings.Default.LastFileName != this.FileName)
+            if (AppSettings.Default.LastFileName == this.FileName)
             {
-                if (!this.ConfirmReplaceSource())
-                {
-                    this.FileName = AppSettings.Default.LastFileName;
-                }
-                else
-                {
-                    this.LoadFromFile(this.FileName);
-                }
+                // No change in selected file name
+                return;
+            }
+
+            if (!this.ConfirmReplaceSource())
+            {
+                // Cancel file load
+                this.FileName = AppSettings.Default.LastFileName;
+            }
+            else if (!string.IsNullOrEmpty(this.FileName))
+            {
+                // Load selected file
+                this.LoadFromFile(this.FileName);
             }
         }
     }

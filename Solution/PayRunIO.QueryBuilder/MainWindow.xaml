@@ -141,7 +141,7 @@
                                         <StackPanel Margin="5">
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Report Title: "/>
-                                                <TextBox Text="{Binding Element.Title}" />
+                                                <TextBox Text="{Binding Element.Title, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <Grid Margin="2">
                                                 <Grid.ColumnDefinitions>
@@ -172,7 +172,7 @@
                                         <StackPanel Margin="5">
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Root node name: "/>
-                                                <TextBox Text="{Binding Element.RootNodeName}" />
+                                                <TextBox Text="{Binding Element.RootNodeName, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <Grid Margin="2">
                                                 <Grid.ColumnDefinitions>
@@ -202,9 +202,9 @@
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="2">
                                                 <TextBlock Text="Name: "/>
-                                                <TextBox Width="150" Text="{Binding ElementName=VariablesListBox, Path=SelectedItem.Name}" />
+                                                <TextBox Width="150" Text="{Binding ElementName=VariablesListBox, Path=SelectedItem.Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                 <TextBlock Text=" Value: " />
-                                                <TextBox Width="150" Text="{Binding ElementName=VariablesListBox, Path=SelectedItem.Value}"/>
+                                                <TextBox Width="150" Text="{Binding ElementName=VariablesListBox, Path=SelectedItem.Value, TargetNullValue={x:Static system:String.Empty}}"/>
                                             </StackPanel>
                                             <ListBox Name="VariablesListBox" ItemsSource="{Binding Element.Variables}" Margin="2" MinHeight="50">
                                                 <ListBox.Resources>
@@ -244,23 +244,23 @@
                                         <StackPanel Margin="5">
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Group Name:"/>
-                                                <TextBox Text="{Binding Element.GroupName}" />
+                                                <TextBox Text="{Binding Element.GroupName, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Item Name:"/>
-                                                <TextBox Text="{Binding Element.ItemName}" />
+                                                <TextBox Text="{Binding Element.ItemName, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Selector:"/>
-                                                <TextBox Text="{Binding Element.Selector}" />
+                                                <TextBox Text="{Binding Element.Selector, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Unique Key Variable:"/>
-                                                <TextBox Text="{Binding Element.UniqueKeyVariable}" />
+                                                <TextBox Text="{Binding Element.UniqueKeyVariable, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Loop Expression:"/>
-                                                <TextBox Text="{Binding Element.LoopExpression}" />
+                                                <TextBox Text="{Binding Element.LoopExpression, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </GroupBox>
@@ -400,11 +400,11 @@
                                         <StackPanel Margin="5">
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Value A:"/>
-                                                <TextBox Text="{Binding Path=Element.ValueA}" />
+                                                <TextBox Text="{Binding Path=Element.ValueA, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Value B:"/>
-                                                <TextBox Text="{Binding Path=Element.ValueB}" />
+                                                <TextBox Text="{Binding Path=Element.ValueB, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </GroupBox>
@@ -445,11 +445,11 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:"/>
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Filter Value:"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -458,7 +458,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Date:"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -467,7 +467,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Date Range (yyyy-MM-dd,yyyy-MM-dd):"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -476,7 +476,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Type Name(s):"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -485,7 +485,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Type Name(s):"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -494,15 +494,15 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:"/>
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Lower Value:"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Upper Value:"/>
-                                                                <TextBox Text="{Binding Path=Value2}" />
+                                                                <TextBox Text="{Binding Path=Value2, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -511,7 +511,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Value Array (csv):"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -520,7 +520,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Value Array (csv):"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -529,7 +529,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:"/>
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -538,7 +538,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:"/>
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -547,7 +547,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Amount to take:"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -556,7 +556,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Base Type:"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -565,7 +565,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Base Type:"/>
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -619,19 +619,19 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Date:" />
-                                                                <TextBox Text="{Binding Path=Date}" />
+                                                                <TextBox Text="{Binding Path=Date, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Pay Frequency:" />
-                                                                <TextBox Text="{Binding Path=PayFrequency}" />
+                                                                <TextBox Text="{Binding Path=PayFrequency, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -669,19 +669,19 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:" />
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Max Length:" />
-                                                                <TextBox Text="{Binding Path=MaxLength}" />
+                                                                <TextBox Text="{Binding Path=MaxLength, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -694,15 +694,15 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Value:" />
-                                                                <TextBox Text="{Binding Path=Value}" />
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -710,7 +710,7 @@
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Max Length:" />
-                                                                <TextBox Text="{Binding Path=MaxLength}" />
+                                                                <TextBox Text="{Binding Path=MaxLength, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -723,7 +723,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -736,23 +736,23 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=DisplayName}" />
+                                                                <TextBox Text="{Binding Path=DisplayName, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Tax Year:" />
-                                                                <TextBox Text="{Binding Path=TaxYear}" />
+                                                                <TextBox Text="{Binding Path=TaxYear, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Tax Period:" />
-                                                                <TextBox Text="{Binding Path=TaxPeriod}" />
+                                                                <TextBox Text="{Binding Path=TaxPeriod, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Pay Frequency:" />
-                                                                <TextBox Text="{Binding Path=PayFrequency}" />
+                                                                <TextBox Text="{Binding Path=PayFrequency, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="End Date: " />
@@ -769,15 +769,15 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Constant Name:" />
-                                                                <TextBox Text="{Binding Path=ConstantName}" />
+                                                                <TextBox Text="{Binding Path=ConstantName, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Constant Type:" />
-                                                                <TextBox Text="{Binding Path=ConstantType}" />
+                                                                <TextBox Text="{Binding Path=ConstantType, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -790,15 +790,15 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=DisplayName}" />
+                                                                <TextBox Text="{Binding Path=DisplayName, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Pay Frequency:" />
-                                                                <TextBox Text="{Binding Path=PayFrequency}" />
+                                                                <TextBox Text="{Binding Path=PayFrequency, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Date:" />
-                                                                <TextBox Text="{Binding Path=Date}" />
+                                                                <TextBox Text="{Binding Path=Date, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Render Tax Period Option:" />
@@ -815,23 +815,23 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Date:" />
-                                                                <TextBox Text="{Binding Path=Date}" />
+                                                                <TextBox Text="{Binding Path=Date, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Interval:" />
-                                                                <TextBox Text="{Binding Path=Interval}" />
+                                                                <TextBox Text="{Binding Path=Interval, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Increment:" />
-                                                                <TextBox Text="{Binding Path=Increment}" />
+                                                                <TextBox Text="{Binding Path=Increment, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -844,11 +844,11 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Hyperlink Reference:" />
-                                                                <TextBox Text="{Binding Path=Href}" />
+                                                                <TextBox Text="{Binding Path=Href, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -857,11 +857,11 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:" />
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -869,7 +869,7 @@
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -882,11 +882,11 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:" />
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -894,7 +894,7 @@
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -907,11 +907,11 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:" />
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -919,7 +919,7 @@
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -932,15 +932,15 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:" />
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Default Value:" />
-                                                                <TextBox Text="{Binding Path=DefaultValue}" />
+                                                                <TextBox Text="{Binding Path=DefaultValue, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -948,7 +948,7 @@
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -961,7 +961,7 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -978,11 +978,11 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Expression:" />
-                                                                <TextBox Text="{Binding Path=Expression}" />
+                                                                <TextBox Text="{Binding Path=Expression, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2" Orientation="Horizontal">
                                                                 <TextBlock Text="Negate Value: " />
@@ -990,15 +990,15 @@
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Minimum:" />
-                                                                <TextBox Text="{Binding Path=Min}" />
+                                                                <TextBox Text="{Binding Path=Min, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Maximum:" />
-                                                                <TextBox Text="{Binding Path=Max}" />
+                                                                <TextBox Text="{Binding Path=Max, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
@@ -1011,15 +1011,15 @@
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Element Name:" />
-                                                                <TextBox Text="{Binding Path=Name}" />
+                                                                <TextBox Text="{Binding Path=Name, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:" />
-                                                                <TextBox Text="{Binding Path=Property}" />
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="String Format:" />
-                                                                <TextBox Text="{Binding Path=Format}" />
+                                                                <TextBox Text="{Binding Path=Format, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
