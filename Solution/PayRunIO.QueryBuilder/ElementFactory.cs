@@ -61,6 +61,18 @@
                 case nameof(WhenNotEqualTo):
                     entity = WhenNotEqualTo.New("ValueA", "ValueB");
                     break;
+                case nameof(WhenContains):
+                    entity = WhenContains.New("ValueA", "ValueB");
+                    break;
+                case nameof(WhenNotContains):
+                    entity = WhenNotContains.New("ValueA", "ValueB");
+                    break;
+                case nameof(WhenWithinArray):
+                    entity = WhenWithinArray.New("Item1,Item2", "ValueB");
+                    break;
+                case nameof(WhenNotWithinArray):
+                    entity = WhenNotWithinArray.New("Item1,Item2", "ValueB");
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
