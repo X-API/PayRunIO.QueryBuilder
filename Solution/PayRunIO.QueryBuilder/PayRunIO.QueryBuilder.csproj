@@ -4,9 +4,9 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Version>1.0.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0.15</Version>
+    <AssemblyVersion>1.0.0.15</AssemblyVersion>
+    <FileVersion>1.0.0.15</FileVersion>
     <Company>PayRun.io Ltd</Company>
     <Authors>PayRun.io Ltd</Authors>
     <Product>PayRun.io Query Builder</Product>
@@ -17,7 +17,7 @@
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.0.1" />
     <PackageReference Include="MahApps.Metro.IconPacks.BoxIcons" Version="4.1.0" />
-	<PackageReference Include="PayRunIO.CSharp.SDK" Version="20.21.2.97" />
+	<PackageReference Include="PayRunIO.CSharp.SDK" Version="20.21.5.46" />
   </ItemGroup>
 
   <ItemGroup>
