@@ -510,6 +510,10 @@
                                                     <DataTemplate DataType="{x:Type filtering:WithinArray}">
                                                         <StackPanel>
                                                             <StackPanel Margin="2">
+                                                                <TextBlock Text="Property:"/>
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Margin="2">
                                                                 <TextBlock Text="Value Array (csv):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
@@ -518,6 +522,10 @@
 
                                                     <DataTemplate DataType="{x:Type filtering:NotWithinArray}">
                                                         <StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Property:"/>
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Value Array (csv):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
