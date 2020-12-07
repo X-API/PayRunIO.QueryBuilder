@@ -32,6 +32,11 @@
                             <x:Type TypeName="outputs:OutputType"/>
                         </ObjectDataProvider.MethodParameters>
                     </ObjectDataProvider>
+                    <ObjectDataProvider x:Key="RoundingOptions" MethodName="GetValues" ObjectType="{x:Type system:Enum}">
+                        <ObjectDataProvider.MethodParameters>
+                            <x:Type TypeName="enums:RoundingOption"/>
+                        </ObjectDataProvider.MethodParameters>
+                    </ObjectDataProvider>
                     <ObjectDataProvider x:Key="RenderTaxPeriodOptions" MethodName="GetValues" ObjectType="{x:Type system:Enum}">
                         <ObjectDataProvider.MethodParameters>
                             <x:Type TypeName="enums:RenderTaxPeriodOption"/>
@@ -1007,6 +1012,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Maximum:" />
                                                                 <TextBox Text="{Binding Path=Max, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Rounding Option:" />
+                                                                <ComboBox ItemsSource="{Binding Source={StaticResource RoundingOptions}}" SelectedValue="{Binding Rounding}" />
                                                             </StackPanel>
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Output Type:" />
