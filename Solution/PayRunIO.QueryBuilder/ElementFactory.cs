@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Windows.Controls;
 
+    using PayRunIO.Core.Enums;
     using PayRunIO.Models.Reporting;
     using PayRunIO.Models.Reporting.Conditions;
     using PayRunIO.Models.Reporting.Filtering;
@@ -331,7 +332,7 @@
                     entity = Count.New("Name");
                     break;
                 case nameof(ExpressionCalculator):
-                    entity = ExpressionCalculator.New("Name", "1 + 2 - 3 * 4 / 5");
+                    entity = ExpressionCalculator.New("Name", "1 + 2 - 3 * 4 / 5", rounding: RoundingOption.NotSet);
                     break;
                 case nameof(Distinct):
                     entity = Distinct.New("Name", "Property");
