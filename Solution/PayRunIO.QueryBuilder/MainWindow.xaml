@@ -267,6 +267,10 @@
                                                 <TextBlock Text="Loop Expression:"/>
                                                 <TextBox Text="{Binding Element.LoopExpression, TargetNullValue={x:Static system:String.Empty}}" />
                                             </StackPanel>
+                                            <StackPanel Margin="2">
+                                                <TextBlock Text="Predicate Expression:"/>
+                                                <TextBox Text="{Binding Element.Predicate, TargetNullValue={x:Static system:String.Empty}}" />
+                                            </StackPanel>
                                         </StackPanel>
                                     </GroupBox>
 
