@@ -733,6 +733,10 @@
                                                                 <TextBlock Text="Output Type:" />
                                                                 <ComboBox ItemsSource="{Binding Source={StaticResource OutputTypes}}" SelectedValue="{Binding Output}" />
                                                             </StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Regular Expression:" />
+                                                                <TextBox Text="{Binding Path=Regex, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
