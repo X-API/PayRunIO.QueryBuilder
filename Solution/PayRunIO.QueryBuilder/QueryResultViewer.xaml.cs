@@ -5,7 +5,9 @@
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Security.AccessControl;
     using System.Text;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Forms.VisualStyles;
@@ -101,12 +103,47 @@
                     contentTypeHeader, 
                     contentTypeHeader);
 
+            if (this.foldingManager != null)
+            {
+                FoldingManager.Uninstall(this.foldingManager);
+                this.foldingManager = null;
+            }
+
+            this.QueryResponseDocument = new TextDocument("Loading...");
+
+            var responseType = this.SelectedProfile.ResponseType;
+            var query = this.Query;
+
+            Action<string> callBack = textResult =>
+                {
+                    this.QueryResponseDocument = new TextDocument(textResult);
+
+                    if (this.SelectedProfile.ResponseType == "XML")
+                    {
+                        this.foldingManager = FoldingManager.Install(this.ResultViewTextEditor.TextArea);
+                        var foldingStrategy = new XmlFoldingStrategy();
+                        foldingStrategy.UpdateFoldings(this.foldingManager, this.ResultViewTextEditor.Document);
+                    }
+                };
+
+            Task<string>.Factory
+                .StartNew(() => GetResponseText(restApiHelper, query, responseType))
+                .ContinueWith(
+                    t =>
+                        {
+                            this.Dispatcher.BeginInvoke(callBack, t.Result);
+                        });
+        }
+
+        private static string GetResponseText(RestApiHelper restApiHelper, Query query, string responseType)
+        {
+            string textResult = null;
+
             try
             {
-                string textResult;
-                if (this.SelectedProfile.ResponseType == "XML")
+                if (responseType == "XML")
                 {
-                    var queryAsXml = XmlSerialiserHelper.SerialiseToXmlDoc(this.Query).InnerXml;
+                    var queryAsXml = XmlSerialiserHelper.SerialiseToXmlDoc(query).InnerXml;
 
                     var rawResult = GetQueryResult(queryAsXml, restApiHelper.PostRawXml);
 
@@ -119,7 +156,7 @@
                 else
                 {
                     string queryAsJson;
-                    using (var jsonStream = JsonSerialiserHelper.Serialise(this.Query))
+                    using (var jsonStream = JsonSerialiserHelper.Serialise(query))
                     {
                         using (var sr = new StreamReader(jsonStream))
                         {
@@ -128,21 +165,6 @@
                     }
 
                     textResult = GetQueryResult(queryAsJson, restApiHelper.PostRawJson);
-                }
-
-                if (this.foldingManager != null)
-                {
-                    FoldingManager.Uninstall(this.foldingManager);
-                    this.foldingManager = null;
-                }
-
-                this.QueryResponseDocument = new TextDocument(textResult);
-
-                if (this.SelectedProfile.ResponseType == "XML")
-                {
-                    this.foldingManager = FoldingManager.Install(this.ResultViewTextEditor.TextArea);
-                    var foldingStrategy = new XmlFoldingStrategy();
-                    foldingStrategy.UpdateFoldings(this.foldingManager, this.ResultViewTextEditor.Document);
                 }
             }
             catch (WebException ex)
@@ -158,7 +180,7 @@
 
                         using (var sr = new StreamReader(responseStream))
                         {
-                            this.QueryResponseDocument = new TextDocument(sr.ReadToEnd());
+                            textResult = sr.ReadToEnd();
                         }
                     }
                 }
@@ -167,18 +189,14 @@
             {
                 var result = new StringBuilder();
 
-                result.AppendLine("An error occured while executing the query");
+                result.AppendLine("An error occurred while executing the query");
                 result.AppendLine(string.Empty);
                 result.AppendLine(ex.ToString());
 
-                if (this.foldingManager != null)
-                {
-                    FoldingManager.Uninstall(this.foldingManager);
-                    this.foldingManager = null;
-                }
-
-                this.QueryResponseDocument = new TextDocument(result.ToString());
+                textResult = result.ToString();
             }
+
+            return textResult;
         }
 
         private static string GetQueryResult(string query, Func<string, string, string> queryMethod)
