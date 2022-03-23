@@ -192,6 +192,9 @@
 
                                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Suppress Metric Attributes: " VerticalAlignment="Center" />
                                                 <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding Element.SuppressMetricAttributes}" Margin="2" />
+
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Exclude Null Or Empty Elements: " VerticalAlignment="Center" />
+                                                <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding Element.ExcludeNullOrEmptyElements}" Margin="2" />
                                             </Grid>
                                         </StackPanel>
                                     </GroupBox>
@@ -560,6 +563,58 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:"/>
                                                                 <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+
+                                                    <DataTemplate DataType="{x:Type filtering:IsNullOrGreaterThan}">
+                                                        <StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Property:"/>
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Value:"/>
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+
+                                                    <DataTemplate DataType="{x:Type filtering:IsNullOrGreaterThanEqualTo}">
+                                                        <StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Property:"/>
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Value:"/>
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+
+                                                    <DataTemplate DataType="{x:Type filtering:IsNullOrLessThan}">
+                                                        <StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Property:"/>
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Value:"/>
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+
+                                                    <DataTemplate DataType="{x:Type filtering:IsNullOrLessThanEqualTo}">
+                                                        <StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Property:"/>
+                                                                <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Margin="2">
+                                                                <TextBlock Text="Value:"/>
+                                                                <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
