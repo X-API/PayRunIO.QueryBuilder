@@ -199,6 +199,18 @@
                 case nameof(IsNotNull):
                     entity = IsNotNull.New("Property");
                     break;
+                case nameof(IsNullOrGreaterThan):
+                    entity = IsNullOrGreaterThan.New("Property", "Value");
+                    break;
+                case nameof(IsNullOrGreaterThanEqualTo):
+                    entity = IsNullOrGreaterThanEqualTo.New("Property", "Value");
+                    break;
+                case nameof(IsNullOrLessThan):
+                    entity = IsNullOrLessThan.New("Property", "Value");
+                    break;
+                case nameof(IsNullOrLessThanEqualTo):
+                    entity = IsNullOrLessThanEqualTo.New("Property", "Value");
+                    break;
                 case nameof(StartsWith):
                     entity = StartsWith.New("Property", "Value");
                     break;
