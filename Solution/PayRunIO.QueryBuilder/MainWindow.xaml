@@ -476,6 +476,10 @@
                                                                 <TextBlock Text="Date:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -484,6 +488,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Date Range (yyyy-MM-dd,yyyy-MM-dd):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -494,6 +502,10 @@
                                                                 <TextBlock Text="Type Name(s):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -502,6 +514,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Type Name(s):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -520,6 +536,10 @@
                                                                 <TextBlock Text="Upper Value:"/>
                                                                 <TextBox Text="{Binding Path=Value2, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -532,6 +552,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Value Array (csv):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -546,6 +570,10 @@
                                                                 <TextBlock Text="Value Array (csv):"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -555,6 +583,10 @@
                                                                 <TextBlock Text="Property:"/>
                                                                 <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -563,6 +595,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Property:"/>
                                                                 <TextBox Text="{Binding Path=Property, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -577,6 +613,10 @@
                                                                 <TextBlock Text="Value:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -589,6 +629,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Value:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -603,6 +647,10 @@
                                                                 <TextBlock Text="Value:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -616,6 +664,10 @@
                                                                 <TextBlock Text="Value:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -624,6 +676,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Amount to take:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -634,6 +690,10 @@
                                                                 <TextBlock Text="Base Type:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
                                                             </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
+                                                            </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
 
@@ -642,6 +702,10 @@
                                                             <StackPanel Margin="2">
                                                                 <TextBlock Text="Base Type:"/>
                                                                 <TextBox Text="{Binding Path=Value, TargetNullValue={x:Static system:String.Empty}}" />
+                                                            </StackPanel>
+                                                            <StackPanel StackPanel.Orientation="Horizontal" Margin="2">
+                                                                <TextBlock Text="Is OR filter:" Margin="0,0,2,0"/>
+                                                                <CheckBox IsChecked="{Binding Path=IsOr}" />
                                                             </StackPanel>
                                                         </StackPanel>
                                                     </DataTemplate>
