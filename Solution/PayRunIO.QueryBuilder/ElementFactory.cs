@@ -226,6 +226,12 @@
                 case nameof(NotOfDerivedType):
                     entity = NotOfDerivedType.New("TypeName");
                     break;
+                case nameof(HasFlag):
+                    entity = HasFlag.New("Property", "Value");
+                    break;
+                case nameof(NotHasFlag):
+                    entity = NotHasFlag.New("Property", "Value");
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
