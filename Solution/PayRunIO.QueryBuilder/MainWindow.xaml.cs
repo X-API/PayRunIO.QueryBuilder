@@ -4,14 +4,12 @@
     using System.Collections.ObjectModel;
     using System.Collections.Specialized;
     using System.ComponentModel;
-    using System.Diagnostics.Eventing.Reader;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
-    using System.Windows.Media.TextFormatting;
     using System.Xml;
 
     using ICSharpCode.AvalonEdit.Document;
@@ -506,7 +504,7 @@
 
         private void LoadFromFile(string filePath)
         {
-            if (!File.Exists(filePath))
+            if (!System.IO.File.Exists(filePath))
             {
                 if (this.FileHistory.Contains(filePath))
                 {
