@@ -18,7 +18,7 @@
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
     <PackageReference Include="MahApps.Metro.IconPacks.BoxIcons" Version="4.11.0" />
-	<PackageReference Include="PayRunIO.CSharp.SDK" Version="23.24.8.47" />
+	<PackageReference Include="PayRunIO.CSharp.SDK" Version="23.24.9.94" />
   </ItemGroup>
 
   <ItemGroup>
