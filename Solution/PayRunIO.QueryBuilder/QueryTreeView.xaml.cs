@@ -8,7 +8,7 @@
     using System.Windows.Media;
     using System.Xml;
 
-    using PayRunIO.CSharp.SDK;
+    using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.QueryBuilder.ViewModels;
 
     /// <summary>

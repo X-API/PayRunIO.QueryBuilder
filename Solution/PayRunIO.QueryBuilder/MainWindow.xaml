@@ -5,13 +5,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PayRunIO.QueryBuilder"
-        xmlns:reporting="clr-namespace:PayRunIO.Models.Reporting;assembly=PayRunIO.Models"
-        xmlns:outputs="clr-namespace:PayRunIO.Models.Reporting.Outputs;assembly=PayRunIO.Models"
+        xmlns:reporting="clr-namespace:PayRunIO.v2.Models.Reporting;assembly=PayRunIO.v2.Models"
+        xmlns:outputs="clr-namespace:PayRunIO.v2.Models.Reporting.Outputs;assembly=PayRunIO.v2.Models"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
-        xmlns:singular="clr-namespace:PayRunIO.Models.Reporting.Outputs.Singular;assembly=PayRunIO.Models"
-        xmlns:enums="clr-namespace:PayRunIO.Core.Enums;assembly=PayRunIO.Core.Enums"
-        xmlns:aggregate="clr-namespace:PayRunIO.Models.Reporting.Outputs.Aggregate;assembly=PayRunIO.Models"
-        xmlns:filtering="clr-namespace:PayRunIO.Models.Reporting.Filtering;assembly=PayRunIO.Models"
+        xmlns:singular="clr-namespace:PayRunIO.v2.Models.Reporting.Outputs.Singular;assembly=PayRunIO.v2.Models"
+        xmlns:enums="clr-namespace:PayRunIO.v2.Core.Enums;assembly=PayRunIO.v2.Core.Enums"
+        xmlns:aggregate="clr-namespace:PayRunIO.v2.Models.Reporting.Outputs.Aggregate;assembly=PayRunIO.v2.Models"
+        xmlns:filtering="clr-namespace:PayRunIO.v2.Models.Reporting.Filtering;assembly=PayRunIO.v2.Models"
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:viewModels="clr-namespace:PayRunIO.QueryBuilder.ViewModels"
@@ -69,7 +69,6 @@
             <Menu DockPanel.Dock="Top" Background="LightGray">
                 <MenuItem Header="_File">
                     <MenuItem Header="_New">
-                        <MenuItem Header="_Report" Click="NewReport_OnClick" />
                         <MenuItem Header="_Query" Click="NewQuery_OnClick"/>
                     </MenuItem>
                     <MenuItem Header="_Open" Command="Open" />
@@ -135,37 +134,6 @@
 
                     <ContentControl Name="ContentControl" Content="{Binding ElementName=QueryTreeView, Path=SelectedItem}">
                         <ContentControl.Resources>
-
-                            <DataTemplate DataType="{x:Type viewModels:ReportDefinitionViewModel}">
-                                <StackPanel Margin="5">
-                                    <TextBlock Text="Report Definition" Style="{StaticResource Header1}" />
-                                    <GroupBox Margin="5">
-                                        <GroupBox.Header>
-                                            <TextBlock Text="Value Controls" Style="{StaticResource GroupBoxHeaderStyle}" />
-                                        </GroupBox.Header>
-                                        <StackPanel Margin="5">
-                                            <StackPanel Margin="2">
-                                                <TextBlock Text="Report Title: "/>
-                                                <TextBox Text="{Binding Element.Title, TargetNullValue={x:Static system:String.Empty}}" />
-                                            </StackPanel>
-                                            <Grid Margin="2">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition />
-                                                    <RowDefinition />
-                                                </Grid.RowDefinitions>
-
-                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Is System Report: " VerticalAlignment="Center" />
-                                                <CheckBox Grid.Row="0" Grid.Column="1" IsChecked="{Binding Element.Readonly}" Margin="2" />
-                                            </Grid>
-                                        </StackPanel>
-                                    </GroupBox>
-                                </StackPanel>
-                            </DataTemplate>
 
                             <DataTemplate DataType="{x:Type viewModels:QueryViewModel}">
                                 <StackPanel Margin="5">
@@ -273,6 +241,13 @@
                                             <StackPanel Margin="2">
                                                 <TextBlock Text="Predicate Expression:"/>
                                                 <TextBox Text="{Binding Element.Predicate, TargetNullValue={x:Static system:String.Empty}}" />
+                                            </StackPanel>
+                                            <StackPanel Margin="2">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Optimise:" Margin="0,0,2,0"/>
+                                                    <CheckBox IsChecked="{Binding Element.Optimise}"></CheckBox>
+                                                </StackPanel>
+                                                <TextBlock Margin="2" FontStyle="Italic">Note: When optimised; only explicitly specified properties are populated. Not compatible with RenderEntity outputs.</TextBlock>
                                             </StackPanel>
                                         </StackPanel>
                                     </GroupBox>
@@ -1281,7 +1256,7 @@
                     <TabItem.Header>
                         <TextBlock Margin="2" FontSize="14" FontWeight="Bold">Execute Query</TextBlock>
                     </TabItem.Header>
-                    <local:QueryResultViewer Query="{Binding ElementName=Window1, Path=Source}" />
+                    <local:QueryResultViewer x:Name="QueryResultViewer" Query="{Binding ElementName=Window1, Path=Source}" />
                 </TabItem>
                 <TabItem>
                     <TabItem.Header>

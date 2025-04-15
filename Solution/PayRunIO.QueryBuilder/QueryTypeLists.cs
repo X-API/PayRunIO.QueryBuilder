@@ -3,11 +3,11 @@
     using System;
     using System.Linq;
 
-    using PayRunIO.Models;
-    using PayRunIO.Models.Reporting.Conditions;
-    using PayRunIO.Models.Reporting.Filtering;
-    using PayRunIO.Models.Reporting.Outputs;
-    using PayRunIO.Models.Reporting.Sorting;
+    using PayRunIO.v2.Models;
+    using PayRunIO.v2.Models.Reporting.Conditions;
+    using PayRunIO.v2.Models.Reporting.Filtering;
+    using PayRunIO.v2.Models.Reporting.Outputs;
+    using PayRunIO.v2.Models.Reporting.Sorting;
 
     public class QueryTypeLists
     {
@@ -15,7 +15,7 @@
             AppDomain.CurrentDomain.GetAssemblies()
                 .Where(asm => asm.FullName.StartsWith("PayRunIO."))
                 .SelectMany(asm => asm.GetTypes())
-                .Where(t => !t.IsAbstract && t.Namespace != null && t.Namespace.StartsWith("PayRunIO.Models.Reporting"))
+                .Where(t => !t.IsAbstract && t.Namespace != null && t.Namespace.StartsWith("PayRunIO.v2.Models.Reporting"))
                 .ToArray();
 
         public string[] ConditionTypes { get; } =

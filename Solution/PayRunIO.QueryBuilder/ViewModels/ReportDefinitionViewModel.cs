@@ -1,6 +1,6 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using PayRunIO.Models;
+    using PayRunIO.v2.Models;
 
     public class ReportDefinitionViewModel : SelectableElementWithCollectionViewModel<ReportDefinition>
     {

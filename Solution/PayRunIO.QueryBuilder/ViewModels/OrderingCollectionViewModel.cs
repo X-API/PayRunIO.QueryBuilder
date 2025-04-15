@@ -2,8 +2,8 @@
 {
     using System;
 
-    using PayRunIO.Models.Reporting;
-    using PayRunIO.Models.Reporting.Sorting;
+    using PayRunIO.v2.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting.Sorting;
 
     public class OrderingCollectionViewModel : SelectableCollectionViewModel
     {

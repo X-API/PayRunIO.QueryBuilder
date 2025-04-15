@@ -1,6 +1,6 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using PayRunIO.Models.Reporting.Filtering;
+    using PayRunIO.v2.Models.Reporting.Filtering;
 
     public class FilterViewModel : SelectableElementViewModel<FilterBase>
     {

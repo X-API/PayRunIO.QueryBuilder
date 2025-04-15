@@ -5,15 +5,15 @@
     using System.Linq;
     using System.Windows.Controls;
 
-    using PayRunIO.Core.Enums;
-    using PayRunIO.Models.Reporting;
-    using PayRunIO.Models.Reporting.Conditions;
-    using PayRunIO.Models.Reporting.Filtering;
-    using PayRunIO.Models.Reporting.Outputs;
-    using PayRunIO.Models.Reporting.Outputs.Aggregate;
-    using PayRunIO.Models.Reporting.Outputs.Singular;
-    using PayRunIO.Models.Reporting.Sorting;
     using PayRunIO.QueryBuilder.ViewModels;
+    using PayRunIO.v2.Core.Enums;
+    using PayRunIO.v2.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting.Conditions;
+    using PayRunIO.v2.Models.Reporting.Filtering;
+    using PayRunIO.v2.Models.Reporting.Outputs;
+    using PayRunIO.v2.Models.Reporting.Outputs.Aggregate;
+    using PayRunIO.v2.Models.Reporting.Outputs.Singular;
+    using PayRunIO.v2.Models.Reporting.Sorting;
 
     public class ElementFactory
     {

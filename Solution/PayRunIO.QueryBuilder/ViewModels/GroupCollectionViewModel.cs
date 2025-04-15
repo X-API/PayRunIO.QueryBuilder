@@ -1,9 +1,8 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
     using System;
-    using System.Linq;
 
-    using PayRunIO.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting;
 
     public class GroupCollectionViewModel : SelectableCollectionViewModel
     {

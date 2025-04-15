@@ -1,6 +1,6 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using PayRunIO.Models.Reporting.Conditions;
+    using PayRunIO.v2.Models.Reporting.Conditions;
 
     public class ConditionViewModel : SelectableElementViewModel<CompareConditionBase>
     {
