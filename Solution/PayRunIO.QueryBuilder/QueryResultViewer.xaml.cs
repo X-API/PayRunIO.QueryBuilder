@@ -1,10 +1,7 @@
 ﻿namespace PayRunIO.QueryBuilder
 {
     using System;
-    using System.Collections.ObjectModel;
     using System.IO;
-    using System.Linq;
-    using System.Net;
     using System.Text;
     using System.Threading.Tasks;
     using System.Windows;
@@ -15,9 +12,11 @@
     using ICSharpCode.AvalonEdit.Document;
     using ICSharpCode.AvalonEdit.Folding;
 
-    using PayRunIO.CSharp.SDK;
-    using PayRunIO.Models.Reporting;
-    using PayRunIO.OAuth1;
+    using PayRunIO.ConnectionControls;
+    using PayRunIO.ConnectionControls.Models;
+    using PayRunIO.v2.CSharp.SDK;
+    using PayRunIO.v2.Models.Reporting;
+    using PayRunIO.v2.OAuth1;
 
     /// <summary>
     /// Interaction logic for QueryResultViewer.xaml
@@ -38,22 +37,6 @@
 
         public static readonly DependencyProperty QueryResponseDocumentProperty = DependencyProperty.Register("QueryResponseDocument", typeof(TextDocument), typeof(QueryResultViewer), new PropertyMetadata(default(TextDocument)));
 
-        public static readonly DependencyProperty ProfilesProperty = DependencyProperty.Register("ApiProfiles", typeof(ObservableCollection<ApiProfile>), typeof(QueryResultViewer), new PropertyMetadata(ApiProfiles.Instance.Profiles));
-
-        public static readonly DependencyProperty SelectedProfileProperty = DependencyProperty.Register("SelectedProfile", typeof(ApiProfile), typeof(QueryResultViewer), new PropertyMetadata(ApiProfiles.Instance.SelectedProfile, OnSelectedProfileChanged));
-
-        public ApiProfile SelectedProfile
-        {
-            get => (ApiProfile)this.GetValue(SelectedProfileProperty);
-            set => this.SetValue(SelectedProfileProperty, value);
-        }
-
-        public ObservableCollection<ApiProfile> Profiles
-        {
-            get => (ObservableCollection<ApiProfile>)this.GetValue(ProfilesProperty);
-            set => this.SetValue(ProfilesProperty, value);
-        }
-
         public TextDocument QueryResponseDocument
         {
             get => (TextDocument)this.GetValue(QueryResponseDocumentProperty);
@@ -66,40 +49,21 @@
             set => this.SetValue(QueryProperty, value);
         }
 
-        public string[] ResponseTypes { get; } = { "XML", "JSON" };
-
-        private static void OnSelectedProfileChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            ApiProfiles.Instance.SelectedProfile = (ApiProfile)e.NewValue;
-            ApiProfiles.Instance.Save();
-        }
-
         private void RefreshCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = this.Query != null 
-                && this.SelectedProfile != null
-                && Uri.TryCreate(this.SelectedProfile.ApiHostUrl, UriKind.Absolute, out var uri)
-                && !string.IsNullOrEmpty(this.SelectedProfile.ConsumerKey)
-                && !string.IsNullOrEmpty(this.SelectedProfile.ConsumerSecret);
+            e.CanExecute = this.Query != null && this.ConnectionPicker.SelectedConnection != null;
         }
 
         private void RefreshCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            if (this.SelectedProfile == null)
+            if (this.ConnectionPicker.SelectedConnection == null)
             {
                 return;
             }
 
-            var contentTypeHeader = this.SelectedProfile.ResponseType == "XML" ? "application/xml" : "application/json";
+            var connection = this.ConnectionPicker.SelectedConnection;
 
-            var restApiHelper = 
-                new RestApiHelper(
-                    this.oAuthSignatureGenerator,
-                    this.SelectedProfile.ConsumerKey,
-                    this.SelectedProfile.ConsumerSecret,
-                    this.SelectedProfile.ApiHostUrl, 
-                    contentTypeHeader, 
-                    contentTypeHeader);
+            var restApiHelper = this.BuildRestApiHelper(connection);
 
             if (this.foldingManager != null)
             {
@@ -109,14 +73,13 @@
 
             this.QueryResponseDocument = new TextDocument("Loading...");
 
-            var responseType = this.SelectedProfile.ResponseType;
             var query = this.Query;
 
             Action<string> callBack = textResult =>
                 {
                     this.QueryResponseDocument = new TextDocument(textResult);
 
-                    if (this.SelectedProfile.ResponseType == "XML")
+                    if (connection.ContentType == ContentType.XML)
                     {
                         this.foldingManager = FoldingManager.Install(this.ResultViewTextEditor.TextArea);
                         var foldingStrategy = new XmlFoldingStrategy();
@@ -124,8 +87,8 @@
                     }
                 };
 
-            Task<string>.Factory
-                .StartNew(() => GetResponseText(restApiHelper, query, responseType))
+            Task
+                .Run(async () => await GetResponseText(restApiHelper, query, connection.ContentType))
                 .ContinueWith(
                     t =>
                         {
@@ -133,17 +96,49 @@
                         });
         }
 
-        private static string GetResponseText(RestApiHelper restApiHelper, Query query, string responseType)
+        private IRestApiHelperAsync BuildRestApiHelper(Connection connection)
+        {
+            var contentHeader = connection.ContentType == ContentType.XML ? "application/xml" : "application/json";
+
+            IRestApiHelperAsync restApiHelper;
+
+            if (connection is Oauth1Connection oauth1Connection)
+            {
+                restApiHelper = 
+                    new AuditRestApiHelper(
+                        this.oAuthSignatureGenerator,
+                        consumerKey: oauth1Connection.ConsumerKey,
+                        consumerSecret: oauth1Connection.ConsumerSecret,
+                        hostEndpoint: oauth1Connection.EndPoint,
+                        contentTypeHeader: contentHeader,
+                        acceptHeader: contentHeader);
+            }
+            else if (connection is BearerTokenConnection bearerTokenConnection)
+            {
+                restApiHelper =
+                    new BearerTokenRestApiHelper(
+                        bearerToken: bearerTokenConnection.BearerToken,
+                        hostEndpoint: bearerTokenConnection.EndPoint,
+                        contentTypeHeader: contentHeader,
+                        acceptHeader: contentHeader);
+            }
+            else
+            {
+                throw new NotSupportedException($"Connection type '{connection.GetType().Name}' not currently supported");
+            }
+
+            return restApiHelper;
+        }
+
+        private static async Task<string> GetResponseText(IRestApiHelperAsync restApiHelper, Query query, ContentType responseType)
         {
             string textResult = null;
 
             try
             {
-                if (responseType == "XML")
+                if (responseType == ContentType.XML)
                 {
-                    var queryAsXml = XmlSerialiserHelper.SerialiseToXmlDoc(query).InnerXml;
-
-                    var rawResult = GetQueryResult(queryAsXml, restApiHelper.PostRawXml);
+                    var rawResult = await GetQueryResult(query.ToXml(), restApiHelper.PostRawXmlAsync);
 
                     var xmlDoc = new XmlDocument { PreserveWhitespace = true };
 
@@ -153,32 +148,22 @@
                 }
                 else
                 {
-                    string queryAsJson;
-                    using (var jsonStream = JsonSerialiserHelper.Serialise(query))
+                    textResult = await GetQueryResult(query.ToJson(), restApiHelper.PostRawJsonAsync);
+                }
+            }
+            catch (ApiResponseException ex)
+            {
+                if (responseType == ContentType.XML)
+                {
+                    textResult = XmlSerialiserHelper.SerialiseToXmlDoc(ex.ErrorModel).Beautify();
+                }
+                else
+                {
+                    using (var jsonStream = JsonSerialiserHelper.Serialise(ex.ErrorModel))
                     {
                         using (var sr = new StreamReader(jsonStream))
                         {
-                            queryAsJson = sr.ReadToEnd();
-                        }
-                    }
-
-                    textResult = GetQueryResult(queryAsJson, restApiHelper.PostRawJson);
-                }
-            }
-            catch (WebException ex)
-            {
-                if (ex.Response is HttpWebResponse response)
-                {
-                    using (var responseStream = response.GetResponseStream())
-                    {
-                        if (responseStream == null)
-                        {
-                            throw;
-                        }
-
-                        using (var sr = new StreamReader(responseStream))
-                        {
-                            textResult = sr.ReadToEnd();
+                            textResult = await sr.ReadToEndAsync();
                         }
                     }
                 }
@@ -197,58 +182,58 @@
             return textResult;
         }
 
-        private static string GetQueryResult(string query, Func<string, string, string> queryMethod)
+        private static Task<string> GetQueryResult(string query, Func<string, string, Task<string>> queryMethod)
         {
             var result = queryMethod("/Query", query);
 
             return result;
         }
-
-        private void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = ApiProfiles.Instance.Profiles.Count > 1;
-        }
-
-        private void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-            var profileToDelete = this.SelectedProfile;
-
-            var nextProfile = ApiProfiles.Instance.Profiles.FirstOrDefault(p => p != profileToDelete);
-
-            if (nextProfile != null)
-            {
-                this.SelectedProfile = nextProfile;
-                ApiProfiles.Instance.DeleteProfile(profileToDelete.Name);
-                this.Expander.IsExpanded = false;
-            }
-        }
-
-        private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
-
-        private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-            int count = 1;
-
-            var name = $"Profile ({count:000})";
-
-            while (ApiProfiles.Instance[name] != null)
-            {
-                name = $"Profile ({++count:000})";
-            }
-
-            ApiProfiles.Instance.AddProfile(name);
-
-            var apiProfile = ApiProfiles.Instance[name];
-
-            apiProfile.ApiHostUrl = "https://api.test.payrun.io";
-            apiProfile.ResponseType = "XML";
-
-            this.SelectedProfile = apiProfile;
-
-            this.Expander.IsExpanded = true;
-        }
+        //
+        // private void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        // {
+        //     e.CanExecute = ApiProfiles.Instance.Profiles.Count > 1;
+        // }
+        //
+        // private void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        // {
+        //     var profileToDelete = this.SelectedProfile;
+        //
+        //     var nextProfile = ApiProfiles.Instance.Profiles.FirstOrDefault(p => p != profileToDelete);
+        //
+        //     if (nextProfile != null)
+        //     {
+        //         this.SelectedProfile = nextProfile;
+        //         ApiProfiles.Instance.DeleteProfile(profileToDelete.Name);
+        //         this.Expander.IsExpanded = false;
+        //     }
+        // }
+        //
+        // private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        // {
+        //     e.CanExecute = true;
+        // }
+        //
+        // private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        // {
+        //     int count = 1;
+        //
+        //     var name = $"Profile ({count:000})";
+        //
+        //     while (ApiProfiles.Instance[name] != null)
+        //     {
+        //         name = $"Profile ({++count:000})";
+        //     }
+        //
+        //     ApiProfiles.Instance.AddProfile(name);
+        //
+        //     var apiProfile = ApiProfiles.Instance[name];
+        //
+        //     apiProfile.ApiHostUrl = "https://api.test.payrun.io";
+        //     apiProfile.ResponseType = "XML";
+        //
+        //     this.SelectedProfile = apiProfile;
+        //
+        //     this.Expander.IsExpanded = true;
+        // }
     }
 }

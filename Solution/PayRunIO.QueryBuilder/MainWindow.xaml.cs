@@ -14,14 +14,16 @@
 
     using ICSharpCode.AvalonEdit.Document;
 
-    using PayRunIO.CSharp.SDK;
-    using PayRunIO.Models;
-    using PayRunIO.Models.Reporting;
-    using PayRunIO.Models.Reporting.Conditions;
-    using PayRunIO.Models.Reporting.Filtering;
-    using PayRunIO.Models.Reporting.Outputs.Singular;
-    using PayRunIO.Models.Reporting.Sorting;
+    using PayRunIO.ConnectionControls;
     using PayRunIO.QueryBuilder.ViewModels;
+    using PayRunIO.v2.CSharp.SDK;
+    using PayRunIO.v2.Models;
+    using PayRunIO.v2.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting.Conditions;
+    using PayRunIO.v2.Models.Reporting.Filtering;
+    using PayRunIO.v2.Models.Reporting.Outputs;
+    using PayRunIO.v2.Models.Reporting.Outputs.Singular;
+    using PayRunIO.v2.Models.Reporting.Sorting;
 
     using Button = System.Windows.Controls.Button;
     using ListBox = System.Windows.Controls.ListBox;
@@ -49,6 +51,7 @@
         public MainWindow()
         {
             this.InitializeComponent();
+            this.QueryResultViewer.ConnectionPicker.SelectConnectionByName(AppSettings.Default.LastConnection);
         }
 
         public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register("SelectedItem", typeof(SelectableBase), typeof(MainWindow), new PropertyMetadata(default(SelectableBase), OnSelectedItemChanged));
@@ -155,7 +158,7 @@
 
         private Query CreateNewQuery()
         {
-            var newQuery = new Query { RootNodeName = "MyQuery" };
+            var newQuery = new Query { RootNodeName = "ResultSet" };
 
             this.Source = newQuery;
 
@@ -164,15 +167,7 @@
             var entityGroup = EntityGroup.New("Employees", "Employee", "/Employer/[EmployerKey]/Employees", "[EmployeeKey]");
             newQuery.Groups.Add(entityGroup);
 
-            var condition = When.New("ValueA", "ValueA");
-            entityGroup.Conditions.Add(condition);
-
-            var filterA = EqualTo.New(nameof(Employee.FirstName), "John");
-            var filterB = GreaterThanEqualTo.New(nameof(Employee.StartDate), "2020-04-06");
-            entityGroup.Filters.Add(filterA);
-            entityGroup.Filters.Add(filterB);
-
-            var outputA = RenderProperty.New("PayrollId", nameof(Employee.Code));
+            var outputA = RenderProperty.New("PayrollId", nameof(Employee.Code), output: OutputType.Attribute);
             var outputB = RenderProperty.New("FirstName", nameof(Employee.FirstName));
             var outputC = RenderProperty.New("LastName", nameof(Employee.LastName));
             entityGroup.Outputs.Add(outputA);
@@ -185,25 +180,6 @@
             entityGroup.Ordering.Add(orderB);
 
             return newQuery;
-        }
-
-        private void NewReport_OnClick(object sender, RoutedEventArgs e)
-        {
-            if (!this.ConfirmReplaceSource())
-            {
-                return;
-            }
-
-            this.Source = new ReportDefinition { Title = "MyReport", Readonly = false, ReportQuery = this.CreateNewQuery() };
-
-            AppSettings.Default.LastFileName = string.Empty;
-            this.FileName = string.Empty;
-            this.OriginalState = string.Empty;
-
-            this.TreeViewSource = new SelectableBase[] { new ReportDefinitionViewModel((ReportDefinition)this.Source),  };
-
-            this.OnPropertyChanged(nameof(this.XmlDocument));
-            this.OnPropertyChanged(nameof(this.JsonDocument));
         }
 
         private void AddVariable_OnClick(object sender, RoutedEventArgs e)
@@ -465,6 +441,10 @@
 
         private void Window_OnClosing(object sender, CancelEventArgs e)
         {
+            AppSettings.Default.LastConnection = this.QueryResultViewer.ConnectionPicker.SelectedConnection?.Name;
+            AppSettings.Default.Save();
+            ConnectionCollectionHelper.SaveConnections();
+
             if (this.WindowState == WindowState.Maximized)
             {
                 AppSettings.Default.WindowTop = this.RestoreBounds.Top;
@@ -498,8 +478,6 @@
             {
                 AppSettings.Default.LastTreeIndex = this.QueryTreeView.SelectedItem.Index;
             }
-
-            ApiProfiles.Instance.Save();
         }
 
         private void LoadFromFile(string filePath)

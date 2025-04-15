@@ -2,8 +2,8 @@
 {
     using System;
 
-    using PayRunIO.Models.Reporting;
-    using PayRunIO.Models.Reporting.Outputs;
+    using PayRunIO.v2.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting.Outputs;
 
     public class OutputCollectionViewModel : SelectableCollectionViewModel
     {

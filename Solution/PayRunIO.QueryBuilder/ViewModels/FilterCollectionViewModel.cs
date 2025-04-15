@@ -2,9 +2,9 @@
 {
     using System;
 
-    using PayRunIO.Models.Reporting;
-    using PayRunIO.Models.Reporting.Filtering;
-    using PayRunIO.Models.Reporting.Outputs.Aggregate;
+    using PayRunIO.v2.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting.Filtering;
+    using PayRunIO.v2.Models.Reporting.Outputs.Aggregate;
 
     public class FilterCollectionViewModel : SelectableCollectionViewModel
     {

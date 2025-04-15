@@ -1,6 +1,6 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using PayRunIO.Models.Reporting.Sorting;
+    using PayRunIO.v2.Models.Reporting.Sorting;
 
     public class OrderingViewModel : SelectableElementViewModel<OrderByBase>
     {

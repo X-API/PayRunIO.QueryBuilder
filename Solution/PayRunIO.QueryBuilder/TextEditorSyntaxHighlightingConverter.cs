@@ -6,21 +6,22 @@
 
     using ICSharpCode.AvalonEdit.Highlighting;
 
+    using PayRunIO.ConnectionControls.Models;
+
     public class TextEditorSyntaxHighlightingConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var valueAsString = value as string;
+            string definitionName;
 
-            if (string.IsNullOrEmpty(valueAsString))
+            if (value == null)
             {
-                return "XML";
+                definitionName = "XML";
             }
-
-            var definitionName = 
-                valueAsString.Equals("XML", StringComparison.InvariantCultureIgnoreCase)
-                    ? "XML"
-                    : "JavaScript";
+            else
+            {
+                definitionName = (ContentType)value == ContentType.XML ? "XML" : "JavaScript";
+            }
 
             return HighlightingManager.Instance.GetDefinition(definitionName);
         }

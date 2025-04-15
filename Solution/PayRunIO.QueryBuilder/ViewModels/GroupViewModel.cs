@@ -1,6 +1,6 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using PayRunIO.Models.Reporting;
+    using PayRunIO.v2.Models.Reporting;
 
     public class GroupViewModel : SelectableElementWithCollectionViewModel<EntityGroup>
     {

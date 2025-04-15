@@ -1,7 +1,7 @@
 ﻿namespace PayRunIO.QueryBuilder.ViewModels
 {
-    using PayRunIO.Models.Reporting.Outputs;
-    using PayRunIO.Models.Reporting.Outputs.Aggregate;
+    using PayRunIO.v2.Models.Reporting.Outputs;
+    using PayRunIO.v2.Models.Reporting.Outputs.Aggregate;
 
     public class OutputViewModel : SelectableElementWithCollectionViewModel<OutputBase>
     {
