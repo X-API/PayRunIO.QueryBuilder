@@ -1268,6 +1268,7 @@
                             SyntaxHighlighting="XML" 
                             FontSize="10pt" 
                             ShowLineNumbers="True"
+                            x:Name="XmlTextEditor"
                             Document="{Binding ElementName=Window1, Path=XmlDocument, Mode=OneWay}">
                             <avalonEdit:TextEditor.Options>
                                 <avalonEdit:TextEditorOptions ShowSpaces="True" ShowTabs="True"/>
@@ -1285,7 +1286,27 @@
                                 </ContextMenu>
                             </avalonEdit:TextEditor.ContextMenu>
                         </avalonEdit:TextEditor>
-                        <Button Margin="5 5 25 5" Padding="2" VerticalAlignment="Top" HorizontalAlignment="Right" Click="RefreshQuery_OnClick">
+                        <Button 
+                            Margin="5 5 65 5" 
+                            Padding="2" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Right" 
+                            Click="UpdateQuery_OnClick" 
+                            Name="UploadXml">
+                            <Button.ToolTip>
+                                <TextBlock>Apply XML text.</TextBlock>
+                            </Button.ToolTip>
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularUpload}" Width="24" Height="24" />
+                        </Button>
+                        <Button 
+                            Margin="5 5 25 5" 
+                            Padding="2" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Right" 
+                            Click="RefreshQuery_OnClick">
+                            <Button.ToolTip>
+                                <TextBlock>Reset XML text.</TextBlock>
+                            </Button.ToolTip>
                             <Image Source="{iconPacks:BoxIconsImage Kind=RegularRefresh}" Width="24" Height="24" />
                         </Button>
                     </Grid>
@@ -1300,6 +1321,7 @@
                             SyntaxHighlighting="JavaScript" 
                             FontSize="10pt" 
                             ShowLineNumbers="True"
+                            x:Name="JsonTextEditor"
                             Document="{Binding ElementName=Window1, Path=JsonDocument, Mode=OneWay}">
                             <avalonEdit:TextEditor.Options>
                                 <avalonEdit:TextEditorOptions ShowSpaces="True" ShowTabs="True" />
@@ -1317,7 +1339,27 @@
                                 </ContextMenu>
                             </avalonEdit:TextEditor.ContextMenu>
                         </avalonEdit:TextEditor>
-                        <Button Margin="5 5 25 5" Padding="2" VerticalAlignment="Top" HorizontalAlignment="Right" Click="RefreshQuery_OnClick">
+                        <Button 
+                            Margin="5 5 65 5" 
+                            Padding="2" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Right" 
+                            Click="UpdateQuery_OnClick" 
+                            Name="UploadJson">
+                            <Button.ToolTip>
+                                <TextBlock>Apply JSON text changes.</TextBlock>
+                            </Button.ToolTip>
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularUpload}" Width="24" Height="24" />
+                        </Button>
+                        <Button 
+                            Margin="5 5 25 5" 
+                            Padding="2" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Right" 
+                            Click="RefreshQuery_OnClick">
+                            <Button.ToolTip>
+                                <TextBlock>Reset JSON text.</TextBlock>
+                            </Button.ToolTip>
                             <Image Source="{iconPacks:BoxIconsImage Kind=RegularRefresh}" Width="24" Height="24" />
                         </Button>
                     </Grid>

@@ -1,12 +1,16 @@
 ﻿namespace PayRunIO.QueryBuilder
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Collections.Specialized;
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
+    using System.Text;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
@@ -19,13 +23,12 @@
     using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.v2.Models;
     using PayRunIO.v2.Models.Reporting;
-    using PayRunIO.v2.Models.Reporting.Conditions;
-    using PayRunIO.v2.Models.Reporting.Filtering;
     using PayRunIO.v2.Models.Reporting.Outputs;
     using PayRunIO.v2.Models.Reporting.Outputs.Singular;
     using PayRunIO.v2.Models.Reporting.Sorting;
 
     using Button = System.Windows.Controls.Button;
+    using File = PayRunIO.v2.Models.File;
     using ListBox = System.Windows.Controls.ListBox;
     using MessageBox = System.Windows.MessageBox;
     using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -46,7 +49,7 @@
 
         private SelectableBase[] treeViewSource;
 
-        private DtoBase source;
+        private Query source;
 
         public MainWindow()
         {
@@ -97,11 +100,11 @@
 
         public ObservableCollection<string> FileHistory { get; } = new ObservableCollection<string>();
 
-        public TextDocument XmlDocument => new TextDocument(this.SourceAsXmlDoc().OuterXml);
+        public TextDocument XmlDocument => new TextDocument(this.source?.ToXml() ?? string.Empty);
 
-        public TextDocument JsonDocument => new TextDocument(new StreamReader(JsonSerialiserHelper.Serialise(this.SourceAsXmlDoc(false))).ReadToEnd());
+        public TextDocument JsonDocument => new TextDocument(this.Source?.ToJson() ?? string.Empty);
 
-        public DtoBase Source
+        public Query Source
         {
             get => this.source;
             set
@@ -119,18 +122,6 @@
                 this.treeViewSource = value;
                 this.OnPropertyChanged(nameof(this.TreeViewSource));
             }
-        }
-
-        private XmlDocument SourceAsXmlDoc(bool preserveWhiteSpace = true)
-        {
-            var xmlDoc = new XmlDocument { PreserveWhitespace = preserveWhiteSpace };
-
-            if (this.Source != null)
-            {
-                xmlDoc.Load(XmlSerialiserHelper.Serialise(this.Source));
-            }
-
-            return xmlDoc;
         }
 
         public string FileTypeFilter
@@ -190,28 +181,13 @@
 
             var nameValuePair = NameValuePair.New("[Name]", "Value");
 
-            var targetQuery = this.GetTargetQuery();
+            var targetQuery = this.Source;
 
             targetQuery.Variables.Add(nameValuePair);
 
             list.Items.Refresh();
 
             list.SelectedItem = nameValuePair;
-        }
-
-        private Query GetTargetQuery()
-        {
-            Query targetQuery;
-            if (this.Source is ReportDefinition reportDefinition)
-            {
-                targetQuery = reportDefinition.ReportQuery;
-            }
-            else
-            {
-                targetQuery = (Query)this.Source;
-            }
-
-            return targetQuery;
         }
 
         private void RemoveVariable_OnClick(object sender, RoutedEventArgs e)
@@ -224,7 +200,7 @@
 
             foreach (var nameValuePair in selectedItems)
             {
-                this.GetTargetQuery().Variables.Remove(nameValuePair);
+                this.Source.Variables.Remove(nameValuePair);
             }
 
             list.Items.Refresh();
@@ -312,12 +288,7 @@
 
         private bool IsDirty()
         {
-            var currentState = 
-                this.Source == null 
-                    ? string.Empty 
-                    : XmlSerialiserHelper.SerialiseToXmlDoc(this.Source).InnerXml;
-
-            return this.OriginalState != currentState;
+            return this.OriginalState != (this.Source?.ToXml() ?? string.Empty);
         }
 
         private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -378,13 +349,9 @@
 
             SelectableBase root;
 
-            if (this.Source is ReportDefinition reportDefinition)
+            if (this.Source != null)
             {
-                root = new ReportDefinitionViewModel(reportDefinition);
-            }
-            else if (this.source is Query newQuery)
-            {
-                root = new QueryViewModel(newQuery);
+                root = new QueryViewModel(this.Source);
             }
             else
             {
@@ -478,6 +445,14 @@
             {
                 AppSettings.Default.LastTreeIndex = this.QueryTreeView.SelectedItem.Index;
             }
+
+            if (this.IsDirty())
+            {
+                if (!this.ConfirmReplaceSource())
+                {
+                    e.Cancel = true;
+                }
+            }
         }
 
         private void LoadFromFile(string filePath)
@@ -507,13 +482,9 @@
                         xmlDoc.Load(fileStream);
                     }
 
-                    if (xmlDoc.DocumentElement.Name == nameof(Query))
+                    if (xmlDoc.DocumentElement?.Name == nameof(Query))
                     {
                         this.Source = XmlSerialiserHelper.Deserialise<Query>(xmlDoc.InnerXml);
-                    }
-                    else if (xmlDoc.DocumentElement.Name == nameof(ReportDefinition))
-                    {
-                        this.Source = XmlSerialiserHelper.Deserialise<ReportDefinition>(xmlDoc.InnerXml);
                     }
                     else
                     {
@@ -529,28 +500,7 @@
 
             this.OriginalState = XmlSerialiserHelper.SerialiseToXmlDoc(this.Source).InnerXml;
 
-            if (this.Source is ReportDefinition reportDefinition)
-            {
-                var reportQuery = reportDefinition.ReportQuery;
-
-                var queryViewModel = new QueryViewModel(reportQuery);
-
-                var reportDefinitionViewModel = new ReportDefinitionViewModel(reportDefinition);
-
-                reportDefinitionViewModel.Children.Clear();
-                reportDefinitionViewModel.Children.Add(queryViewModel);
-
-                this.TreeViewSource = new SelectableBase[] { reportDefinitionViewModel };
-
-                var queryA = (this.treeViewSource[0] as ReportDefinitionViewModel)?.Element.ReportQuery;
-                var queryB = reportQuery;
-                var queryC = ((ReportDefinition)this.Source).ReportQuery;
-
-            }
-            else if (this.Source is Query sourceQuery)
-            {
-                this.TreeViewSource = new SelectableBase[] { new QueryViewModel(sourceQuery) };
-            }
+            this.TreeViewSource = new SelectableBase[] { new QueryViewModel(this.Source) };
 
             AppSettings.Default.LastFileName = filePath;
 
@@ -576,20 +526,13 @@
 
         private void SaveSource(string filePath)
         {
-            var xmlDoc = this.SourceAsXmlDoc(false);
-
             if (filePath.EndsWith(".json", StringComparison.InvariantCultureIgnoreCase))
             {
-                using (var sw = new StreamWriter(filePath))
-                using (var sr = new StreamReader(JsonSerialiserHelper.Serialise(xmlDoc)))
-                {
-                    sw.Write(sr.ReadToEnd());
-                    sw.Flush();
-                }
+                System.IO.File.WriteAllText(filePath, this.source.ToJson());
             }
             else
             {
-                xmlDoc.Save(filePath);
+                System.IO.File.WriteAllText(filePath, this.source.ToXml());
             }
 
             if (this.FileHistory.Contains(filePath))
@@ -607,7 +550,7 @@
             }
 
             this.FileName = filePath;
-            this.OriginalState = XmlSerialiserHelper.SerialiseToXmlDoc(this.Source).InnerXml;
+            this.OriginalState = this.Source.ToXml();
         }
 
         private void RefreshQuery_OnClick(object sender, RoutedEventArgs e)
@@ -648,10 +591,7 @@
 
         private void Exit_OnClick(object sender, RoutedEventArgs e)
         {
-            if (this.ConfirmReplaceSource())
-            {
-                Application.Current.Shutdown();
-            }
+            this.Close();
         }
 
         private void OpenCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -709,6 +649,92 @@
             {
                 // Load selected file
                 this.LoadFromFile(this.FileName);
+            }
+        }
+
+        private void UpdateQuery_OnClick(object sender, RoutedEventArgs e)
+        {
+            Query query = null;
+
+            if (e.OriginalSource is Button button)
+            {
+                Func<Query> builder;
+
+                if (button == this.UploadXml)
+                {
+                    builder = () => XmlSerialiserHelper.Deserialise<Query>(this.XmlTextEditor.Text);
+                }
+                else if (button == this.UploadJson)
+                {
+                    builder = () =>
+                        {
+                            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(this.JsonTextEditor.Text)))
+                            {
+                                var jsonToXml = JsonSerialiserHelper.ConvertJsonStreamToXmlDocument(stream);
+                                return XmlSerialiserHelper.Deserialise<Query>(jsonToXml.InnerXml);
+                            }
+                        };
+                }
+                else
+                {
+                    return;
+                }
+
+                try
+                {
+                    query = builder();
+                }
+                catch (Exception ex)
+                {
+                    var messageFirstLine = ex.Message.Split(Environment.NewLine).First();
+
+                    MessageBox.Show(this, $"Unable to apply XML query: {messageFirstLine}", "Invalid Query Definition", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+            else
+            {
+                return;
+            }
+
+            var originalItemsFlatList = this.SelectableItemsAsFlatList(this.TreeViewSource).ToArray();
+
+            var newTreeViewSource = new SelectableBase[] { new QueryViewModel(query) };
+
+            var newItemsFlatList = this.SelectableItemsAsFlatList(newTreeViewSource).ToArray();
+
+            for (int i = 0; i < originalItemsFlatList.Length; i++)
+            {
+                var original = originalItemsFlatList[i];
+
+                if (i >= newItemsFlatList.Length)
+                {
+                    break;
+                }
+
+                var newItem = newItemsFlatList[i];
+
+                newItem.IsExpanded = original.IsExpanded;
+                newItem.IsSelected = original.IsSelected;
+            }
+
+            this.Source = query;
+            this.TreeViewSource = newTreeViewSource;
+        }
+
+        private IEnumerable<SelectableBase> SelectableItemsAsFlatList(SelectableBase[] source)
+        {
+            foreach (var item in source)
+            {
+                yield return item;
+
+                if (item is IHaveChildren parent && parent.Children.Any())
+                {
+                    foreach (var child in this.SelectableItemsAsFlatList(parent.Children.ToArray()))
+                    {
+                        yield return child;
+                    }
+                }
             }
         }
     }
