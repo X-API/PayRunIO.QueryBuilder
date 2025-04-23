@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.35827.206
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayRunIO.QueryBuilder", "PayRunIO.QueryBuilder\PayRunIO.QueryBuilder.csproj", "{22669AAC-73AB-41AC-BCF1-84CB7A7AEC1C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayRunIO.ConnectionControls", "..\..\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls.csproj", "{10C14C7A-1D4A-47E8-909B-1AB2B6C951EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayRunIO.ConnectionControls", "..\..\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls.csproj", "{A935251C-8320-4C07-85BF-F94644DBD32A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{22669AAC-73AB-41AC-BCF1-84CB7A7AEC1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22669AAC-73AB-41AC-BCF1-84CB7A7AEC1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22669AAC-73AB-41AC-BCF1-84CB7A7AEC1C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{10C14C7A-1D4A-47E8-909B-1AB2B6C951EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{10C14C7A-1D4A-47E8-909B-1AB2B6C951EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{10C14C7A-1D4A-47E8-909B-1AB2B6C951EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{10C14C7A-1D4A-47E8-909B-1AB2B6C951EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A935251C-8320-4C07-85BF-F94644DBD32A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A935251C-8320-4C07-85BF-F94644DBD32A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A935251C-8320-4C07-85BF-F94644DBD32A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A935251C-8320-4C07-85BF-F94644DBD32A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
