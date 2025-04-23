@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\PayRunIO.DataExplorer\Solution\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls.csproj" />
+    <ProjectReference Include="..\..\..\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls.csproj" />
   </ItemGroup>
 
   <ItemGroup>
