@@ -345,18 +345,15 @@
             else
             {
                 this.Source = this.CreateNewQuery();
+                this.OriginalState = XmlSerialiserHelper.SerialiseToXmlDoc(this.source).InnerXml;
             }
 
-            SelectableBase root;
-
-            if (this.Source != null)
-            {
-                root = new QueryViewModel(this.Source);
-            }
-            else
+            if (this.Source == null)
             {
                 return;
             }
+
+            SelectableBase root = new QueryViewModel(this.Source);
 
             var selectedItem = this.FindByIndex(root, AppSettings.Default.LastTreeIndex);
 
@@ -409,7 +406,7 @@
         private void Window_OnClosing(object sender, CancelEventArgs e)
         {
             AppSettings.Default.LastConnection = this.QueryResultViewer.ConnectionPicker.SelectedConnection?.Name;
-            AppSettings.Default.Save();
+
             ConnectionCollectionHelper.SaveConnections();
 
             if (this.WindowState == WindowState.Maximized)
@@ -445,6 +442,8 @@
             {
                 AppSettings.Default.LastTreeIndex = this.QueryTreeView.SelectedItem.Index;
             }
+
+            AppSettings.Default.Save();
 
             if (this.IsDirty())
             {
