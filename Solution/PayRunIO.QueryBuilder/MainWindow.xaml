@@ -15,6 +15,8 @@
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:viewModels="clr-namespace:PayRunIO.QueryBuilder.ViewModels"
+        xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
+        xmlns:helpers="clr-namespace:PayRunIO.QueryBuilder.Helpers"
         mc:Ignorable="d"
         SourceInitialized="Window_OnSourceInitialised"
         Closing="Window_OnClosing"
@@ -27,8 +29,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
-                    <local:ObjectToTypeNameConverter x:Key="ObjectToTypeNameConverter" />
-                    <local:QueryTypeLists x:Key="QueryTypes" />
+                    <converters:ObjectToTypeNameConverter x:Key="ObjectToTypeNameConverter" />
+                    <helpers:QueryTypeLists x:Key="QueryTypes" />
                     <ObjectDataProvider x:Key="OutputTypes" MethodName="GetValues" ObjectType="{x:Type system:Enum}">
                         <ObjectDataProvider.MethodParameters>
                             <x:Type TypeName="outputs:OutputType"/>
@@ -45,7 +47,7 @@
                         </ObjectDataProvider.MethodParameters>
                     </ObjectDataProvider>
                 </ResourceDictionary>
-                <ResourceDictionary Source="CommonStyles.xaml" />
+                <ResourceDictionary Source="/Helpers/CommonStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
 
@@ -78,6 +80,11 @@
                     <MenuItem Header="_SaveAs" Click="SaveQueryAs_OnClick" />
                     <Separator />
                     <MenuItem Header="_Exit" Click="Exit_OnClick" />
+                </MenuItem>
+                <MenuItem Header="_AI Assistant">
+                    <MenuItem Header="_Create New Query" Click="AiCreate_OnClick" />
+                    <MenuItem Header="_Edit Query" Click="AiEdit_OnClick" />
+                    <MenuItem Header="_Discuss Query" Click="AiDiscuss_OnClick" />
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header="_About" Click="About_OnClick"></MenuItem>
@@ -119,9 +126,13 @@
             </Border>
         </DockPanel>
 
-        <local:QueryTreeView Grid.Column="0" Grid.Row="1" Margin="5" x:Name="QueryTreeView" TreeViewSource="{Binding ElementName=Window1, Path=TreeViewSource}" SelectedItem="{Binding ElementName=Window1, Path=SelectedItem, Mode=TwoWay}">
-
-        </local:QueryTreeView>
+        <local:QueryTreeView 
+            Grid.Column="0" 
+            Grid.Row="1" 
+            Margin="5" 
+            x:Name="QueryTreeView" 
+            TreeViewSource="{Binding ElementName=Window1, Path=TreeViewSource}" SelectedItem="{Binding ElementName=Window1, Path=SelectedItem, Mode=TwoWay}"
+            />
 
         <GridSplitter Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Background="LightBlue" ShowsPreview="True" Width="5" Height="200" />
 

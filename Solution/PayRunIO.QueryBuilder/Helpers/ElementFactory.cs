@@ -1,4 +1,4 @@
-﻿namespace PayRunIO.QueryBuilder
+﻿namespace PayRunIO.QueryBuilder.Helpers
 {
     using System;
     using System.Collections.ObjectModel;

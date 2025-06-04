@@ -10,6 +10,7 @@
 
     using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.QueryBuilder.ViewModels;
+    using PayRunIO.QueryBuilder.Helpers;
 
     /// <summary>
     /// Interaction logic for QueryTreeView.xaml

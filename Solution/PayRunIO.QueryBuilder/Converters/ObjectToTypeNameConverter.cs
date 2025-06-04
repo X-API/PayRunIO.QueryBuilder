@@ -1,4 +1,4 @@
-﻿namespace PayRunIO.QueryBuilder
+﻿namespace PayRunIO.QueryBuilder.Converters
 {
     using System;
     using System.Text.RegularExpressions;

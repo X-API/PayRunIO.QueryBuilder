@@ -18,11 +18,13 @@
   <ItemGroup>
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="MahApps.Metro.IconPacks.BoxIcons" Version="5.1.0" />
-	<PackageReference Include="PayRunIO.CSharp.SDK" Version="25.26.4.110" />
+    <PackageReference Include="Markdown.Xaml" Version="1.0.0" />
+	<PackageReference Include="PayRunIO.CSharp.SDK" Version="25.26.4.134" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls\PayRunIO.ConnectionControls.csproj" />
+    <ProjectReference Include="..\PayRunIO.RqlAssistant.Service\PayRunIO.RqlAssistant.Service.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="AppSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>AppSettings.Designer.cs</LastGenOutput>

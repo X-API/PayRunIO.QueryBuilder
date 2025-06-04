@@ -19,7 +19,10 @@
     using ICSharpCode.AvalonEdit.Document;
 
     using PayRunIO.ConnectionControls;
+    using PayRunIO.ConnectionControls.Models;
+    using PayRunIO.QueryBuilder.Helpers;
     using PayRunIO.QueryBuilder.ViewModels;
+    using PayRunIO.RqlAssistant.Service;
     using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.v2.Models;
     using PayRunIO.v2.Models.Reporting;
@@ -696,6 +699,11 @@
                 return;
             }
 
+            this.UpdateQuery(query);
+        }
+
+        public void UpdateQuery(Query query)
+        {
             var originalItemsFlatList = this.SelectableItemsAsFlatList(this.TreeViewSource).ToArray();
 
             var newTreeViewSource = new SelectableBase[] { new QueryViewModel(query) };
@@ -735,6 +743,48 @@
                     }
                 }
             }
+        }
+
+        private void AiEdit_OnClick(object sender, RoutedEventArgs e)
+        {
+            var aiAssistantWindow = 
+                new AiAssistantWindow
+                    {
+                        Owner = this, 
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        QuestionBox = { Text = "Please amended this RQL statement as follows:\r\n\r\n- My change goes here..." },
+                        Query = this.Source
+                    };
+
+            aiAssistantWindow.ShowDialog();
+        }
+
+        private void AiCreate_OnClick(object sender, RoutedEventArgs e)
+        {
+            var aiAssistantWindow = 
+                new AiAssistantWindow
+                    {
+                        Owner = this,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        QuestionBox = { Text = "Create a new RQL statement that:\r\n- Lists all employees\r\n\r\nParameters:\r\n* Employer Key: ER001" },
+                        Query = null
+                };
+
+            aiAssistantWindow.ShowDialog();
+        }
+
+        private void AiDiscuss_OnClick(object sender, RoutedEventArgs e)
+        {
+            var aiAssistantWindow =
+                new AiAssistantWindow
+                    {
+                        Owner = this,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        QuestionBox = { Text = "Please clearly describe what this query does." },
+                        Query = this.Source
+                    };
+
+            aiAssistantWindow.ShowDialog();
         }
     }
 }

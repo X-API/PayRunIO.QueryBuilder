@@ -1,0 +1,3862 @@
+[
+  {
+    "ClassName": "GetActivePayInstructionsReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/ACTPAYINS/run",
+    "OperationId": "GetActivePayInstructionsReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the active pay instructions report",
+    "Description": "Returns the result of the executed active pay instructions report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetAEAssessmentFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/AEAssessment/{aeAssessmentId}",
+    "OperationId": "GetAEAssessmentFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get the auto enrolment assessment",
+    "Description": "Gets the auto enrolment assessment from the specified employee",
+    "Tags": [
+      "AEAssessment",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "AEAssessment"
+  },
+  {
+    "ClassName": "GetAEAssessmentsFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/AEAssessments",
+    "OperationId": "GetAEAssessmentsFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get the auto enrolment assessments",
+    "Description": "Gets all auto enrolment assessments from the specified employee",
+    "Tags": [
+      "AEAssessment",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAEAssessmentsFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/AEAssessments",
+    "OperationId": "GetAEAssessmentsFromPayRun",
+    "Verb": "GET",
+    "Summary": "Get the auto enrolment assessments",
+    "Description": "Gets all auto enrolment assessments from the specified pay run",
+    "Tags": [
+      "AEAssessment",
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllCisInstructionTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisInstructions/Tags",
+    "OperationId": "GetAllCisInstructionTags",
+    "Verb": "GET",
+    "Summary": "Get all CIS instruction tags",
+    "Description": "Gets all the CIS instruction tags",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllCisLineTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisLines/Tags",
+    "OperationId": "GetAllCisLineTags",
+    "Verb": "GET",
+    "Summary": "Get all CIS line tags",
+    "Description": "Gets all the CIS line tags",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllCisLineTypeTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisLineTypes/Tags",
+    "OperationId": "GetAllCisLineTypeTags",
+    "Verb": "GET",
+    "Summary": "Get all CIS line type tags",
+    "Description": "Gets all the CIS line type tags",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllEmployeeTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employees/Tags",
+    "OperationId": "GetAllEmployeeTags",
+    "Verb": "GET",
+    "Summary": "Get all employee tags",
+    "Description": "Gets all the employee tags",
+    "Tags": [
+      "Tagging",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllEmployerTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employers/Tags",
+    "OperationId": "GetAllEmployerTags",
+    "Verb": "GET",
+    "Summary": "Get all employer tags",
+    "Description": "Gets all the employer tags",
+    "Tags": [
+      "Tagging",
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllHolidaySchemeTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidaySchemes/Tags",
+    "OperationId": "GetAllHolidaySchemeTags",
+    "Verb": "GET",
+    "Summary": "Get all holiday scheme tags",
+    "Description": "Gets all the holiday scheme tags",
+    "Tags": [
+      "Tagging",
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllJournalLinesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalLines/Tag/{tagId}",
+    "OperationId": "GetAllJournalLinesWithTag",
+    "Verb": "GET",
+    "Summary": "Get links to tagged journal lines",
+    "Description": "Gets the journal lines with the specified tag",
+    "Tags": [
+      "Tagging",
+      "JournalLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllJournalLineTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalLines/Tags",
+    "OperationId": "GetAllJournalLineTags",
+    "Verb": "GET",
+    "Summary": "Get all journal line tags",
+    "Description": "Gets all the journal line tags",
+    "Tags": [
+      "Tagging",
+      "JournalLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPayCodeTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCodes/Tags",
+    "OperationId": "GetAllPayCodeTags",
+    "Verb": "GET",
+    "Summary": "Get all pay code tags",
+    "Description": "Gets all the pay code tags",
+    "Tags": [
+      "Tagging",
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPayInstructionTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayInstructions/Tags",
+    "OperationId": "GetAllPayInstructionTags",
+    "Verb": "GET",
+    "Summary": "Get all pay instruction tags",
+    "Description": "Gets all the pay instruction tags",
+    "Tags": [
+      "Tagging",
+      "PayInstruction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPayLineTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayLines/Tags",
+    "OperationId": "GetAllPayLineTags",
+    "Verb": "GET",
+    "Summary": "Get all pay line tags",
+    "Description": "Gets all the pay line tags",
+    "Tags": [
+      "Tagging",
+      "PayLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPayRunTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRuns/Tags",
+    "OperationId": "GetAllPayRunTags",
+    "Verb": "GET",
+    "Summary": "Get all pay run tags",
+    "Description": "Gets all the pay run tags",
+    "Tags": [
+      "Tagging",
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPayScheduleTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedules/Tags",
+    "OperationId": "GetAllPayScheduleTags",
+    "Verb": "GET",
+    "Summary": "Get all pay schedule tags",
+    "Description": "Gets all the pay schedule tags",
+    "Tags": [
+      "Tagging",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPermissionsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permissions/Tag/{tagId}",
+    "OperationId": "GetAllPermissionsWithTag",
+    "Verb": "GET",
+    "Summary": "Get links to tagged Permissions",
+    "Description": "Gets the Permissions with the specified tag",
+    "Tags": [
+      "Tagging",
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllPermissionTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permissions/Tags",
+    "OperationId": "GetAllPermissionTags",
+    "Verb": "GET",
+    "Summary": "Get all Permission tags",
+    "Description": "Get all tags from all Permissions",
+    "Tags": [
+      "Tagging",
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllRtiTransactionTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransactions/Tags",
+    "OperationId": "GetAllRtiTransactionTags",
+    "Verb": "GET",
+    "Summary": "Get all RTI transaction tags",
+    "Description": "Gets all the RTI transaction tags",
+    "Tags": [
+      "Tagging",
+      "RTI"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllSubContractorTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractors/Tags",
+    "OperationId": "GetAllSubContractorTags",
+    "Verb": "GET",
+    "Summary": "Get all sub contractor tags",
+    "Description": "Gets all the sub contractor tags",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllThirdPartyTransactionsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ThirdPartyTransactions/Tag/{tagId}",
+    "OperationId": "GetAllThirdPartyTransactionsWithTag",
+    "Verb": "GET",
+    "Summary": "Get links to tagged third party transactions",
+    "Description": "Gets the third party transactions with the specified tag",
+    "Tags": [
+      "Tagging",
+      "ThirdPartyTransaction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllThirdPartyTransactionTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ThirdPartyTransactions/Tags",
+    "OperationId": "GetAllThirdPartyTransactionTags",
+    "Verb": "GET",
+    "Summary": "Get all third party transaction tags",
+    "Description": "Gets all the third party transaction tags",
+    "Tags": [
+      "Tagging",
+      "ThirdPartyTransaction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllUsersWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Users/Tag/{tagId}",
+    "OperationId": "GetAllUsersWithTag",
+    "Verb": "GET",
+    "Summary": "Get links to tagged users",
+    "Description": "Gets the users with the specified tag",
+    "Tags": [
+      "Tagging",
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAllUserTagsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Users/Tags",
+    "OperationId": "GetAllUserTags",
+    "Verb": "GET",
+    "Summary": "Get all user tags",
+    "Description": "Get all tags from all users",
+    "Tags": [
+      "Tagging",
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetAoeLiabilityReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/AOELIABILITY/run",
+    "OperationId": "GetAoeLiabilityReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the AOE liability report",
+    "Description": "Returns the result of the executed AOE liability report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetApplicationSecretRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Secret/{secretId}",
+    "OperationId": "GetApplicationSecret",
+    "Verb": "GET",
+    "Summary": "Get Application secret",
+    "Description": "Get the public visible Application secret object",
+    "Tags": [
+      "Application"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "ApplicationSecret"
+  },
+  {
+    "ClassName": "GetApplicationSecretsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Secrets",
+    "OperationId": "GetApplicationSecrets",
+    "Verb": "GET",
+    "Summary": "Get all Application secret links",
+    "Description": "Get all the Application secret links",
+    "Tags": [
+      "Application"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetBatchJobInfoRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Batch/{jobId}/Info",
+    "OperationId": "GetBatchJobInfo",
+    "Verb": "GET",
+    "Summary": "Get the Batch job information",
+    "Description": "Return the the Batch job information",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetBatchJobProgressRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Batch/{jobId}/Progress",
+    "OperationId": "GetBatchJobProgress",
+    "Verb": "GET",
+    "Summary": "Get the Batch job progress",
+    "Description": "Return the the Batch job progress",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetBatchJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Batch",
+    "OperationId": "GetBatchJobs",
+    "Verb": "GET",
+    "Summary": "Get all Batch jobs",
+    "Description": "Gets all the Batch jobs",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetBatchJobStatusRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Batch/{jobId}/Status",
+    "OperationId": "GetBatchJobStatus",
+    "Verb": "GET",
+    "Summary": "Get the Batch job status",
+    "Description": "Return the the Batch job status",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetCisInstructionFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisInstruction/{cisInstructionId}",
+    "OperationId": "GetCisInstructionFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Get CIS instruction from sub contractor",
+    "Description": "Gets the specified CIS instruction from sub contractor.",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "CisInstruction"
+  },
+  {
+    "ClassName": "GetCisInstructionsFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisInstructions",
+    "OperationId": "GetCisInstructionsFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Get CIS instructions from sub contractor.",
+    "Description": "Get links to all CIS instructions for the specified sub contractor.",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisInstructionsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisInstructions/Tag/{tagId}",
+    "OperationId": "GetCisInstructionsWithTag",
+    "Verb": "GET",
+    "Summary": "Get CIS instructions with tag",
+    "Description": "Gets the CIS instruction with the tag",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisJobInfoRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Cis/{jobId}/Info",
+    "OperationId": "GetCisJobInfo",
+    "Verb": "GET",
+    "Summary": "Get the CIS job information",
+    "Description": "Return the the CIS job information",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetCisJobProgressRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Cis/{jobId}/Progress",
+    "OperationId": "GetCisJobProgress",
+    "Verb": "GET",
+    "Summary": "Get the CIS job progress",
+    "Description": "Return the the CIS job progress",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetCisJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Cis",
+    "OperationId": "GetCisJobs",
+    "Verb": "GET",
+    "Summary": "Get all CIS jobs",
+    "Description": "Gets all the CIS jobs",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisJobStatusRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Cis/{jobId}/Status",
+    "OperationId": "GetCisJobStatus",
+    "Verb": "GET",
+    "Summary": "Get the CIS job status",
+    "Description": "Return the the CIS job status",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetCisLineFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisLine/{cisLineId}",
+    "OperationId": "GetCisLineFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Get CIS line from sub contractor",
+    "Description": "Gets the specified CIS line from sub contractor.",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "CisLine"
+  },
+  {
+    "ClassName": "GetCisLinesFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisLines",
+    "OperationId": "GetCisLinesFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Get CIS lines from sub contractor.",
+    "Description": "Get links to all CIS lines for the specified sub contractor.",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisLinesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisLines/Tag/{tagId}",
+    "OperationId": "GetCisLinesWithTag",
+    "Verb": "GET",
+    "Summary": "Get CIS lines with tag",
+    "Description": "Gets the CIS line with the tag",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisLineTypeFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisLineType/{cisLineTypeId}",
+    "OperationId": "GetCisLineTypeFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get CIS line type from employer",
+    "Description": "Gets the specified CIS line type from employer.",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "CisLineType"
+  },
+  {
+    "ClassName": "GetCisLineTypesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisLineTypes",
+    "OperationId": "GetCisLineTypesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get CIS line types from employer.",
+    "Description": "Get links to all CIS line types for the specified employer.",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisLineTypesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisLineTypes/Tag/{tagId}",
+    "OperationId": "GetCisLineTypesWithTag",
+    "Verb": "GET",
+    "Summary": "Get CIS line types with tag",
+    "Description": "Gets the CIS line type with the tag",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCisTransactionFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisTransaction/{cisTransactionId}",
+    "OperationId": "GetCisTransactionFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get the CIS transaction",
+    "Description": "Returns the specified CIS transaction",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "CisTransaction"
+  },
+  {
+    "ClassName": "GetCisTransactionsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisTransactions",
+    "OperationId": "GetCisTransactionsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get all CIS transactions for the employer",
+    "Description": "Get links for all CIS transactions for the specified employer",
+    "Tags": [
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCommentariesFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Commentaries",
+    "OperationId": "GetCommentariesFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get links to all commentaries for the specified employee",
+    "Description": "Get links to all commentaries for the specified employee.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCommentariesFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/Commentaries",
+    "OperationId": "GetCommentariesFromPayRun",
+    "Verb": "GET",
+    "Summary": "Get links to all commentaries for the specified pay run",
+    "Description": "Get links to all commentaries for the specified pay run.",
+    "Tags": [
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetCommentaryFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Commentary/{commentaryId}",
+    "OperationId": "GetCommentaryFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get commentary from employee",
+    "Description": "Gets the specified commentary report from the employee",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Commentary"
+  },
+  {
+    "ClassName": "GetCommentaryFromPayRunByEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/Employee/{employeeId}/Commentary",
+    "OperationId": "GetCommentaryFromPayRunByEmployee",
+    "Verb": "GET",
+    "Summary": "Get commentary from payrun by specified employee.",
+    "Description": "Get commentary from payrun by specified employee.",
+    "Tags": [
+      "Employee",
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Commentary"
+  },
+  {
+    "ClassName": "GetDpsJobInfoRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Dps/{jobId}/Info",
+    "OperationId": "GetDpsJobInfo",
+    "Verb": "GET",
+    "Summary": "Get the DPS job information",
+    "Description": "Return the the DPS job information",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetDpsJobProgressRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Dps/{jobId}/Progress",
+    "OperationId": "GetDpsJobProgress",
+    "Verb": "GET",
+    "Summary": "Get the DPS job progress",
+    "Description": "Return the the DPS job progress",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetDpsJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Dps",
+    "OperationId": "GetDpsJobs",
+    "Verb": "GET",
+    "Summary": "Get all DPS jobs",
+    "Description": "Gets all the DPS jobs",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetDpsJobStatusRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Dps/{jobId}/Status",
+    "OperationId": "GetDpsJobStatus",
+    "Verb": "GET",
+    "Summary": "Get the DPS job status",
+    "Description": "Return the the DPS job status",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetDpsMessageFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/DpsMessage/{dpsMessageId}",
+    "OperationId": "GetDpsMessageFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the DPS message",
+    "Description": "Gets the DPS message",
+    "Tags": [
+      "DpsMessage"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "DpsMessage"
+  },
+  {
+    "ClassName": "GetDpsMessageReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/DPSMSG/run",
+    "OperationId": "GetDpsMessageReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the DPS message report",
+    "Description": "Returns the result of the executed DPS message report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetDpsMessagesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/DpsMessages",
+    "OperationId": "GetDpsMessagesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the DPS messages",
+    "Description": "Gets the DPS message links",
+    "Tags": [
+      "DpsMessage"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetEmployeeByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employee by effective date.",
+    "Description": "Returns the employee\u0027s state at the specified effective date.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Employee"
+  },
+  {
+    "ClassName": "GetEmployeeFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}",
+    "OperationId": "GetEmployeeFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get employee from employer",
+    "Description": "Gets the specified employee from employer by employee code.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Employee"
+  },
+  {
+    "ClassName": "GetEmployeeGroupsByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/{effectiveDate:datetime(yyyy-MM-dd)}/Groups",
+    "OperationId": "GetEmployeeGroupsByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets a list of groups assigned to the specified employee at a given date",
+    "Description": "Returns groups links for the specified employee is a member of at a given date",
+    "Tags": [
+      "Group",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeGroupsByRevisionNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Revision/{revisionNumber:int}/Groups",
+    "OperationId": "GetEmployeeGroupsByRevisionNumber",
+    "Verb": "GET",
+    "Summary": "Gets a list of groups assigned to the specified employee revision",
+    "Description": "Get the employee groups matching the specified revision number",
+    "Tags": [
+      "Group",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeGroupsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Groups",
+    "OperationId": "GetEmployeeGroups",
+    "Verb": "GET",
+    "Summary": "Gets a list of groups that the employee is assigned to",
+    "Description": "Returns groups links for the specified employee is a member of",
+    "Tags": [
+      "Group",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeRevisionByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Revision/{revisionNumber:int}",
+    "OperationId": "GetEmployeeRevisionByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the employee by revision number",
+    "Description": "Get the employee revision matching the specified revision number",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Employee"
+  },
+  {
+    "ClassName": "GetEmployeeRevisionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Revisions",
+    "OperationId": "GetEmployeeRevisions",
+    "Verb": "GET",
+    "Summary": "Get all employee revisions",
+    "Description": "Gets links to all employee revisions",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeRevisionSummariesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Revisions/Summary",
+    "OperationId": "GetEmployeeRevisionSummaries",
+    "Verb": "GET",
+    "Summary": "Get all employee revision summaries",
+    "Description": "Gets links to all employee revision summaries",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeRevisionSummaryByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Revision/{revisionNumber:int}/Summary",
+    "OperationId": "GetEmployeeRevisionSummaryByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the employee summary by revision number",
+    "Description": "Get the employee revision summary matching the specified revision number",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployeeSummary"
+  },
+  {
+    "ClassName": "GetEmployeesByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employees/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetEmployeesByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employees from employer at a given effective date.",
+    "Description": "Get links to all employees for the employer on specified effective date.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeSecretRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Secret/{secretId}",
+    "OperationId": "GetEmployeeSecret",
+    "Verb": "GET",
+    "Summary": "Get employee secret",
+    "Description": "Get the public visible employee secret object",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployeeSecret"
+  },
+  {
+    "ClassName": "GetEmployeeSecretsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Secrets",
+    "OperationId": "GetEmployeeSecrets",
+    "Verb": "GET",
+    "Summary": "Get all employee secret links",
+    "Description": "Get all the employee secret links",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employees",
+    "OperationId": "GetEmployeesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get employees from employer.",
+    "Description": "Get links to all employees for the specified employer.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/Employees",
+    "OperationId": "GetEmployeesFromPayRun",
+    "Verb": "GET",
+    "Summary": "Get employees from the pay run",
+    "Description": "Gets links to all employees included in the specified pay run.",
+    "Tags": [
+      "Employee",
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesFromPayScheduleOnEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/Employees/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetEmployeesFromPayScheduleOnEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employees from a pay schedule on effective date.",
+    "Description": "Gets links to all employee revisions in the specified pay schedule for the given effective date.",
+    "Tags": [
+      "Employee",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesFromPayScheduleRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/Employees",
+    "OperationId": "GetEmployeesFromPaySchedule",
+    "Verb": "GET",
+    "Summary": "Get all employees revisions from a pay schedule.",
+    "Description": "Gets links to all employee revisions that have ever existed in the specified pay schedule.",
+    "Tags": [
+      "Employee",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesInPensionByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}/{effectiveDate:datetime(yyyy-MM-dd)}/Employees",
+    "OperationId": "GetEmployeesInPensionByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets a list of employees in a specific pension at a given date",
+    "Description": "Returns a list of employees in a specific pension at a given date",
+    "Tags": [
+      "Employee",
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesInPensionByPensionRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}/Revision/{revisionNumber:int}/Employees",
+    "OperationId": "GetEmployeesInPensionByPensionRevision",
+    "Verb": "GET",
+    "Summary": "Gets a list of employees in a specific pension revision",
+    "Description": "Returns a list of employees in a specific pension revision",
+    "Tags": [
+      "Employee",
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeesInPensionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}/Employees",
+    "OperationId": "GetEmployeesInPension",
+    "Verb": "GET",
+    "Summary": "Gets a list of employees in a specific pension latest revision",
+    "Description": "Returns a list of employees in a specific pension latest revision",
+    "Tags": [
+      "Employee",
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeSummariesByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employees/{effectiveDate:datetime(yyyy-MM-dd)}/Summary",
+    "OperationId": "GetEmployeeSummariesByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employee summaries from employer at a given effective date.",
+    "Description": "Get links to all employee summaries for the employer on specified effective date.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeSummariesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employees/Summary",
+    "OperationId": "GetEmployeeSummariesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get employee summaries from employer.",
+    "Description": "Get links to all employee summaries for the specified employer.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployeeSummaryByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/{effectiveDate:datetime(yyyy-MM-dd)}/Summary",
+    "OperationId": "GetEmployeeSummaryByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employee summary by effective date.",
+    "Description": "Gets the employee summary for the specified effective date.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployeeSummary"
+  },
+  {
+    "ClassName": "GetEmployeeSummaryFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Summary",
+    "OperationId": "GetEmployeeSummaryFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get employee summary from employer",
+    "Description": "Gets the specified employee summary data from employer by employee code.",
+    "Tags": [
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployeeSummary"
+  },
+  {
+    "ClassName": "GetEmployeesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employees/Tag/{tagId}",
+    "OperationId": "GetEmployeesWithTag",
+    "Verb": "GET",
+    "Summary": "Get employees with tag",
+    "Description": "Gets the employees with the tag",
+    "Tags": [
+      "Tagging",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetEmployerByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets the employer at the specified effective",
+    "Description": "Returns the employer\u0027s state at the specified effective date.",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Employer"
+  },
+  {
+    "ClassName": "GetEmployerCostSplitRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CostSplit/{costSplitId}",
+    "OperationId": "GetEmployerCostSplit",
+    "Verb": "GET",
+    "Summary": "Gets the specified employer cost split from the employer",
+    "Description": "Returns the specified employer cost split from the employer",
+    "Tags": [
+      "EmployerCostSplit"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployerCostSplit"
+  },
+  {
+    "ClassName": "GetEmployerCostSplitsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CostSplits",
+    "OperationId": "GetEmployerCostSplits",
+    "Verb": "GET",
+    "Summary": "Gets the employer cost splits from the employer",
+    "Description": "Returns the employer cost splits from the employer",
+    "Tags": [
+      "EmployerCostSplit"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Employer/{employerId}",
+    "OperationId": "GetEmployerJobs",
+    "Verb": "GET",
+    "Summary": "Gets all jobs relating to the employer.",
+    "Description": "Returns all job information objects for the specified employer.",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetEmployerRateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Rate/{rateId}",
+    "OperationId": "GetEmployerRate",
+    "Verb": "GET",
+    "Summary": "Gets the specified employer rate from the employer",
+    "Description": "Returns the specified employer rate from the employer",
+    "Tags": [
+      "EmployerRate"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployerRate"
+  },
+  {
+    "ClassName": "GetEmployerRatesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Rates",
+    "OperationId": "GetEmployerRates",
+    "Verb": "GET",
+    "Summary": "Gets the employer rates from the employer",
+    "Description": "Returns the employer rates from the employer",
+    "Tags": [
+      "EmployerRate"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerRevisionByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Revision/{revisionNumber:int}",
+    "OperationId": "GetEmployerRevisionByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the employer by revision number",
+    "Description": "Get the employer revision matching the specified revision number",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Employer"
+  },
+  {
+    "ClassName": "GetEmployerRevisionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Revisions",
+    "OperationId": "GetEmployerRevisions",
+    "Verb": "GET",
+    "Summary": "Gets the employer revisions",
+    "Description": "Gets links to all the employer revisions",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerRevisionSummariesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Revisions/Summary",
+    "OperationId": "GetEmployerRevisionSummaries",
+    "Verb": "GET",
+    "Summary": "Get all employer revision summaries",
+    "Description": "Gets links to all employer revision summaries",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerRevisionSummaryByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Revision/{revisionNumber:int}/Summary",
+    "OperationId": "GetEmployerRevisionSummaryByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the employer summary by revision number",
+    "Description": "Get the employer revision summary matching the specified revision number",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployerSummary"
+  },
+  {
+    "ClassName": "GetEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}",
+    "OperationId": "GetEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the employer",
+    "Description": "Get the specified employer object",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Employer"
+  },
+  {
+    "ClassName": "GetEmployersByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employers/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetEmployersByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets all employers at the specified effective date",
+    "Description": "Gets links to all employers contained under the authorised application scope for the specified effective date.",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerSecretRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Secret/{secretId}",
+    "OperationId": "GetEmployerSecret",
+    "Verb": "GET",
+    "Summary": "Get employer secret",
+    "Description": "Get the public visible employer secret object",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployerSecret"
+  },
+  {
+    "ClassName": "GetEmployerSecretsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Secrets",
+    "OperationId": "GetEmployerSecrets",
+    "Verb": "GET",
+    "Summary": "Get all employer secret links",
+    "Description": "Get all the employer secret links",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployersRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employers",
+    "OperationId": "GetEmployers",
+    "Verb": "GET",
+    "Summary": "Gets all employers",
+    "Description": "Gets links to all employers contained under the authorised application scope",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerSummariesByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employers/{effectiveDate:datetime(yyyy-MM-dd)}/Summary",
+    "OperationId": "GetEmployerSummariesByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employer summaries at a given effective date.",
+    "Description": "Get links to all employer summaries on specified effective date.",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerSummariesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employers/Summary",
+    "OperationId": "GetEmployerSummaries",
+    "Verb": "GET",
+    "Summary": "Get employer summaries.",
+    "Description": "Get links to all employer summaries.",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerSummaryByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/{effectiveDate:datetime(yyyy-MM-dd)}/Summary",
+    "OperationId": "GetEmployerSummaryByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get employer summary by effective date.",
+    "Description": "Gets the employer summary for the specified effective date.",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployerSummary"
+  },
+  {
+    "ClassName": "GetEmployerSummaryReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/EMPSUM/run",
+    "OperationId": "GetEmployerSummaryReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the employer summary report",
+    "Description": "Returns the result of the employer summary report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetEmployerSummaryRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Summary",
+    "OperationId": "GetEmployerSummary",
+    "Verb": "GET",
+    "Summary": "Get employer summary",
+    "Description": "Gets the specified employer summary data.",
+    "Tags": [
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "EmployerSummary"
+  },
+  {
+    "ClassName": "GetEmployersWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employers/Tag/{tagId}",
+    "OperationId": "GetEmployersWithTag",
+    "Verb": "GET",
+    "Summary": "Get employers with tag",
+    "Description": "Gets the employers with the tag",
+    "Tags": [
+      "Tagging",
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetFileListFromApplicationRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Files/List()",
+    "OperationId": "GetFileListFromApplication",
+    "Verb": "GET",
+    "Summary": "Gets a list of all application files",
+    "Description": "Returns a flat list of all application files",
+    "Tags": [
+      "File"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetFileListFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Files/List()",
+    "OperationId": "GetFileListFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets a list of all employee files",
+    "Description": "Returns a flat list of all employee files",
+    "Tags": [
+      "File"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetFileListFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Files/List()",
+    "OperationId": "GetFileListFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets a list of all employer files",
+    "Description": "Returns a flat list of all employer files",
+    "Tags": [
+      "File"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetFilesFromApplicationRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Files/{*filePath}",
+    "OperationId": "GetFilesFromApplication",
+    "Verb": "GET",
+    "Summary": "Gets a list of application files matching the specified path",
+    "Description": "Returns a list of application files matching the specified path",
+    "Tags": [
+      "File"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetFilesFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Files/{*filePath}",
+    "OperationId": "GetFilesFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets a list of employee files matching the specified path",
+    "Description": "Returns a list of employee files matching the specified path",
+    "Tags": [
+      "File"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetFilesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Files/{*filePath}",
+    "OperationId": "GetFilesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets a list of employer files matching the specified path",
+    "Description": "Returns a list of employer files matching the specified path",
+    "Tags": [
+      "File"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetGrossToNetReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/GRO2NET/run",
+    "OperationId": "GetGrossToNetReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the gross to net report",
+    "Description": "Returns the result of the executed gross to net report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetGroupEmployeesByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Group/{groupId}/Employees/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetGroupEmployeesByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets a list of employees assigned to the specified group at a given date",
+    "Description": "Returns employee links for the specified group at a given date",
+    "Tags": [
+      "Group",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetGroupEmployeesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Group/{groupId}/Employees",
+    "OperationId": "GetGroupEmployees",
+    "Verb": "GET",
+    "Summary": "Gets a list of employees assigned to the specified group",
+    "Description": "Returns employee links for the specified group",
+    "Tags": [
+      "Group",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetGroupRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Group/{groupId}",
+    "OperationId": "GetGroup",
+    "Verb": "GET",
+    "Summary": "Gets the specified group from the employer",
+    "Description": "Returns the specified employer rate from the employer",
+    "Tags": [
+      "Group"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Group"
+  },
+  {
+    "ClassName": "GetGroupsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Groups",
+    "OperationId": "GetGroups",
+    "Verb": "GET",
+    "Summary": "Gets the groups from the employer",
+    "Description": "Returns the employer rates from the employer",
+    "Tags": [
+      "Group"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetHealthCheckRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Healthcheck",
+    "OperationId": "GetHealthCheck",
+    "Verb": "GET",
+    "Summary": "Get health check status",
+    "Description": "Returns the health status of the application",
+    "Tags": [
+      "Healthcheck"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "HealthCheck"
+  },
+  {
+    "ClassName": "GetHolidayBalanceReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/HOLBAL/run",
+    "OperationId": "GetHolidayBalanceReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the holiday balance report",
+    "Description": "Returns the result of the executed holiday balance report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetHolidaySchemeByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetHolidaySchemeByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get holiday scheme by effective date.",
+    "Description": "Returns the holiday scheme\u0027s state at the specified effective date.",
+    "Tags": [
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "HolidayScheme"
+  },
+  {
+    "ClassName": "GetHolidaySchemeFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}",
+    "OperationId": "GetHolidaySchemeFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get holiday scheme from employer",
+    "Description": "Gets the specified holiday scheme from employer.",
+    "Tags": [
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "HolidayScheme"
+  },
+  {
+    "ClassName": "GetHolidaySchemeRevisionByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/Revision/{revisionNumber:int}",
+    "OperationId": "GetHolidaySchemeRevisionByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the holiday scheme revision by revision number",
+    "Description": "Get the holiday scheme revision matching the specified revision number",
+    "Tags": [
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "HolidayScheme"
+  },
+  {
+    "ClassName": "GetHolidaySchemeRevisionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/Revisions",
+    "OperationId": "GetHolidaySchemeRevisions",
+    "Verb": "GET",
+    "Summary": "Get all holiday scheme revisions",
+    "Description": "Gets links to all the holiday scheme revisions",
+    "Tags": [
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetHolidaySchemesByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidaySchemes/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetHolidaySchemesByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get holiday schemes from employer at a given effective date.",
+    "Description": "Get links to all holiday schemes for the employer on specified effective date.",
+    "Tags": [
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetHolidaySchemesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidaySchemes",
+    "OperationId": "GetHolidaySchemesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get holiday schemes from employer.",
+    "Description": "Get links to all holiday schemes for the specified employer.",
+    "Tags": [
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetHolidaySchemesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidaySchemes/Tag/{tagId}",
+    "OperationId": "GetHolidaySchemesWithTag",
+    "Verb": "GET",
+    "Summary": "Get holiday schemes with tag",
+    "Description": "Gets the holiday scheme with the tag",
+    "Tags": [
+      "Tagging",
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalExpressionSchemaRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/ReferenceData/JournalExpressionDataTable",
+    "OperationId": "GetJournalExpressionSchema",
+    "Verb": "GET",
+    "Summary": "Gets the journal expression data schema",
+    "Description": "Gets the data schema for all available journal expression values. Includes table names, column names and data types.",
+    "Tags": [
+      "Reference"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JournalExpressionDataTable"
+  },
+  {
+    "ClassName": "GetJournalInstructionFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalInstruction/{journalInstructionId}",
+    "OperationId": "GetJournalInstructionFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the specified journal instruction from the employer",
+    "Description": "Returns the specified journal instruction from employer",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JournalInstruction"
+  },
+  {
+    "ClassName": "GetJournalInstructionsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalInstructions",
+    "OperationId": "GetJournalInstructionsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the Journal instructions from the specified employer",
+    "Description": "Get links to all journal instructions for the specified employer",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalInstructionTemplateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/JournalInstruction/{journalInstructionId}",
+    "OperationId": "GetJournalInstructionTemplate",
+    "Verb": "GET",
+    "Summary": "Gets the Journal instructions template for the application",
+    "Description": "Retrurns the specified journal instruction from the application",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JournalInstruction"
+  },
+  {
+    "ClassName": "GetJournalInstructionTemplatesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/JournalInstructions",
+    "OperationId": "GetJournalInstructionTemplates",
+    "Verb": "GET",
+    "Summary": "Gets the Journal instructions templates for the application",
+    "Description": "Get links to all journal instruction templates for the application",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalLineFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalLine/{journalLineId}",
+    "OperationId": "GetJournalLineFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the specified journal Line from the employer",
+    "Description": "Returns the specified journal Line from employer",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JournalLine"
+  },
+  {
+    "ClassName": "GetJournalLinesFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/JournalLines",
+    "OperationId": "GetJournalLinesFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets the journal Lines from the specified employee",
+    "Description": "Get links to all journal lines for the specified employee",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalLinesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalLines",
+    "OperationId": "GetJournalLinesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the Journal Lines from the specified employer",
+    "Description": "Get links to all journal Lines for the specified employer",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalLinesFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/JournalLines",
+    "OperationId": "GetJournalLinesFromPayRun",
+    "Verb": "GET",
+    "Summary": "Gets the journal Lines from the specified pay run",
+    "Description": "Get links to all journal lines for the specified pay run",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalLinesFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/JournalLines",
+    "OperationId": "GetJournalLinesFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Gets the journal Lines from the specified sub contractor",
+    "Description": "Get links to all journal lines for the specified sub contractor",
+    "Tags": [
+      "Journals"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetJournalReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/JOURNAL/run",
+    "OperationId": "GetJournalReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the journal report",
+    "Description": "Returns the result of the journal report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetLastPayDateReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/LASTPAYDATE/run",
+    "OperationId": "GetLastPayDateReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the last pay date report",
+    "Description": "Returns the result of the executed last pay date report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetNetPayReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/NETPAY/run",
+    "OperationId": "GetNetPayReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the net pay report",
+    "Description": "Returns the result of the executed net pay report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetNextPayPeriodDatesReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/NEXTPERIOD/run",
+    "OperationId": "GetNextPayPeriodDatesReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the next pay period report",
+    "Description": "Returns the result of the executed next pay period report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetNominalCodeFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/NominalCode/{nominalCodeId}",
+    "OperationId": "GetNominalCodeFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the nominal code",
+    "Description": "Gets the nominal code",
+    "Tags": [
+      "NominalCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "NominalCode"
+  },
+  {
+    "ClassName": "GetNominalCodesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/NominalCodes",
+    "OperationId": "GetNominalCodesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the nominal codes",
+    "Description": "Gets the nominal code links",
+    "Tags": [
+      "NominalCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetP11SummaryReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/P11SUM/run",
+    "OperationId": "GetP11SummaryReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the P11 summary report",
+    "Description": "Returns the result of the executed P11 summary report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetP32NetReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/P32/run",
+    "OperationId": "GetP32NetReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the P32 report",
+    "Description": "Returns the result of the executed P32 report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetP32SummaryNetReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/P32SUM/run",
+    "OperationId": "GetP32SummaryNetReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the P32 summary report",
+    "Description": "Returns the result of the executed P32 summary report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetP45ReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/P45/run",
+    "OperationId": "GetP45ReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the P45 report",
+    "Description": "Returns the result of the executed P45 report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetP60ReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/P60/run",
+    "OperationId": "GetP60ReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the P60 report",
+    "Description": "Returns the result of the executed P60 report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPapdisReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/PAPDIS/run",
+    "OperationId": "GetPapdisReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the PAPDIS report",
+    "Description": "Returns the result of the executed PAPDIS report. PAPDIS is a free and open data interface standard designed to allow payroll and middleware software developers to create a file that can be used by pension providers to exchange data. http://www.papdis.org/",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPassReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/PASS/run",
+    "OperationId": "GetPassReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the PASS report",
+    "Description": "Returns the result of the executed PASS report. PASS stands for Payroll and Systemsync. PASS 1.1 is an extension of the PAPDIS V1.1 schema. https://pensionsynckb.systemsyncsolutions.com/display/PKB/PASS\u002B1.1",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPayCodeByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCode/{payCodeId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetPayCodeByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets pay code for specified date",
+    "Description": "Gets the pay code revision for the specified effective date",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayCode"
+  },
+  {
+    "ClassName": "GetPayCodeFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCode/{payCodeId}",
+    "OperationId": "GetPayCodeFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the specified pay code from the employer",
+    "Description": "Returns the specified pay code from the employer",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayCode"
+  },
+  {
+    "ClassName": "GetPayCodeRevisionByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCode/{payCodeId}/Revision/{revisionNumber:int}",
+    "OperationId": "GetPayCodeRevisionByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the pay code by revision number",
+    "Description": "Get the pay code revision matching the specified revision number",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayCode"
+  },
+  {
+    "ClassName": "GetPayCodeRevisionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCode/{payCodeId}/Revisions",
+    "OperationId": "GetPayCodeRevisions",
+    "Verb": "GET",
+    "Summary": "Get all revisions of the Pay Code",
+    "Description": "Returns links to all revisions of the pay code",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayCodesByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCodes/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetPayCodesByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets all pay codes for specified date",
+    "Description": "Gets the effective pay code revision for the specified date",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayCodesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCodes",
+    "OperationId": "GetPayCodesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the pay codes from the employer",
+    "Description": "Get links to all the pay codes for the specified employer",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayCodesFromNominalCodeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/NominalCode/{nominalCodeId}/PayCodes",
+    "OperationId": "GetPayCodesFromNominalCode",
+    "Verb": "GET",
+    "Summary": "Gets the pay codes by nominal code",
+    "Description": "Get the pay codes that share the specified nominal code",
+    "Tags": [
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayCodesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCodes/Tag/{tagId}",
+    "OperationId": "GetPayCodesWithTag",
+    "Verb": "GET",
+    "Summary": "Get pay codes with tag",
+    "Description": "Gets the pay codes with the tag",
+    "Tags": [
+      "Tagging",
+      "PayCode"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayDashboardPayslipReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/PAYDASHBOARD/run",
+    "OperationId": "GetPayDashboardPayslipReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the Pay Dashboard payslips report",
+    "Description": "Returns the result of the executed Pay Dashboard payslip report for the given query parameters. See https://api.paydashboard.com for details. For compatability should be returned as JSON with TransformDefinitionKey=Json-Clean.",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPayInstructionFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayInstruction/{payInstructionId}",
+    "OperationId": "GetPayInstructionFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets the specified pay instruction from the employee",
+    "Description": "Returns the specified pay instruction from employee",
+    "Tags": [
+      "PayInstruction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayInstruction"
+  },
+  {
+    "ClassName": "GetPayInstructionsFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayInstructions",
+    "OperationId": "GetPayInstructionsFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets the pay instructions from the specified employee",
+    "Description": "Get links to all pay instructions for the specified employee",
+    "Tags": [
+      "PayInstruction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayInstructionsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayInstructions/Tag/{tagId}",
+    "OperationId": "GetPayInstructionsWithTag",
+    "Verb": "GET",
+    "Summary": "Get pay instructions with tag",
+    "Description": "Gets the pay instructions with the tag",
+    "Tags": [
+      "Tagging",
+      "PayInstruction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayLineFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayLine/{payLineId}",
+    "OperationId": "GetPayLineFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets the specified pay line from the employee",
+    "Description": "Returns the specified pay line from employee",
+    "Tags": [
+      "PayLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayLine"
+  },
+  {
+    "ClassName": "GetPayLinesFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayLines",
+    "OperationId": "GetPayLinesFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets the pay lines from the specified employee",
+    "Description": "Get links to all pay lines for the specified employee",
+    "Tags": [
+      "PayLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayLinesFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/PayLines",
+    "OperationId": "GetPayLinesFromPayRun",
+    "Verb": "GET",
+    "Summary": "Gets the pay lines from the specified pay run",
+    "Description": "Get links to all pay lines for the specified pay run",
+    "Tags": [
+      "PayLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayLinesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayLines/Tag/{tagId}",
+    "OperationId": "GetPayLinesWithTag",
+    "Verb": "GET",
+    "Summary": "Get pay lines with tag",
+    "Description": "Gets the pay line with the tag",
+    "Tags": [
+      "Tagging",
+      "PayLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayRunFromPayScheduleRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}",
+    "OperationId": "GetPayRunFromPaySchedule",
+    "Verb": "GET",
+    "Summary": "Gets the pay run from the pay schedule",
+    "Description": "Returns the pay run from the pay schedule",
+    "Tags": [
+      "PayRun",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayRun"
+  },
+  {
+    "ClassName": "GetPayRunJobInfoRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/PayRuns/{jobId}/Info",
+    "OperationId": "GetPayRunJobInfo",
+    "Verb": "GET",
+    "Summary": "Get the pay run job information",
+    "Description": "Return the the payrun job information",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetPayRunJobProgressRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/PayRuns/{jobId}/Progress",
+    "OperationId": "GetPayRunJobProgress",
+    "Verb": "GET",
+    "Summary": "Get the pay run job progress",
+    "Description": "Return the the payrun job progress",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPayRunJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/PayRuns",
+    "OperationId": "GetPayRunJobs",
+    "Verb": "GET",
+    "Summary": "Get all PayRun jobs",
+    "Description": "Gets all the pay run jobs",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayRunJobStatusRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/PayRuns/{jobId}/Status",
+    "OperationId": "GetPayRunJobStatus",
+    "Verb": "GET",
+    "Summary": "Get the pay run job status",
+    "Description": "Return the the payrun job status",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPayRunOnDateFromPayScheduleRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetPayRunOnDateFromPaySchedule",
+    "Verb": "GET",
+    "Summary": "Gets the pay run from the pay schedule",
+    "Description": "Returns the pay run from the pay schedule",
+    "Tags": [
+      "PayRun",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PayRun"
+  },
+  {
+    "ClassName": "GetPayRunsFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayRuns",
+    "OperationId": "GetPayRunsFromEmployee",
+    "Verb": "GET",
+    "Summary": "Gets the pay runs from the employee",
+    "Description": "Get links to all pay runs for the specified employee.",
+    "Tags": [
+      "PayRun",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayRunsFromPayScheduleRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRuns",
+    "OperationId": "GetPayRunsFromPaySchedule",
+    "Verb": "GET",
+    "Summary": "Gets the pay runs from the pay schedule",
+    "Description": "Get links to all pay runs for the specified pay schedule",
+    "Tags": [
+      "PayRun",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayRunsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRuns/Tag/{tagId}",
+    "OperationId": "GetPayRunsWithTag",
+    "Verb": "GET",
+    "Summary": "Get pay runs with tag",
+    "Description": "Gets the pay runs with the tag",
+    "Tags": [
+      "Tagging",
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayScheduleFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}",
+    "OperationId": "GetPayScheduleFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the specified pay schedule from the employer",
+    "Description": "Returns the specified pay schedule object from employer",
+    "Tags": [
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "PaySchedule"
+  },
+  {
+    "ClassName": "GetPaySchedulesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedules",
+    "OperationId": "GetPaySchedulesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the pay schedule from the specified employer",
+    "Description": "Get links to all pay schedules for the specified employer",
+    "Tags": [
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPaySchedulesWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedules/Tag/{tagId}",
+    "OperationId": "GetPaySchedulesWithTag",
+    "Verb": "GET",
+    "Summary": "Get pay schedule with tag",
+    "Description": "Gets the pay schedules with the tag",
+    "Tags": [
+      "Tagging",
+      "PaySchedule"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPayslip3ReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/PAYSLIP3/run",
+    "OperationId": "GetPayslip3ReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the verbose payslip report",
+    "Description": "Returns the result of the executed verbose payslip report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPensionByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetPensionByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get pension by effective date.",
+    "Description": "Returns the penion\u0027s state at the specified effective date.",
+    "Tags": [
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Pension"
+  },
+  {
+    "ClassName": "GetPensionFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}",
+    "OperationId": "GetPensionFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get pension from employer",
+    "Description": "Gets the specified pension from employer by pension code.",
+    "Tags": [
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Pension"
+  },
+  {
+    "ClassName": "GetPensionLiabilityReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/PENLIABILITY/run",
+    "OperationId": "GetPensionLiabilityReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the pension liability report",
+    "Description": "Returns the result of the executed pension liability report for the given query parameters",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetPensionRevisionByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}/Revision/{revisionNumber:int}",
+    "OperationId": "GetPensionRevisionByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the pension by revision number",
+    "Description": "Get the pension revision matching the specified revision number",
+    "Tags": [
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Pension"
+  },
+  {
+    "ClassName": "GetPensionRevisionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pension/{pensionId}/Revisions",
+    "OperationId": "GetPensionRevisions",
+    "Verb": "GET",
+    "Summary": "Get all pension revisions",
+    "Description": "Returns links to all revisions of the pension",
+    "Tags": [
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPensionsByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pensions/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetPensionsByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get pensions from employer at a given effective date.",
+    "Description": "Get links to all pensions for the employer on specified effective date.",
+    "Tags": [
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPensionsForEmployeeByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/{effectiveDate:datetime(yyyy-MM-dd)}/Pensions",
+    "OperationId": "GetPensionsForEmployeeByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Gets a list of pensions for a specific employee at a given date",
+    "Description": "Returns a list of pensions for a specific employee at a given date",
+    "Tags": [
+      "Pension",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPensionsForEmployeeByEmployeeRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Revision/{revisionNumber:int}/Pensions",
+    "OperationId": "GetPensionsForEmployeeByEmployeeRevision",
+    "Verb": "GET",
+    "Summary": "Gets a list of pensions for a specific employee revision",
+    "Description": "Returns a list of pensions for a specific employee revision",
+    "Tags": [
+      "Pension",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPensionsForEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Pensions",
+    "OperationId": "GetPensionsForEmployee",
+    "Verb": "GET",
+    "Summary": "Gets a list of pensions for a specific employee",
+    "Description": "Returns a list of pensions for a specific employee",
+    "Tags": [
+      "Pension",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPensionsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Pensions",
+    "OperationId": "GetPensionsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get pensions from employer.",
+    "Description": "Get links to all pensions for the specified employer.",
+    "Tags": [
+      "Pension"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetPermissionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permission/{permissionId}",
+    "OperationId": "GetPermission",
+    "Verb": "GET",
+    "Summary": "Gets the permission object",
+    "Description": "Gets the permission object for application",
+    "Tags": [
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Permission"
+  },
+  {
+    "ClassName": "GetPermissionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permissions",
+    "OperationId": "GetPermissions",
+    "Verb": "GET",
+    "Summary": "Gets all permission objects",
+    "Description": "Gets all permission objects for application",
+    "Tags": [
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetQueryResponseRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Query",
+    "OperationId": "GetQueryResponse",
+    "Verb": "POST",
+    "Summary": "Get the query result",
+    "Description": "Get the results for the specified query",
+    "Tags": [
+      "Query"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetReportDefinitionFromApplicationRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/{reportDefinitionId}",
+    "OperationId": "GetReportDefinitionFromApplication",
+    "Verb": "GET",
+    "Summary": "Get the report definition",
+    "Description": "Returns the specified report definition from the authroised application",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "ReportDefinition"
+  },
+  {
+    "ClassName": "GetReportDefinitionsFromApplicationRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Reports",
+    "OperationId": "GetReportDefinitionsFromApplication",
+    "Verb": "GET",
+    "Summary": "Gets all reports",
+    "Description": "Get links to all saved report definitions under authorised application",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetReportingInstructionFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ReportingInstruction/{reportingInstructionId}",
+    "OperationId": "GetReportingInstructionFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the specified reporting instruction from the employer",
+    "Description": "Returns the specified pay instruction from employee",
+    "Tags": [
+      "ReportLineInstruction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "ReportingInstruction"
+  },
+  {
+    "ClassName": "GetReportingInstructionsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ReportingInstructions",
+    "OperationId": "GetReportingInstructionsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the reporting instructions from the specified employer",
+    "Description": "Get links to all pay instructions for the specified employee",
+    "Tags": [
+      "ReportLineInstruction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetReportLineFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ReportLine/{reportLineId}",
+    "OperationId": "GetReportLineFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the specified report line from the employer",
+    "Description": "Returns the specified pay line from employee",
+    "Tags": [
+      "ReportLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "ReportLine"
+  },
+  {
+    "ClassName": "GetReportLinesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ReportLines",
+    "OperationId": "GetReportLinesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Gets the report lines from the specified employer",
+    "Description": "Get links to all report lines for the specified employee",
+    "Tags": [
+      "ReportLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetReportLinesFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/ReportLines",
+    "OperationId": "GetReportLinesFromPayRun",
+    "Verb": "GET",
+    "Summary": "Gets the report lines from the specified pay run",
+    "Description": "Returns all report lines associated with the specified pay run",
+    "Tags": [
+      "ReportLine",
+      "PayRun"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetReportOutputRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Report/{reportDefinitionId}/run",
+    "OperationId": "GetReportOutput",
+    "Verb": "GET",
+    "Summary": "Runs the specified report definition",
+    "Description": "Returns the result of the executed report definition",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetRtiJobInfoRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Rti/{jobId}/Info",
+    "OperationId": "GetRtiJobInfo",
+    "Verb": "GET",
+    "Summary": "Get the RTI job information",
+    "Description": "Return the the RTI job information",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetRtiJobProgressRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Rti/{jobId}/Progress",
+    "OperationId": "GetRtiJobProgress",
+    "Verb": "GET",
+    "Summary": "Get the RTI job progress",
+    "Description": "Return the the RTI job progress",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetRtiJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Rti",
+    "OperationId": "GetRtiJobs",
+    "Verb": "GET",
+    "Summary": "Get all RTI jobs",
+    "Description": "Gets all the RTI jobs",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetRtiJobStatusRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/Rti/{jobId}/Status",
+    "OperationId": "GetRtiJobStatus",
+    "Verb": "GET",
+    "Summary": "Get the RTI job status",
+    "Description": "Return the the RTI job status",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetRtiTransactionFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransaction/{rtiTransactionId}",
+    "OperationId": "GetRtiTransactionFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get the RTI transaction",
+    "Description": "Returns the specified RTI transaction",
+    "Tags": [
+      "RTI"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "RtiTransactionBase"
+  },
+  {
+    "ClassName": "GetRtiTransactionsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransactions",
+    "OperationId": "GetRtiTransactionsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get all RTI transactions for the employer",
+    "Description": "Get links for all RTI transactions for the specified employer",
+    "Tags": [
+      "RTI"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetRtiTransactionSummariesFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransactions/Summary",
+    "OperationId": "GetRtiTransactionSummariesFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get all RTI transaction summaries for the employer",
+    "Description": "Get links for all RTI transaction summaries for the specified employer",
+    "Tags": [
+      "RTI"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetRtiTransactionSummaryFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransaction/{rtiTransactionId}/Summary",
+    "OperationId": "GetRtiTransactionSummaryFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get the RTI transaction summary",
+    "Description": "Returns the specified RTI transaction summary data excluding some poroperties",
+    "Tags": [
+      "RTI"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "RtiTransactionBase"
+  },
+  {
+    "ClassName": "GetRtiTransactionsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransactions/Tag/{tagId}",
+    "OperationId": "GetRtiTransactionsWithTag",
+    "Verb": "GET",
+    "Summary": "Get RTI transactions with tag",
+    "Description": "Gets the RTI transactions with the tag",
+    "Tags": [
+      "Tagging",
+      "RTI"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetSchemaRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Schemas/{dtoDataType}",
+    "OperationId": "GetSchema",
+    "Verb": "GET",
+    "Summary": "Get XSD schema",
+    "Description": "Returns the XSD schema for the specified data type",
+    "Tags": [
+      "Schemas"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetSchemasRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Schemas",
+    "OperationId": "GetSchemas",
+    "Verb": "GET",
+    "Summary": "Get a list of all available schemas",
+    "Description": "Returns a collection of links to all the available data object schemas",
+    "Tags": [
+      "Schemas"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetSubContractorByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetSubContractorByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get sub contractor by effective date.",
+    "Description": "Returns the sub contractor\u0027s state at the specified effective date.",
+    "Tags": [
+      "SubContractor"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "SubContractor"
+  },
+  {
+    "ClassName": "GetSubContractorFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}",
+    "OperationId": "GetSubContractorFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get sub contractor from employer",
+    "Description": "Gets the specified sub contractor from employer.",
+    "Tags": [
+      "SubContractor"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "SubContractor"
+  },
+  {
+    "ClassName": "GetSubContractorRevisionByNumberRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/Revision/{revisionNumber:int}",
+    "OperationId": "GetSubContractorRevisionByNumber",
+    "Verb": "GET",
+    "Summary": "Gets the sub contractor by revision number",
+    "Description": "Get the sub contractor revision matching the specified revision number",
+    "Tags": [
+      "SubContractor"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "SubContractor"
+  },
+  {
+    "ClassName": "GetSubContractorRevisionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/Revisions",
+    "OperationId": "GetSubContractorRevisions",
+    "Verb": "GET",
+    "Summary": "Get all sub contractor revisions",
+    "Description": "Gets links to all the sub contractor revisions",
+    "Tags": [
+      "SubContractor"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetSubContractorsByEffectiveDateRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractors/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetSubContractorsByEffectiveDate",
+    "Verb": "GET",
+    "Summary": "Get sub contractors from employer at a given effective date.",
+    "Description": "Get links to all sub contractors for the employer on specified effective date.",
+    "Tags": [
+      "SubContractor"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetSubContractorsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractors",
+    "OperationId": "GetSubContractorsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get sub contractors from employer.",
+    "Description": "Get links to all sub contractors for the specified employer.",
+    "Tags": [
+      "SubContractor"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetSubContractorsWithTagRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractors/Tag/{tagId}",
+    "OperationId": "GetSubContractorsWithTag",
+    "Verb": "GET",
+    "Summary": "Get sub contractors with tag",
+    "Description": "Gets the sub contractor with the tag",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagFromCisInstructionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisInstruction/{cisInstructionId}/Tag/{tagId}",
+    "OperationId": "GetTagFromCisInstruction",
+    "Verb": "GET",
+    "Summary": "Get CIS instruction tag",
+    "Description": "Gets the tag from the CIS instruction",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromCisLineRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisLine/{cisLineId}/Tag/{tagId}",
+    "OperationId": "GetTagFromCisLine",
+    "Verb": "GET",
+    "Summary": "Get CIS line tag",
+    "Description": "Gets the tag from the CIS line",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromCisLineTypeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisLineType/{cisLineTypeId}/Tag/{tagId}",
+    "OperationId": "GetTagFromCisLineType",
+    "Verb": "GET",
+    "Summary": "Get CIS line type tag",
+    "Description": "Gets the tag from the CIS line type",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromEmployeeRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Tag/{tagId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagFromEmployeeRevision",
+    "Verb": "GET",
+    "Summary": "Get employee revision tag",
+    "Description": "Gets the tag from the employee revision",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Tag/{tagId}",
+    "OperationId": "GetTagFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get employee tag",
+    "Description": "Gets the tag from the employee",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromEmployerRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Tag/{tagId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagFromEmployerRevision",
+    "Verb": "GET",
+    "Summary": "Get employer revision tag",
+    "Description": "Gets the tag from the employer revision",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Tag/{tagId}",
+    "OperationId": "GetTagFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get employer tag",
+    "Description": "Gets the tag from the employer",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromHolidaySchemeRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/Tag/{tagId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagFromHolidaySchemeRevision",
+    "Verb": "GET",
+    "Summary": "Get holiday scheme revision tag",
+    "Description": "Gets the tag from the holiday scheme revision",
+    "Tags": [
+      "Tagging",
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromHolidaySchemeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/Tag/{tagId}",
+    "OperationId": "GetTagFromHolidayScheme",
+    "Verb": "GET",
+    "Summary": "Get holiday scheme tag",
+    "Description": "Gets the tag from the holiday scheme",
+    "Tags": [
+      "Tagging",
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromJournalLineRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalLine/{journalLineId}/Tag/{tagId}",
+    "OperationId": "GetTagFromJournalLine",
+    "Verb": "GET",
+    "Summary": "Get journal line tag",
+    "Description": "Gets a tag from the journal line",
+    "Tags": [
+      "Tagging",
+      "JournalLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromPayCodeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCode/{payCodeId}/Tag/{tagId}",
+    "OperationId": "GetTagFromPayCode",
+    "Verb": "GET",
+    "Summary": "Get pay code tag",
+    "Description": "Gets the tag from the pay code",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromPayInstructionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayInstruction/{payInstructionId}/Tag/{tagId}",
+    "OperationId": "GetTagFromPayInstruction",
+    "Verb": "GET",
+    "Summary": "Get pay instruction tag",
+    "Description": "Gets the tag from the pay instruction",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromPayLineRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayLine/{payLineId}/Tag/{tagId}",
+    "OperationId": "GetTagFromPayLine",
+    "Verb": "GET",
+    "Summary": "Get pay line tag",
+    "Description": "Gets the tag from the pay line",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/Tag/{tagId}",
+    "OperationId": "GetTagFromPayRun",
+    "Verb": "GET",
+    "Summary": "Get pay run tag",
+    "Description": "Gets the tag from the pay run",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromPayScheduleRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/Tag/{tagId}",
+    "OperationId": "GetTagFromPaySchedule",
+    "Verb": "GET",
+    "Summary": "Get pay schedule tag",
+    "Description": "Gets the tag from the pay schedule",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromPermissionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permission/{permissionId}/Tag/{tagId}",
+    "OperationId": "GetTagFromPermission",
+    "Verb": "GET",
+    "Summary": "Get Permission tag",
+    "Description": "Gets a tag from the Permission",
+    "Tags": [
+      "Tagging",
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromRtiTransactionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransaction/{rtiTransactionId}/Tag/{tagId}",
+    "OperationId": "GetTagFromRtiTransaction",
+    "Verb": "GET",
+    "Summary": "Get RTI transaction tag",
+    "Description": "Gets the tag from the RTI transaction",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromSubContractorRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/Tag/{tagId}/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagFromSubContractorRevision",
+    "Verb": "GET",
+    "Summary": "Get sub contractor revision tag",
+    "Description": "Gets the tag from the sub contractor revision",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/Tag/{tagId}",
+    "OperationId": "GetTagFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Get sub contractor tag",
+    "Description": "Gets the tag from the sub contractor",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromThirdPartyTransactionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ThirdPartyTransaction/{thirdPartyTransactionId}/Tag/{tagId}",
+    "OperationId": "GetTagFromThirdPartyTransaction",
+    "Verb": "GET",
+    "Summary": "Get third party transaction tag",
+    "Description": "Gets a tag from the third party transaction",
+    "Tags": [
+      "Tagging",
+      "ThirdPartyTransaction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagFromUserRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/User/{userId}/Tag/{tagId}",
+    "OperationId": "GetTagFromUser",
+    "Verb": "GET",
+    "Summary": "Get user tag",
+    "Description": "Gets a tag from the user",
+    "Tags": [
+      "Tagging",
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Models.Tag"
+  },
+  {
+    "ClassName": "GetTagsFromCisInstructionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisInstruction/{cisInstructionId}/Tags",
+    "OperationId": "GetTagsFromCisInstruction",
+    "Verb": "GET",
+    "Summary": "Get all tags from the CIS instruction",
+    "Description": "Gets all the tags from the CIS instruction",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromCisLineRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/CisLine/{cisLineId}/Tags",
+    "OperationId": "GetTagsFromCisLine",
+    "Verb": "GET",
+    "Summary": "Get all tags from the CIS line",
+    "Description": "Gets all the tags from the CIS line",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromCisLineTypeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/CisLineType/{cisLineTypeId}/Tags",
+    "OperationId": "GetTagsFromCisLineType",
+    "Verb": "GET",
+    "Summary": "Get all tags from the CIS line type",
+    "Description": "Gets all the tags from the CIS line type",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromEmployeeRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Tags/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagsFromEmployeeRevision",
+    "Verb": "GET",
+    "Summary": "Get all employee revision tags",
+    "Description": "Gets all the tags from the employee revision",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/Tags",
+    "OperationId": "GetTagsFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get all employee tags",
+    "Description": "Gets all the tags from the employee",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromEmployerRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Tags/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagsFromEmployerRevision",
+    "Verb": "GET",
+    "Summary": "Get all employer revision tags",
+    "Description": "Gets all the tags from the employer revision",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromEmployerRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Tags",
+    "OperationId": "GetTagsFromEmployer",
+    "Verb": "GET",
+    "Summary": "Get all employer tags",
+    "Description": "Gets all the tags from the employer",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromHolidaySchemeRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/Tags/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagsFromHolidaySchemeRevision",
+    "Verb": "GET",
+    "Summary": "Get all holiday scheme revision tags",
+    "Description": "Gets all the tags from the holiday scheme revision",
+    "Tags": [
+      "Tagging",
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromHolidaySchemeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/HolidayScheme/{holidaySchemeId}/Tags",
+    "OperationId": "GetTagsFromHolidayScheme",
+    "Verb": "GET",
+    "Summary": "Get all tags from the holiday scheme",
+    "Description": "Gets all the tags from the holiday scheme",
+    "Tags": [
+      "Tagging",
+      "HolidayScheme"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromJournalLineRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/JournalLine/{journalLineId}/Tags",
+    "OperationId": "GetTagsFromJournalLine",
+    "Verb": "GET",
+    "Summary": "Get tags from journal line",
+    "Description": "Gets all tags from the journal line",
+    "Tags": [
+      "Tagging",
+      "JournalLine"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromPayCodeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PayCode/{payCodeId}/Tags",
+    "OperationId": "GetTagsFromPayCode",
+    "Verb": "GET",
+    "Summary": "Get all pay code tags",
+    "Description": "Gets all the tags from the pay code",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromPayInstructionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayInstruction/{payInstructionId}/Tags",
+    "OperationId": "GetTagsFromPayInstruction",
+    "Verb": "GET",
+    "Summary": "Get all tags from the pay instruction",
+    "Description": "Gets all the tags from the pay instruction",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromPayLineRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/PayLine/{payLineId}/Tags",
+    "OperationId": "GetTagsFromPayLine",
+    "Verb": "GET",
+    "Summary": "Get all tags from the pay line",
+    "Description": "Gets all the tags from the pay line",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromPayRunRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{payRunId}/Tags",
+    "OperationId": "GetTagsFromPayRun",
+    "Verb": "GET",
+    "Summary": "Get all pay run tags",
+    "Description": "Gets all the tags from the pay run",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromPayScheduleRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/PaySchedule/{payScheduleId}/Tags",
+    "OperationId": "GetTagsFromPaySchedule",
+    "Verb": "GET",
+    "Summary": "Get all pay schedule tags",
+    "Description": "Gets all the tags from the pay schedule",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromPermissionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permission/{permissionId}/Tags",
+    "OperationId": "GetTagsFromPermission",
+    "Verb": "GET",
+    "Summary": "Get tags from Permission",
+    "Description": "Gets all tags from the Permission",
+    "Tags": [
+      "Tagging",
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromRtiTransactionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/RtiTransaction/{rtiTransactionId}/Tags",
+    "OperationId": "GetTagsFromRtiTransaction",
+    "Verb": "GET",
+    "Summary": "Get all tags from RTI transaction",
+    "Description": "Gets all the tags from the RTI transaction",
+    "Tags": [
+      "Tagging"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromSubContractorRevisionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/Tags/{effectiveDate:datetime(yyyy-MM-dd)}",
+    "OperationId": "GetTagsFromSubContractorRevision",
+    "Verb": "GET",
+    "Summary": "Get all sub contractor revision tags",
+    "Description": "Gets all the tags from the sub contractor revision",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromSubContractorRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/SubContractor/{subContractorId}/Tags",
+    "OperationId": "GetTagsFromSubContractor",
+    "Verb": "GET",
+    "Summary": "Get all tags from the sub contractor",
+    "Description": "Gets all the tags from the sub contractor",
+    "Tags": [
+      "Tagging",
+      "CIS"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromThirdPartyTransactionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ThirdPartyTransaction/{thirdPartyTransactionId}/Tags",
+    "OperationId": "GetTagsFromThirdPartyTransaction",
+    "Verb": "GET",
+    "Summary": "Get tags from third party transaction",
+    "Description": "Gets all tags from the third party transaction",
+    "Tags": [
+      "Tagging",
+      "ThirdPartyTransaction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTagsFromUserRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/User/{userId}/Tags",
+    "OperationId": "GetTagsFromUser",
+    "Verb": "GET",
+    "Summary": "Get tags from user",
+    "Description": "Gets all tags from the user",
+    "Tags": [
+      "Tagging",
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTemplateModelRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Template/{dtoDataType}",
+    "OperationId": "GetTemplateModel",
+    "Verb": "GET",
+    "Summary": "Get the object template",
+    "Description": "Returns a template instance of the specified data type",
+    "Tags": [
+      "Templates"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetTemplatesRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Templates",
+    "OperationId": "GetTemplates",
+    "Verb": "GET",
+    "Summary": "Get a list of all available data object tempaltes",
+    "Description": "Returns a collection of links to all the available data object templates",
+    "Tags": [
+      "Templates"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetThirdPartyJobInfoRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/ThirdParty/{jobId}/Info",
+    "OperationId": "GetThirdPartyJobInfo",
+    "Verb": "GET",
+    "Summary": "Get the Third Party job information",
+    "Description": "Return the the Third Party job information",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "JobInfo"
+  },
+  {
+    "ClassName": "GetThirdPartyJobProgressRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/ThirdParty/{jobId}/Progress",
+    "OperationId": "GetThirdPartyJobProgress",
+    "Verb": "GET",
+    "Summary": "Get the Third Party job progress",
+    "Description": "Return the the Third Party job progress",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetThirdPartyJobsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/ThirdParty",
+    "OperationId": "GetThirdPartyJobs",
+    "Verb": "GET",
+    "Summary": "Get all Third Party jobs",
+    "Description": "Gets all the Third Party jobs",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetThirdPartyJobStatusRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Jobs/ThirdParty/{jobId}/Status",
+    "OperationId": "GetThirdPartyJobStatus",
+    "Verb": "GET",
+    "Summary": "Get the Third Party job status",
+    "Description": "Return the the Third Party job status",
+    "Tags": [
+      "Jobs"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "Object"
+  },
+  {
+    "ClassName": "GetThirdPartyTransactionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ThirdPartyTransaction/{thirdPartyTransactionId}",
+    "OperationId": "GetThirdPartyTransaction",
+    "Verb": "GET",
+    "Summary": "Get a third party transaction",
+    "Description": "Get a third party transaction",
+    "Tags": [
+      "ThirdPartyTransaction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "ThirdPartyTransaction"
+  },
+  {
+    "ClassName": "GetThirdPartyTransactionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/ThirdPartyTransactions",
+    "OperationId": "GetThirdPartyTransactions",
+    "Verb": "GET",
+    "Summary": "Get all third party transaction links",
+    "Description": "Get all third party transaction links",
+    "Tags": [
+      "ThirdPartyTransaction"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetTransformDefinitionFromApplicationRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Transform/{transformDefinitionId}",
+    "OperationId": "GetTransformDefinitionFromApplication",
+    "Verb": "GET",
+    "Summary": "Get the transform definition",
+    "Description": "Returns the specified transform definition from the authroised application",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "TransformDefinition"
+  },
+  {
+    "ClassName": "GetTransformDefinitionsFromApplicationRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Transforms",
+    "OperationId": "GetTransformDefinitionsFromApplication",
+    "Verb": "GET",
+    "Summary": "Gets all transform definitions",
+    "Description": "Get links to all saved transform definitions under authorised application",
+    "Tags": [
+      "Reports"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetUserPermissionsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/User/{userId}/Permissions",
+    "OperationId": "GetUserPermissions",
+    "Verb": "GET",
+    "Summary": "Gets the user permissions",
+    "Description": "Gets the user permission instances",
+    "Tags": [
+      "Permission",
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetUserRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/User/{userId}",
+    "OperationId": "GetUser",
+    "Verb": "GET",
+    "Summary": "Gets the user object",
+    "Description": "Gets the user object for application",
+    "Tags": [
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "User"
+  },
+  {
+    "ClassName": "GetUsersFromPermissionRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Permission/{permissionId}/Users",
+    "OperationId": "GetUsersFromPermission",
+    "Verb": "GET",
+    "Summary": "Gets the users with the specified permission",
+    "Description": "Gets the users with the specified permission",
+    "Tags": [
+      "Permission"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetUsersRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Users",
+    "OperationId": "GetUsers",
+    "Verb": "GET",
+    "Summary": "Gets all user objects",
+    "Description": "Gets all user objects for application",
+    "Tags": [
+      "User"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  }
+]

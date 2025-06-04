@@ -3,12 +3,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:PayRunIO.QueryBuilder"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:viewModels="clr-namespace:PayRunIO.QueryBuilder.ViewModels"
              xmlns:filtering="clr-namespace:PayRunIO.v2.Models.Reporting.Filtering;assembly=PayRunIO.v2.Models"
              xmlns:singular="clr-namespace:PayRunIO.v2.Models.Reporting.Outputs.Singular;assembly=PayRunIO.v2.Models"
              xmlns:aggregate="clr-namespace:PayRunIO.v2.Models.Reporting.Outputs.Aggregate;assembly=PayRunIO.v2.Models"
+             xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              Name="UserControlRoot">
@@ -16,9 +16,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
-                    <local:ObjectToTypeNameConverter x:Key="ObjectToTypeNameConverter" />
+                    <converters:ObjectToTypeNameConverter x:Key="ObjectToTypeNameConverter" />
                 </ResourceDictionary>
-                <ResourceDictionary Source="CommonStyles.xaml" />
+                <ResourceDictionary Source="/Helpers/CommonStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>

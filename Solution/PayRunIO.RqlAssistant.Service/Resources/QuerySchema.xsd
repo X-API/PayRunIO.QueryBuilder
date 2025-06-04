@@ -1,0 +1,2474 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema version="1.0.0.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:element name="Query" type="Query" />
+
+    <xsd:complexType name="Query">
+        <xsd:annotation>
+            <xsd:documentation>The data transfer object query. Written using the reporting query language definition. Represents the serialised reporting query used during report processing.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <xsd:element minOccurs="1" maxOccurs="1" name="RootNodeName">
+                <xsd:annotation>
+                    <xsd:documentation>The report root node name. Used for naming the root element of the report output.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="3"/>
+                        <xsd:maxLength value="50"/>
+                        <xsd:pattern value="[A-Za-z0-9\:]*"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="1" name="SchemaLocation" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation>The report root node xsi:schemaLocation value.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="1" name="SuppressMetricAttributes" type="xsd:boolean">
+                <xsd:annotation>
+                    <xsd:documentation>The "suppress" metric attributes option. Determines if the query result metric attributes should be excluded from the query results.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="1" name="ExcludeNullOrEmptyElements" type="xsd:boolean">
+                <xsd:annotation>
+                    <xsd:documentation>The exclude null or empty elements option. Determines if null or empty report elements are excluded from the report output.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+
+            <xsd:element minOccurs="0" maxOccurs="1" nillable="true" name="Encoding">
+                <xsd:annotation>
+                    <xsd:documentation>The report output encoding .</xsd:documentation>
+                </xsd:annotation>
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="3"/>
+                        <xsd:maxLength value="25"/>
+                        <xsd:pattern value="[A-Za-z0-9/-:]*"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+
+            <xsd:element minOccurs="0" maxOccurs="1" nillable="true" name="Namespaces">
+                <xsd:annotation>
+                    <xsd:documentation>The report output namespaces. The namespaces to be included in the report output root element.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element minOccurs="0" maxOccurs="unbounded" name="Namespace" type="Namespace" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="1" nillable="true" name="Variables">
+                <xsd:annotation>
+                    <xsd:documentation>The report variables. Contains the pre-defined key value pair variables.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element minOccurs="0" maxOccurs="unbounded" name="Variable" type="NameValuePair" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="1" nillable="true" name="Required">
+                <xsd:annotation>
+                    <xsd:documentation>The required variable collection. Lists the variable names that must be present at the start of the report generation process.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element minOccurs="0" maxOccurs="unbounded" name="Variable" type="xsd:string" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element minOccurs="1" maxOccurs="1" nillable="true" name="Groups">
+                <xsd:annotation>
+                    <xsd:documentation>The entity reporting groups. Lists the entity reporting groups to be used during the report generation process.</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element minOccurs="0" maxOccurs="unbounded" name="Group" type="EntityGroup" />
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="QueryConditionBase" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>The compare condition base type. Used for conditional exclusion of entity groups based on comparing two values of the same type.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="ValueA" use="required">
+            <xsd:annotation>
+                <xsd:documentation>The first comparison value. Accepts variable names.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="ValueB" use="required">
+            <xsd:annotation>
+                <xsd:documentation>The second comparison value. Accepts variable names.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="When">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when condition. Used for conditional inclusion of entity groups.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+                <xsd:attribute name="CaseSensitive" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The case sensitivity flag value. Determines if comparisons should be case sensitive. If omitted; comparisons are non-case sensitive.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenNot">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when not condition. Used for conditional exclusion of entity groups.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+                <xsd:attribute name="CaseSensitive" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The case sensitivity flag value. Determines if comparisons should be case sensitive. If omitted; comparisons are non-case sensitive.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when equal to condition. Used for conditional exclusion of entity groups by comparing values A and B as equal.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenNotEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when not equal to condition. Used for conditional exclusion of entity groups by comparing values A and B as not equal.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenGreaterThan">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when greater than condition. Used for conditional exclusion of entity groups by comparing value A is greater than value B.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenGreaterThanEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when greater than or equal to condition. Used for conditional exclusion of entity groups by comparing value A is greater than or equal to value B.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenLessThan">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when less than condition. Used for conditional exclusion of entity groups by comparing value A is less than value B.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenLessThanEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when less than or equal to condition. Used for conditional exclusion of entity groups by comparing value A is less than or equal to value B.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenContains">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when contains condition. Used for conditional inclusion of entity groups by determination of value A containing value B.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+                <xsd:attribute name="CaseSensitive" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The case sensitivity flag value. Determines if comparisons should be case sensitive. If omitted; comparisons are non-case sensitive.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenNotContains">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when not contains condition. Used for conditional exclusion of entity groups by determination of value A containing value B.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+                <xsd:attribute name="CaseSensitive" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The case sensitivity flag value. Determines if comparisons should be case sensitive. If omitted; comparisons are non-case sensitive.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenWithinArray">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when within array condition. Used for conditional inclusion of entity groups by comparing comma separated array 'value A' against candidate 'value B'.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WhenNotWithinArray">
+        <xsd:annotation>
+            <xsd:documentation>
+                The when within array condition. Used for conditional exclusion of entity groups by comparing comma separated array 'value A' against candidate 'value B'.
+                <p>
+                    <strong>Supported data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryConditionBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="EntityGroup">
+        <xsd:annotation>
+            <xsd:documentation>The entity reporting group. Represents a logical output element within the report. Used to select and iterate over entities during the report generation process.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element minOccurs="0" maxOccurs="unbounded" name="Condition" type="QueryConditionBase">
+                <xsd:annotation>
+                    <xsd:documentation>The exclusion conditions. Allows for the specification of exclusion condition checks.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="unbounded" name="Filter" type="QueryFilterBase">
+                <xsd:annotation>
+                    <xsd:documentation>The filter rules. Allows for the specification of entity filter expressions.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="unbounded" name="Output" type="QueryOutputBase">
+                <xsd:annotation>
+                    <xsd:documentation>The output expressions. Allows for the specification of report output expressions.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="unbounded" name="Order" type="QueryOrderByBase">
+                <xsd:annotation>
+                    <xsd:documentation>The order expressions. Allows for sorting matched entities.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element minOccurs="0" maxOccurs="unbounded" name="Group" type="EntityGroup">
+                <xsd:annotation>
+                    <xsd:documentation>The sub entity groups. Allows for generation of hierarchical report elements.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="GroupName" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The group name. Used to name the containing report element generated for the entity group. If omitted, no containing element is created and all sub elements will be appended to the containing parent node.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="[A-Za-z0-9:]*"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="ItemName" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The item name. Used to name any matched entity report elements. If omitted, no entity level element is created and all outputs will be appended to the containing parent node.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="[A-Za-z0-9:]*"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="Selector" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>
+                    The entity selection URL. Used match entities for the owning group. Follows the URL pattern used across the API. For Example: /Employer/<b>ER001</b>/Employees will match all employees under the employer with a unique key of <b>ER001</b>.
+                </xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="^[a-zA-Z0-9\-_\.\*\/\[\]]+(?:\(\))?$"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="UniqueKeyVariable" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The variable name to store the matched entity unique key during the report iteration. If specified, the unique key value will be applied to the named variable as the report executes any sub groups.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="\[[A-Za-z0-9]+\]"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="LoopExpression" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The loop expression. Enables options for looping over the matched entities.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="Predicate" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>
+                    <span>The predicate value (Optional). Allows for the specification of low level entity filter predicate. Predicate values can be used to control the entities matched by the group selector.</span>
+                    <br />
+                    <span>Predicates must match the following pattern: [PropertyName] [Operator] [Value] (optional) AND OR</span>
+                    <br />
+                    <br/>
+                    <span>Examples:</span>
+                    <br />
+                    <ul>
+                        <li>[Name] == 'value'</li>
+                        <li>[Value] &gt; 100.00</li>
+                        <li>[Date] &lt;= 2022-04-06</li>
+                        <li>[Name] == 'value' AND [Value] &gt; 100.00 AND [Date] = null OR [Date] &lt;= 2022-04-06</li>
+                        <li>OFTYPE = 'TaxPayInstruction'</li>
+                        <li>[Name] CONTAINS 'Smith'</li>
+                        <li>[Name] EXCLUDES 'Smith'</li>
+                        <li>[Name] STARTSWITH 'Smith'</li>
+                        <li>[Name] ENDSWITH 'Smith'</li>
+                    </ul>
+                    <br />
+                    <span>Operators:</span>
+                    <br />
+                    <ul>
+                        <li>Equal To: ==</li>
+                        <li>Not Equal To: !=</li>
+                        <li>Greater Than: &gt;</li>
+                        <li>Greater Than Equal To: &gt;=</li>
+                        <li>Less Than: &lt;</li>
+                        <li>Less Than Equal To: &lt;=</li>
+                        <li>String property contains sub string: CONTAINS</li>
+                        <li>String property excludes sub string: EXCLUDES</li>
+                        <li>String property starts with sub string: STARTSWITH</li>
+                        <li>String property ends with sub string: ENDSWITH</li>
+                    </ul>
+                </xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="Optimise" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The optimisation control value. Controls the data selection of match entities. When optimisation selected, only specified properties are populated in the results.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:boolean">
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="QueryFilterBase" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>The filter base type. Used for filtering matched entities.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="IsOr" use="optional">
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:boolean" />
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="ActiveOn">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The active on filter. Allows entity filtering on objects that have start and end date properties. Also supports ongoing, open ended objects.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The effective date. Used as the target of the Active on test. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string" />
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ActiveWithin">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The active within filter. Allows entity filtering on objects that have start and end date properties intersecting the specified date range. Supports ongoing, open ended objects.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The date range. Must be specified as two dates separated by a comma. Example: 2019-01-31,2019-12-31. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value=".+,.+" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Between">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The between filter. Allows entity filtering by properties between two values. Values outside the specified range will be excluded from the matched results.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                    <li>DateTime</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The first filter value. Represents the lower level of the between filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value2" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The second filter value. Represents the upper level of the between filter.  Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Contain">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The contain filter. Allows entity filtering by properties containing the specified value. Properties that do not contain the specified value will be excluded from the matched results.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="EndsWith">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The ends with filter. Matches entities having the property ending with the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="EqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The equal to filter. Matches entities having the property matching specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Boolean</li>
+                    <li>DateTime</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="GreaterThan">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The greater than filter. Matches entities having the property greater than the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>DateTime</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="GreaterThanEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The greater than or equal to filter. Matches entities having the property greater than or equal to the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>DateTime</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IsNullOrGreaterThan">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The is null or greater than filter. Matches entities having the property of null or greater than the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>DateTime</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IsNullOrGreaterThanEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The is null or greater than or equal to filter. Matches entities having the property of null or greater than or equal to the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>DateTime</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IsNotNull">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The is not null filter. Matches entities having a non-null property value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Object</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IsNull">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The is null filter. Matches entities having a null property value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Object</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="LessThan">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The less than filter. Matches entities having the property less than the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="LessThanEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The less than or equal to filter. Matches entities having the property less than or equal to the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IsNullOrLessThan">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The is null or less than filter. Matches entities having the property of null or less than the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="IsNullOrLessThanEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The is null or less than or equal to filter. Matches entities having the property of null or less than or equal to the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NotContain">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The not contain filter. Allows entity filtering by properties that do not contain the specified value. Properties that do contain the specified value will be excluded from the matched results.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NotEqualTo">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The not equal to filter. Matches entities with a property not matching specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Boolean</li>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NotWithinArray">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The not within array query filter. Matches entities with a property not included in the specified array. Array values should be represented as comma separated list.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                    <li>
+                        DateTime (<i>yyyy-MM-dd,yyyy-MM-dd</i>)
+                    </li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter array value. Represents a comma separated list of values to be used in the filter evaluation. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="OfType">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>
+                    The of type query filter. Matches entities of the specified type(s). Types to be matched can be represented as a comma seperated list of type names. E.g: <b>PayLinePension, PayLineBenefit</b>
+                </span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NotOfType">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>
+                    The not of type query filter. Excludes entities of the specified type(s). Types to be excluded can be represented as a comma seperated list of type names. E.g: <b>PayLinePension, PayLineBenefit</b>
+                </span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="OfDerivedType">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>
+                    The of derived type query filter. Matches entities that inherit from the specified type.
+                </span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NotOfDerivedType">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>
+                    The not of derived type query filter. Matches entities that do not inherit from the specified type.
+                </span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="StartsWith">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The starts with filter. Matches entities having the property starting with the specified value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter value. The value to be used in the filter. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="TakeFirst">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The take first filter. Matches the specified number of entities from the matched entity group.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The number of entities to match. The value must be a non-negative integer. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:int">
+                            <xsd:minInclusive value="0" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="WithinArray">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The within array query filter. Matches entities with a property value included in the specified array. Array values should be represented as comma separated list.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>String</li>
+                    <li>
+                        Date Time (<i>yyyy-MM-dd,yyyy-MM-dd</i>)
+                    </li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter array value. Represents a comma separated list of values to be used in the filter evaluation. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="HasFlag">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The has flag query filter. Matches entities having a enumerator flag value that contains the specified filter value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Enum (Flag)</li>
+                    <li>
+                        WorkingDays.Monday | WorkingDays.Friday
+                    </li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter array value. Represents a space separated list of flag values to be used in the filter evaluation. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NotHasFlag">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The not has flag query filter. Matches entities not having a enumerator flag value that contains the specified filter value.</span>
+                <p>
+                    <strong>Supported property data types:</strong>
+                </p>
+                <ul>
+                    <li>Enum (Flag)</li>
+                    <li>
+                        WorkingDays.Monday | WorkingDays.Friday
+                    </li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryFilterBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The filter array value. Represents a space separated list of flag values to be used in the filter evaluation. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:element name="Namespace" type="Namespace" />
+
+    <xsd:complexType name="Namespace">
+        <xsd:annotation>
+            <xsd:documentation>A query namespace declaration. Used to inject namespaces into the query output document.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute use="required" name="Prefix">
+                    <xsd:simpleType>
+                        <xsd:annotation>
+                            <xsd:documentation>The namespace prefix to be used in the query output document.</xsd:documentation>
+                        </xsd:annotation>
+                        <xsd:restriction base="xsd:string" />
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="NameValuePair">
+        <xsd:annotation>
+            <xsd:documentation>The name value pair. Manages the variable key value pairs used within reporting queries.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="Name" use="required">
+            <xsd:annotation>
+                <xsd:documentation>The name. Represents the key name for the pair.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="3"/>
+                    <xsd:maxLength value="200"/>
+                    <xsd:pattern value="\[[A-Za-z0-9]+\]"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="Value" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The value. Represents the value element of the pair.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="QueryOrderByBase" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>The order by base type. Used to specify the output order for matched entities.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="Property" use="required">
+            <xsd:annotation>
+                <xsd:documentation>The property name. Indicates the entity property to be used for ordering.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:pattern value="[A-Za-z0-9_\.]+"/>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="Ascending">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The ascending order by option. Used to sort matched entities by their specified property values.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOrderByBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Descending">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The descending order by option. Used to sort matched entities by their specified property values.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOrderByBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="QueryOutputAggregateBase" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output base type. Defines the common schema elements of the aggregation outputs.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:sequence>
+                    <xsd:element minOccurs="0" maxOccurs="unbounded" name="Filter" type="QueryFilterBase">
+                        <xsd:annotation>
+                            <xsd:documentation>The filter rules. Allows for the specification of entity filter expressions.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:sequence>
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output name. Used to identify the output target. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Negate" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The negate option. Indicates that the aggregation result should be negated.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Avg">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output average type. Used to output the average value of the specified property.</span>
+                <h3>Supported property data types:</h3>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the aggregated result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Count">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output count type. Outputs the number of matched entities.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="ExpressionCalculator">
+        <xsd:annotation>
+            <xsd:documentation>
+                <p>The aggregate output expression calculator type. Used to output the results of simple mathematical expressions.</p>
+                <p>Supported symbols: plus +, minus -, divide / and multiply *</p>
+                <p>Use of property names, variable name and constant values is allowed. Example: Property * [Variable] - 10</p>
+                <h3>Supported property data types:</h3>
+                <ul>
+                    <li>Integer</li>
+                    <li>Decimal</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+                <xsd:attribute name="Expression" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The aggregation expression. A simple expression following this pattern: 1 + 2 - 3 / 4 * 10.9. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[\[\]\.\-\/a-zA-Z0-9+*$ ]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the aggregated result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Min" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The minimum result value. Used to ensure the returned value is not less than the specified minimum. Variable Names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Max" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The minimum result value. Used to ensure the returned value is not less than the specified minimum. Variable Names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Rounding" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The rounding option value. Used to indicate how the expression result is rounded. Variable names are not supported.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="RoundingOption">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Max">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output maximum type. Used to output the maximum value of the specified property across the selected entities.</span>
+                <h3>Supported property data types:</h3>
+                <ul>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the aggregated result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Min">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output minimum type. Used to output the minimum value of the specified property across the selected entities.</span>
+                <h3>Supported property data types:</h3>
+                <ul>
+                    <li>Date Time</li>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the aggregated result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Sum">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output sum type. Used to output the sum value of the specified property across the selected entities.</span>
+                <h3>Supported property data types:</h3>
+                <ul>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the aggregated result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="DefaultValue" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The default result value. Used to apply a default output value in the event of the property being null.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="Distinct">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The aggregate output distinct type. Used to output the a distinct CSV list of values from specified property across the selected entities.</span>
+                <h3>Supported property data types:</h3>
+                <ul>
+                    <li>Decimal</li>
+                    <li>Integer</li>
+                    <li>DateTime</li>
+                    <li>String</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputAggregateBase">
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the aggregated result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="QueryOutputBase" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>The output base type. Used to specify the elements outputted to the report.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="Output" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The target location for the output. Allows the output to be directed towards: element, attribute or variable. If omitted; defaults to element.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                    <xsd:enumeration value="Element">
+                        <xsd:annotation>
+                            <xsd:documentation>Target the report element.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="Attribute">
+                        <xsd:annotation>
+                            <xsd:documentation>Target the report element attribute.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="Variable">
+                        <xsd:annotation>
+                            <xsd:documentation>Target and replace the report variable.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="VariableSum">
+                        <xsd:annotation>
+                            <xsd:documentation>Target and sum the report variable. Numeric variable types only.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="VariableAppend">
+                        <xsd:annotation>
+                            <xsd:documentation>Target and concatenate the report variable. String variable types only.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="VariablePrepend">
+                        <xsd:annotation>
+                            <xsd:documentation>The [Variable Prepend] type. Indicates the output should be joined to the start of the current variable value.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="ElementDatePart">
+                        <xsd:annotation>
+                            <xsd:documentation>The [ElementDatePart] type. Indicates the date value should be written to an element with the [Day], [Month] and [Year] specified as individual attributes.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                    <xsd:enumeration value="InnerText">
+                        <xsd:annotation>
+                            <xsd:documentation>The [Inner Text] type. Indicates that the value should be rendered to the inner text of the node in context.</xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:enumeration>
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="MaxLength" use="optional">
+            <xsd:annotation>
+                <xsd:documentation>The maximum character length. Specifies the maximum number of characters to be output.</xsd:documentation>
+            </xsd:annotation>
+            <xsd:simpleType>
+                <xsd:restriction base="xsd:integer">
+                    <xsd:minInclusive value="0" />
+                </xsd:restriction>
+            </xsd:simpleType>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderEntity">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render entity type. Used to render the entire serialised entity to the report output.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderLink">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render entity link type. Used to render the entity resource locator link to the report output.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderProperty">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render property type. Used to render the property values of the matched entities during the report generation process.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Property" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The property name. Indicates the entity property to be used in the filter expression.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[A-Za-z0-9_\.\[\]]+"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the output result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderTaxPeriod">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render tax period type. Used to render details of the tax period matched bt the specified date and payment frequency.</span>
+                <h3>Tax Period Format:</h3>
+                <ul>
+                    <li>pp-yyyy/yy (01-2017/18)</li>
+                    <li>pp: Tax Period (padded with leading zero if required)</li>
+                    <li>yyyy: The starting year for the tax period.</li>
+                    <li>yy: The ending year for the tax period.</li>
+                </ul>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="DisplayName" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output display name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="PayFrequency" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The payment frequency. Used to identify the required tax period. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Date" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The context date. Used to identify the required tax period. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="RenderOption" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The optional tax period output type. Enables the selection of the tax year output type.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:enumeration value="AsString">
+                                <xsd:annotation>
+                                    <xsd:documentation>Indicates that the tax year should be rendered as a string (pp-yyyy/yy).</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:enumeration>
+                            <xsd:enumeration value="PeriodOnly">
+                                <xsd:annotation>
+                                    <xsd:documentation>Indicates that only the tax year period should be rendered</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:enumeration>
+                            <xsd:enumeration value="YearOnly">
+                                <xsd:annotation>
+                                    <xsd:documentation>Indicates that only the tax year should be rendered.</xsd:documentation>
+                                </xsd:annotation>
+                            </xsd:enumeration>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderTaxPeriodDate">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render tax period date. Used to render the start or end tax period dates.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="DisplayName" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output display name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="TaxYear" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The starting year. The year in which the required tax period stated. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="TaxPeriod" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The tax period number. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="PayFrequency" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The payment frequency. Used to identify the required tax period. If omitted; defaults to Monthly.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The formatting option. Used to format the resulting tax period date.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="EndDate" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The end date option. Used to select the tax period end date. If omitted; defaults to False.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderTypeName">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render entity type name. Used to render data type name for the matched entities during the query execution.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output display name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderValue">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render value output. Used to render a value during the query processing. Enables the output of variable values.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Value" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output value. Specifies the value to be written to the query output. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The output formatting. Used to apply string formatting to the output result.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Negate" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The value negation option. Determines if the rendered numeric value should be negated.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:boolean">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Regex" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The regular expression value. Specifies the regular expression to be applied to the source value in order to create the output value.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderConstant">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render output constant type. Used to select constant values from within the API.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output name. Provides the name of the outputted value.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="ConstantName" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The name of the API constant value. Provides the name of the constant value to be rendered.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="ConstantType" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The data type name of constant value. Provides the name of the constant value data type to be rendered.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:enumeration value="System.Decimal" />
+                            <xsd:enumeration value="System.Integer" />
+                            <xsd:enumeration value="System.String" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderArrayHint">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render array hint. Used to force the generation of Json array brackets around child entity collections.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase" />
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderIndex">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render index output type. Used to create an incrementing index attribute. Indexes are used to provide paging support across large data sets.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase" />
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderNextDate">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render next date output type. Used to calculate the next per period date based on a specified start date and pay frequency.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output display name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Date" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The context date. Used to identify the required tax period. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="PayFrequency" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The payment frequency. Used to identify the required tax period. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The formatting option. Used to format the resulting tax period date.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderDateAdd">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render date add output type. Used to calculate a new date based on interval and increment values.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output display name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Date" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The source date that the calculated date will be based upon. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Interval" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The interval type to add or subtract from the source date. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Increment" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The increment value to add or subtract from the source date; can be negative. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:integer">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Format" use="optional">
+                    <xsd:annotation>
+                        <xsd:documentation>The formatting option. Used to format the resulting tax period date.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="RenderUniqueKeyFromLink">
+        <xsd:annotation>
+            <xsd:documentation>
+                <span>The render unique key from link output. Used to render the unique key value from a link href during the query processing.</span>
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="QueryOutputBase">
+                <xsd:attribute name="Name" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The output name. Specifies the name of the output target.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+                <xsd:attribute name="Href" use="required">
+                    <xsd:annotation>
+                        <xsd:documentation>The link href value. Specifies the link href from which the unique key should be extracted. Variable names are allowed.</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:attribute>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+</xsd:schema>

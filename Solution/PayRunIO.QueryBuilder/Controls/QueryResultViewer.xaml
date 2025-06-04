@@ -3,18 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:PayRunIO.QueryBuilder"
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:connectionControls="clr-namespace:PayRunIO.ConnectionControls;assembly=PayRunIO.ConnectionControls"
+             xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
              Name="UserControlRoot"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="CommonStyles.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="/Helpers/CommonStyles.xaml"></ResourceDictionary>
                 <ResourceDictionary>
-                    <local:TextEditorSyntaxHighlightingConverter x:Key="SyntaxHighlightingConverter" />
+                    <converters:TextEditorSyntaxHighlightingConverter x:Key="SyntaxHighlightingConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

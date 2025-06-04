@@ -14,6 +14,7 @@
 
     using PayRunIO.ConnectionControls;
     using PayRunIO.ConnectionControls.Models;
+    using PayRunIO.QueryBuilder.Helpers;
     using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.v2.Models.Reporting;
     using PayRunIO.v2.OAuth1;
