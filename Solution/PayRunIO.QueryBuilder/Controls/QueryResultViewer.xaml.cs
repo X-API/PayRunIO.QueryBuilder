@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Runtime.CompilerServices;
     using System.Text;
     using System.Threading.Tasks;
     using System.Windows;
@@ -16,6 +17,7 @@
     using PayRunIO.ConnectionControls.Models;
     using PayRunIO.QueryBuilder.Helpers;
     using PayRunIO.v2.CSharp.SDK;
+    using PayRunIO.v2.Models;
     using PayRunIO.v2.Models.Reporting;
     using PayRunIO.v2.OAuth1;
 
@@ -37,6 +39,14 @@
         public static readonly DependencyProperty QueryProperty = DependencyProperty.Register("Query", typeof(Query), typeof(QueryResultViewer), new PropertyMetadata(default(Query)));
 
         public static readonly DependencyProperty QueryResponseDocumentProperty = DependencyProperty.Register("QueryResponseDocument", typeof(TextDocument), typeof(QueryResultViewer), new PropertyMetadata(default(TextDocument)));
+
+        public static readonly DependencyProperty LastErrorModelProperty = DependencyProperty.Register(nameof(LastErrorModel), typeof(ErrorModel), typeof(QueryResultViewer), new PropertyMetadata(default(ErrorModel)));
+
+        public ErrorModel LastErrorModel
+        {
+            get => (ErrorModel)GetValue(LastErrorModelProperty);
+            set => this.SetValue(LastErrorModelProperty, value);
+        }
 
         public TextDocument QueryResponseDocument
         {
@@ -76,15 +86,20 @@
 
             var query = this.Query;
 
-            Action<string> callBack = textResult =>
+            Action<(string text, ErrorModel error)> callBack = args =>
                 {
-                    this.QueryResponseDocument = new TextDocument(textResult);
+                    this.QueryResponseDocument = new TextDocument(args.text);
 
                     if (connection.ContentType == ContentType.XML)
                     {
                         this.foldingManager = FoldingManager.Install(this.ResultViewTextEditor.TextArea);
                         var foldingStrategy = new XmlFoldingStrategy();
                         foldingStrategy.UpdateFoldings(this.foldingManager, this.ResultViewTextEditor.Document);
+                    }
+
+                    if (args.error != null)
+                    {
+                        this.LastErrorModel = args.error;
                     }
                 };
 
@@ -131,9 +146,11 @@
             return restApiHelper;
         }
 
-        private static async Task<string> GetResponseText(IRestApiHelperAsync restApiHelper, Query query, ContentType responseType)
+        private static async Task<(string, ErrorModel)> GetResponseText(IRestApiHelperAsync restApiHelper, Query query, ContentType responseType)
         {
             string textResult = null;
+
+            ErrorModel error = null;
 
             try
             {
@@ -154,6 +171,8 @@
             }
             catch (ApiResponseException ex)
             {
+                error = ex.ErrorModel;
+
                 if (responseType == ContentType.XML)
                 {
                     textResult = XmlSerialiserHelper.SerialiseToXmlDoc(ex.ErrorModel).Beautify();
@@ -180,7 +199,7 @@
                 textResult = result.ToString();
             }
 
-            return textResult;
+            return (textResult, error);
         }
 
         private static Task<string> GetQueryResult(string query, Func<string, string, Task<string>> queryMethod)
@@ -189,52 +208,5 @@
 
             return result;
         }
-        //
-        // private void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        // {
-        //     e.CanExecute = ApiProfiles.Instance.Profiles.Count > 1;
-        // }
-        //
-        // private void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        // {
-        //     var profileToDelete = this.SelectedProfile;
-        //
-        //     var nextProfile = ApiProfiles.Instance.Profiles.FirstOrDefault(p => p != profileToDelete);
-        //
-        //     if (nextProfile != null)
-        //     {
-        //         this.SelectedProfile = nextProfile;
-        //         ApiProfiles.Instance.DeleteProfile(profileToDelete.Name);
-        //         this.Expander.IsExpanded = false;
-        //     }
-        // }
-        //
-        // private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        // {
-        //     e.CanExecute = true;
-        // }
-        //
-        // private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-        // {
-        //     int count = 1;
-        //
-        //     var name = $"Profile ({count:000})";
-        //
-        //     while (ApiProfiles.Instance[name] != null)
-        //     {
-        //         name = $"Profile ({++count:000})";
-        //     }
-        //
-        //     ApiProfiles.Instance.AddProfile(name);
-        //
-        //     var apiProfile = ApiProfiles.Instance[name];
-        //
-        //     apiProfile.ApiHostUrl = "https://api.test.payrun.io";
-        //     apiProfile.ResponseType = "XML";
-        //
-        //     this.SelectedProfile = apiProfile;
-        //
-        //     this.Expander.IsExpanded = true;
-        // }
     }
 }

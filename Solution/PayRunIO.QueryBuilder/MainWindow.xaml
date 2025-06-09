@@ -85,6 +85,7 @@
                     <MenuItem Header="_Create New Query" Click="AiCreate_OnClick" />
                     <MenuItem Header="_Edit Query" Click="AiEdit_OnClick" />
                     <MenuItem Header="_Discuss Query" Click="AiDiscuss_OnClick" />
+                    <MenuItem Header="_Error Help" Click="AiErrorHelp_OnClick" />
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header="_About" Click="About_OnClick"></MenuItem>

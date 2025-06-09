@@ -786,5 +786,27 @@
 
             aiAssistantWindow.ShowDialog();
         }
+
+        private void AiErrorHelp_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (this.QueryResultViewer.LastErrorModel == null)
+            {
+                return;
+            }
+
+            var questionText =
+                $"Please help me understand this error message:\r\n\r\n```xml\r\n{XmlSerialiserHelper.SerialiseToXmlDoc(this.QueryResultViewer.LastErrorModel).Beautify()}\r\n```";
+
+            var aiAssistantWindow =
+                new AiAssistantWindow
+                    {
+                        Owner = this,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        QuestionBox = { Text = questionText },
+                        Query = this.Source
+                    };
+
+            aiAssistantWindow.ShowDialog();
+        }
     }
 }
