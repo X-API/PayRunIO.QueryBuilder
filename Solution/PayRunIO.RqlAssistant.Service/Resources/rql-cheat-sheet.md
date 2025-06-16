@@ -1,62 +1,133 @@
-# RQL Overview Guide
+# Report Query Language (RQL) – Condensed Spec (v2025)
 
-**Report Query Language (RQL)** is a powerful, structured query format used within the PayRun.io API to define ad-hoc and reusable reports. It enables the extraction and transformation of payroll-related data through a declarative, hierarchical structure.
+**Use** this cheat‑sheet when generating RQL inside an LLM prompt. It contains every rule once; deeper payroll‑domain look‑ups live in the retrieval appendix.
 
-## 🎯 Purpose and Intent
+---
 
-RQL allows users to construct highly customized reports by describing **what data** to retrieve and **how to structure the response**. It supports both flat and nested queries over entities like Employers, Employees, Pay Instructions, and more.
+## 1. Mini‑grammar
 
-## 🧱 Core Concepts
+```xml
+<Query RootNodeName="…">
+  <Variables>* <Variable Name="…" Value="…"/> </Variables>
+  <Groups>+
+    <Group GroupName="…" Selector="…" [ItemName] [UniqueKeyVariable]
+           [Predicate] [LoopExpression]>
+      <Conditions>*  <Condition Type="…" …/> </Conditions>
+      <Filters>*     <Filter Type="…" …/>    </Filters>
+      <Ordering>?    <OrderBy Property="…" Direction="Ascending|Descending"/> </Ordering>
+      <Outputs>*     <!-- RenderEntity | Sum | … --> </Outputs>
+      <Groups>*      <!-- recursion -->
+    </Group>
+  </Groups>
+</Query>
+```
 
-### Query Structure
-An RQL query is composed of the following elements:
-- **Root Node** – Defines the name of the top-level result.
-- **Variables** – Parameterize and control query behavior.
-- **Groups** – Specify entity selection logic and shape the result hierarchy.
-- **Outputs** – Define the data to be included in the output for each group.
-- **Conditions & Filters** – Apply logic to determine group visibility and post-fetch filtering.
+Legend: `*` = 0‑n, `+` = 1‑n, `?` = 0‑1, `[]` = optional attribute.
 
-### Groups
-Groups are the foundational units of data selection. They:
-- Match one or more entities using `Selector` paths.
-- Can be nested to represent parent-child relationships.
-- Include `Output`, `Condition`, `Filter`, and `Ordering` elements.
+---
 
-### Selectors
-Selectors define the resource path (similar to an API URI) for the data to be queried. They can be:
-- **Static paths** (e.g. `/Employers`)
-- **Dynamic paths** using variable substitution (e.g. `/Employer/[EmployerKey]/Employees`)
+## 2. Core attributes (groups & query)
 
-### Variables
-Variables are used:
-- As dynamic placeholders in selectors or outputs.
-- To store intermediate values like totals or identifiers.
-- With optional formatting and runtime reassignment via outputs.
+| Attr | Default | Purpose | Snippet |
+|------|---------|---------|---------|
+| `GroupName` | – | Node name in output | `GroupName="Employer"` |
+| `ItemName`  | plural of GroupName | Rename single items | `ItemName="Employee"` |
+| `Selector`  | – | Path to data | `/Employer/[EmployerKey]/Employees` |
+| `UniqueKeyVariable` | – | Stores ID of each match | `UniqueKeyVariable="[EmpID]"` |
+| `Predicate` | – | Server‑side SQL filter | `Predicate="EmployeeID > 1000"` |
+| `LoopExpression` | – | For each CSV/array item | `LoopExpression="[YearList]"` |
+| `RootNodeName` (Query) | `QueryResult` | Top element name | `RootNodeName="PayrollRpt"` |
 
-### Outputs
-Outputs specify what information to return:
-- Single-value outputs (like entity fields or constants).
-- Aggregate outputs (such as `Sum`, `Count`, `Avg`).
-- Render control (e.g. to elements, attributes, or variables).
+---
 
-### Conditions and Filters
-- **Conditions** determine whether a group executes.
-- **Filters** constrain entity sets after selection.
-- **Predicates** can be used for pre-fetch constraints within a `Selector`.
+## 3. Outputs & filters
 
-## 💡 Advanced Capabilities
-- **Nested Groups** for hierarchical traversal and output.
-- **Render Options** to customize output structure and behavior.
-- **Expression Calculators** for in-query arithmetic.
-- **Support for Date/Number formatting, looping, tax period calculations, and regex substitution.**
+| Type | Key params | Returns / Action |
+|------|------------|------------------|
+| **RenderEntity** | `Output` target | Whole XML of entity |
+| **RenderProperty** | `Property` | Value of field |
+| **RenderValue** | `Value`, `Regex` | Constant or extracted text |
+| **Sum / Count / Avg / Min / Max** | `Property` | Aggregate number |
+| **Distinct** | `Property` | CSV of unique values |
+| **ExpressionCalculator** | `Expression` | Calculated scalar |
+| **Filter.Equals / NotEquals** | `Property`, `Value` | Match (= / ≠) |
+| **Filter.GreaterThan / LessThan / Between** | `Property`, `Value(s)` | Range |
+| **Filter.Contains / StartsWith / Regex** | `Property`, `Value` | Text test |
+| **Filter.OfType / NotOfType** | `Property`, `Type` | Polymorphic entity |
+| **Filter.FlagSet / FlagNotSet** | `Property`, `Flag` | Bitwise flag |
+| **Filter.IsNull / NotNull** | `Property` | Null check |
+| **Filter.TakeFirst** | `Count` | Cardinality limit |
 
-## 🔄 Execution Model
-- RQL processes from top-level groups downward.
-- Each group loops through matched entities.
-- Variables and outputs are evaluated per match.
-- Nested groups reflect the parent-child traversal of entity hierarchies.
+All filters AND together unless `<Filters IsOr="true">`.
 
-## ✅ Typical Use Cases
-- Payroll summaries and breakdowns.
-- Dynamic report generation without code changes.
-- Bulk querying of nested employee/pay instruction data.
+`Output=` can be `Element` (default), `Attribute`, `Variable`, `VariableSum/Append/Prepend`, or `InnerText`.
+
+---
+
+## 4. Evaluation & paging rules
+
+* **Order**: Conditions → Selector → Predicate → Filters → Ordering → *aggregates* → scalars.  
+* Variables are **global for the whole query**; re‑initialise them in each loop to avoid leakage.  
+* `[StartIndex]` & `[MaxIndex]` variables plus `RenderIndex` enable paging.  
+* Wildcard `*` steps and `//` segments flatten selectors; use sparingly for performance.
+
+---
+
+## 5. Golden‑path examples
+
+### 5.1 Flat list
+```xml
+<Query RootNodeName="Employers">
+  <Groups>
+    <Group GroupName="Employer" Selector="/Employer">
+      <Outputs>
+        <RenderProperty Property="EmployerName"/>
+      </Outputs>
+    </Group>
+  </Groups>
+</Query>
+```
+
+### 5.2 Nested hierarchy with variable chaining
+```xml
+<Query RootNodeName="PayDetails">
+  <Groups>
+    <Group GroupName="Employer" Selector="/Employer" UniqueKeyVariable="[EmpKey]">
+      <Groups>
+        <Group GroupName="Employee" Selector="/Employer/[EmpKey]/Employees" UniqueKeyVariable="[EEKey]">
+          <Groups>
+            <Group GroupName="PayLine" Selector="/Employer/[EmpKey]/Employees/[EEKey]/PayLines">
+              <Outputs>
+                <RenderProperty Property="Description"/>
+                <RenderProperty Property="Amount"/>
+              </Outputs>
+            </Group>
+          </Groups>
+        </Group>
+      </Groups>
+    </Group>
+  </Groups>
+</Query>
+```
+
+### 5.3 Aggregation
+```xml
+<Query RootNodeName="Totals">
+  <Groups>
+    <Group GroupName="Employer" Selector="/Employer">
+      <Outputs>
+        <Sum Property="GrossPay" Output="Element"/>
+        <Count Property="Employees" Output="Attribute"/>
+      </Outputs>
+    </Group>
+  </Groups>
+</Query>
+```
+
+---
+
+**Appendix** – Full filter catalogue, payroll field map, and optimisation flags are stored separately in the vector index. Fetch them only when the user question references a specific item not covered above.
+
+---
+
+*End of condensed specification (≈ 600 tokens).*

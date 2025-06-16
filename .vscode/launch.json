@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "NetCoreDbg",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Solution/PayRunIO.QueryBuilder/bin/Debug/net8.0-windows7.0/PayRunIO.QueryBuilder.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Solution/PayRunIO.QueryBuilder",
+            "console": "internalConsole",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}/Solution/PayRunIO.QueryBuilder",
+                "pipeProgram": "powershell",
+                "pipeArgs": ["-c"],
+                "debuggerPath": "C:\\Users\\crisp\\source\\lib\\netcoredbg-win64\\netcoredbg\\netcoredbg.exe",
+                "debuggerArgs": ["--interpreter=vscode"],
+                "quoteArgs": true
+            },
+            "env":{
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        }
+    ]
+}

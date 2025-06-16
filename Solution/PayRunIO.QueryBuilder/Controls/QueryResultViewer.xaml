@@ -6,6 +6,7 @@
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:connectionControls="clr-namespace:PayRunIO.ConnectionControls;assembly=PayRunIO.ConnectionControls"
              xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
+             xmlns:helpers="clr-namespace:PayRunIO.QueryBuilder.Helpers"
              Name="UserControlRoot"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -15,6 +16,7 @@
                 <ResourceDictionary Source="/Helpers/CommonStyles.xaml"></ResourceDictionary>
                 <ResourceDictionary>
                     <converters:TextEditorSyntaxHighlightingConverter x:Key="SyntaxHighlightingConverter" />
+                    <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -66,6 +68,21 @@
                 </ContextMenu>
             </avalonedit:TextEditor.ContextMenu>
         </avalonedit:TextEditor>
+
+        <Button 
+            Grid.Row="2"
+            Margin="5 5 25 5" 
+            Padding="2" 
+            VerticalAlignment="Top" 
+            HorizontalAlignment="Right" 
+            Background="LightCoral"
+            Command="helpers:CommonAiCommands.ErrorAiQueryCommand"
+            Visibility="{Binding ElementName=UserControlRoot, Path=LastErrorModel, Converter={StaticResource NullToVisibilityConverter}}">
+            <Button.ToolTip>
+                <TextBlock>Get AI help with this error</TextBlock>
+            </Button.ToolTip>
+            <TextBlock Text="Error Help🤔" FontWeight="Bold" FontSize="20" />
+        </Button>
     </Grid>
 
 </UserControl>

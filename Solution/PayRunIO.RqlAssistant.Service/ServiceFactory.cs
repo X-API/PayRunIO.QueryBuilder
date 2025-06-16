@@ -6,12 +6,17 @@
     {
         private const string DefaultTimeoutAsString = "00:05:00";
 
-        public static IRqlRagService CreateService(IConfiguration configuration)
+        public static IRqlRagService CreateService(IConfiguration configuration, HttpClient? httpClient = null)
         {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
             var remoteAiService = 
                 new RemoteAiService(
                     configuration, 
-                    new HttpClient
+                    httpClient ?? new HttpClient
                         {
                             Timeout = TimeSpan.Parse(configuration["HttpClient:TimeOut"] ?? DefaultTimeoutAsString)
                         });

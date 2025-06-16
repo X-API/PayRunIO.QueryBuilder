@@ -6,6 +6,7 @@
         xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:queryBuilder="clr-namespace:PayRunIO.QueryBuilder"
         xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
+        xmlns:helpers="clr-namespace:PayRunIO.QueryBuilder.Helpers"
         mc:Ignorable="d"
         Title="Query Builder - Ai Assistant" 
         x:Name="AiAssistantWindow1"
@@ -19,6 +20,7 @@
     <Window.CommandBindings>
         <CommandBinding Command="Save" CanExecute="SaveCommand_CanExecute" Executed="SaveCommand_Executed" />
         <CommandBinding Command="Close" Executed="CloseCommand_Executed" />
+        <CommandBinding Command="helpers:CommonAiCommands.AskAiQueryCommand" Executed="AskAiQueryCommand_Executed" CanExecute="AskAiQueryCommand_CanExecute" />
     </Window.CommandBindings>
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -97,7 +99,7 @@
                         <Button 
                             Content="► Ask Question" 
                             Width="200" 
-                            Click="OnAskClick" 
+                            Command="helpers:CommonAiCommands.AskAiQueryCommand"
                             FontSize="20"
                             VerticalAlignment="Bottom"
                             HorizontalAlignment="Center"

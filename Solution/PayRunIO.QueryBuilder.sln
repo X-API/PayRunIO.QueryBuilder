@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayRunIO.ConnectionControls
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PayRunIO.RqlAssistant.Service", "PayRunIO.RqlAssistant.Service\PayRunIO.RqlAssistant.Service.csproj", "{B9102F51-96FA-47D9-9CC5-0B83F00B6D7E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayRunIO.RqlAssistant.Service.Tests", "PayRunIO.RqlAssistant.Service.Tests\PayRunIO.RqlAssistant.Service.Tests.csproj", "{D9DA0213-F263-40BF-AB32-D04E132171FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{B9102F51-96FA-47D9-9CC5-0B83F00B6D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9102F51-96FA-47D9-9CC5-0B83F00B6D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9102F51-96FA-47D9-9CC5-0B83F00B6D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9DA0213-F263-40BF-AB32-D04E132171FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9DA0213-F263-40BF-AB32-D04E132171FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9DA0213-F263-40BF-AB32-D04E132171FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9DA0213-F263-40BF-AB32-D04E132171FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

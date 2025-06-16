@@ -97,10 +97,7 @@
                         foldingStrategy.UpdateFoldings(this.foldingManager, this.ResultViewTextEditor.Document);
                     }
 
-                    if (args.error != null)
-                    {
-                        this.LastErrorModel = args.error;
-                    }
+                    this.LastErrorModel = args.error;
                 };
 
             Task

@@ -7,6 +7,7 @@
     using System.Text.RegularExpressions;
     using System.Windows;
     using System.Windows.Input;
+    using System.Threading.Tasks;
 
     using Microsoft.Extensions.Configuration;
 
@@ -49,6 +50,13 @@
 
         public static readonly DependencyProperty TabularQueryProperty = DependencyProperty.Register(nameof(TabularQuery), typeof(bool), typeof(AiAssistantWindow), new PropertyMetadata(default(bool)));
 
+        public static readonly DependencyProperty AutoProcessQuestionProperty = 
+            DependencyProperty.Register(
+                nameof(AutoProcessQuestion), 
+                typeof(bool), 
+                typeof(AiAssistantWindow), 
+                new PropertyMetadata(false));
+
         public bool TabularQuery
         {
             get => (bool)GetValue(TabularQueryProperty);
@@ -65,6 +73,12 @@
         {
             get => (bool)GetValue(IncludeSchemasProperty);
             set => this.SetValue(IncludeSchemasProperty, value);
+        }
+
+        public bool AutoProcessQuestion
+        {
+            get => (bool)GetValue(AutoProcessQuestionProperty);
+            set => this.SetValue(AutoProcessQuestionProperty, value);
         }
 
         public Query Query
@@ -107,9 +121,25 @@
 
             // Clear any existing chat history
             this.ChatHistoryControl.MessagesSource.Clear();
+
+            // Add loaded event handler
+            this.Loaded += this.OnWindowLoaded;
         }
 
-        private async void OnAskClick(object sender, RoutedEventArgs e)
+        private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            // Only auto-process if AutoProcessQuestion is true and there's text in the question box
+            if (this.AutoProcessQuestion && !string.IsNullOrWhiteSpace(this.QuestionBox.Text))
+            {
+                // Ensure we're on the UI thread for UI operations
+                await this.Dispatcher.InvokeAsync(async () =>
+                {
+                    await this.OnAskClick(sender, e);
+                });
+            }
+        }
+
+        private async Task OnAskClick(object sender, RoutedEventArgs e)
         {
             var question = this.QuestionBox.Text.Trim();
 
@@ -245,6 +275,16 @@
             }
 
             this.Close();
+        }
+
+        private void AskAiQueryCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = !string.IsNullOrWhiteSpace(this.QuestionBox.Text);
+        }
+
+        private async void AskAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            await this.OnAskClick(sender, e);
         }
     }
 }

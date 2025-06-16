@@ -9,20 +9,18 @@
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Text;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Xml;
+    using System.Threading.Tasks;
 
     using ICSharpCode.AvalonEdit.Document;
 
     using PayRunIO.ConnectionControls;
-    using PayRunIO.ConnectionControls.Models;
     using PayRunIO.QueryBuilder.Helpers;
     using PayRunIO.QueryBuilder.ViewModels;
-    using PayRunIO.RqlAssistant.Service;
     using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.v2.Models;
     using PayRunIO.v2.Models.Reporting;
@@ -31,7 +29,6 @@
     using PayRunIO.v2.Models.Reporting.Sorting;
 
     using Button = System.Windows.Controls.Button;
-    using File = PayRunIO.v2.Models.File;
     using ListBox = System.Windows.Controls.ListBox;
     using MessageBox = System.Windows.MessageBox;
     using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
@@ -745,12 +742,31 @@
             }
         }
 
-        private void AiEdit_OnClick(object sender, RoutedEventArgs e)
+        private void NewAiQueryCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var aiAssistantWindow = 
+            e.CanExecute = true;
+        }
+
+        private void NewAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            var aiAssistantWindow =
                 new AiAssistantWindow
                     {
-                        Owner = this, 
+                        Owner = this,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        QuestionBox = { Text = "Create a new RQL statement that:\r\n- Lists all employees\r\n\r\nParameters:\r\n* Employer Key: ER001" },
+                        Query = null
+                    };
+
+            aiAssistantWindow.ShowDialog();
+        }
+
+        private void EditAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            var aiAssistantWindow =
+                new AiAssistantWindow
+                    {
+                        Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
                         QuestionBox = { Text = "Please amended this RQL statement as follows:\r\n\r\n- My change goes here..." },
                         Query = this.Source
@@ -759,21 +775,17 @@
             aiAssistantWindow.ShowDialog();
         }
 
-        private void AiCreate_OnClick(object sender, RoutedEventArgs e)
+        private void EditAiQueryCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            var aiAssistantWindow = 
-                new AiAssistantWindow
-                    {
-                        Owner = this,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        QuestionBox = { Text = "Create a new RQL statement that:\r\n- Lists all employees\r\n\r\nParameters:\r\n* Employer Key: ER001" },
-                        Query = null
-                };
-
-            aiAssistantWindow.ShowDialog();
+            e.CanExecute = true;
         }
 
-        private void AiDiscuss_OnClick(object sender, RoutedEventArgs e)
+        private void QuestionAiQueryCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void QuestionAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var aiAssistantWindow =
                 new AiAssistantWindow
@@ -787,13 +799,8 @@
             aiAssistantWindow.ShowDialog();
         }
 
-        private void AiErrorHelp_OnClick(object sender, RoutedEventArgs e)
+        private void ErrorAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            if (this.QueryResultViewer.LastErrorModel == null)
-            {
-                return;
-            }
-
             var questionText =
                 $"Please help me understand this error message:\r\n\r\n```xml\r\n{XmlSerialiserHelper.SerialiseToXmlDoc(this.QueryResultViewer.LastErrorModel).Beautify()}\r\n```";
 
@@ -803,10 +810,16 @@
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
                         QuestionBox = { Text = questionText },
-                        Query = this.Source
+                        Query = this.Source,
+                        AutoProcessQuestion = true
                     };
 
             aiAssistantWindow.ShowDialog();
+        }
+
+        private void ErrorAiQueryCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = this.QueryResultViewer.LastErrorModel != null;
         }
     }
 }

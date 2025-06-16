@@ -58,6 +58,10 @@
         <CommandBinding Command="MoveUp" CanExecute="MoveUpCommand_CanExecute" Executed="MoveUpCommand_Executed" />
         <CommandBinding Command="MoveDown" CanExecute="MoveDownCommand_CanExecute" Executed="MoveDownCommand_Executed" />
         <CommandBinding Command="Delete" CanExecute="DeleteCommand_CanExecute" Executed="DeleteCommand_Executed" />
+        <CommandBinding Command="helpers:CommonAiCommands.NewAiQueryCommand" CanExecute="NewAiQueryCommand_CanExecute" Executed="NewAiQueryCommand_Executed" />
+        <CommandBinding Command="helpers:CommonAiCommands.EditAiQueryCommand" CanExecute="EditAiQueryCommand_CanExecute" Executed="EditAiQueryCommand_Executed" />
+        <CommandBinding Command="helpers:CommonAiCommands.QuestionAiQueryCommand" CanExecute="QuestionAiQueryCommand_CanExecute" Executed="QuestionAiQueryCommand_Executed" />
+        <CommandBinding Command="helpers:CommonAiCommands.ErrorAiQueryCommand" CanExecute="ErrorAiQueryCommand_CanExecute" Executed="ErrorAiQueryCommand_Executed" />
     </Window.CommandBindings>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -82,10 +86,10 @@
                     <MenuItem Header="_Exit" Click="Exit_OnClick" />
                 </MenuItem>
                 <MenuItem Header="_AI Assistant">
-                    <MenuItem Header="_Create New Query" Click="AiCreate_OnClick" />
-                    <MenuItem Header="_Edit Query" Click="AiEdit_OnClick" />
-                    <MenuItem Header="_Discuss Query" Click="AiDiscuss_OnClick" />
-                    <MenuItem Header="_Error Help" Click="AiErrorHelp_OnClick" />
+                    <MenuItem Header="_Create New Query" Command="helpers:CommonAiCommands.NewAiQueryCommand" />
+                    <MenuItem Header="_Edit Query" Command="helpers:CommonAiCommands.EditAiQueryCommand" />
+                    <MenuItem Header="_Discuss Query" Command="helpers:CommonAiCommands.QuestionAiQueryCommand" />
+                    <MenuItem Header="_Error Help" Command="helpers:CommonAiCommands.ErrorAiQueryCommand" />
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header="_About" Click="About_OnClick"></MenuItem>
