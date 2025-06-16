@@ -293,7 +293,7 @@
             // Fetch documentation snippets relevant to the identified schemaNames.
             if (schemaNames.Any())
             {
-                //systemPrompts.Add(this.querySchema);
+                // systemPrompts.Add(this.querySchema);
                 systemPrompts.AddRange(this.documentRepository.FindSchemaSnippets(schemaNames).Select(d => "# Entity Schema:\r\n" + d));
             }
 
