@@ -4,15 +4,11 @@
 
     public static class ResourceHelper
     {
-        public const string FindSchemaNames = "find-schema-names-system-prompt.txt";
-
-        public const string FindRouteNames = "find-route-names-system-prompt.txt";
+        public const string FindSchemaAndRouteNames = "find-schema-route-names.txt";
 
         public const string AnswerQuestionSystemPrompt = "answer-question-system-prompt.txt";
 
         public const string TabularRql = "rql-tabular-queries.md";
-        
-        public const string RqlCheatSheet = "rql-cheat-sheet.md";
         
         public const string RqlDocJson = "rql-doc-json.md";
 

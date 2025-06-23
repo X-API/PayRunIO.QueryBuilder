@@ -18,7 +18,7 @@
                     configuration, 
                     httpClient ?? new HttpClient
                         {
-                            Timeout = TimeSpan.Parse(configuration["HttpClient:TimeOut"] ?? DefaultTimeoutAsString)
+                            Timeout = TimeSpan.Parse(configuration["OpenAi:HttpClient:TimeOut"] ?? DefaultTimeoutAsString)
                         });
             var requestBuilderService = new RequestBuilderService(configuration);
             var documentRepository = new DocumentRepository();

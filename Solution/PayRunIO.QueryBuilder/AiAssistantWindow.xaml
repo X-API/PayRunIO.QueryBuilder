@@ -107,9 +107,24 @@
                         />
                         <TextBlock VerticalAlignment="Center">Include:</TextBlock>
                         <StackPanel VerticalAlignment="Center" Margin="5,0,0,0">
-                            <CheckBox IsChecked="{Binding ElementName=AiAssistantWindow1, Path=IncludeSchemas}" VerticalContentAlignment="Center">Schemas</CheckBox>
-                            <CheckBox IsChecked="{Binding ElementName=AiAssistantWindow1, Path=IncludeRoutes}" VerticalContentAlignment="Center">Routes</CheckBox>
-                            <CheckBox IsChecked="{Binding ElementName=AiAssistantWindow1, Path=TabularQuery}" VerticalContentAlignment="Center">Tabular Query</CheckBox>
+                            <CheckBox IsChecked="{Binding ElementName=AiAssistantWindow1, Path=IncludeSchemasAndRoutes}" VerticalContentAlignment="Center">
+                                <CheckBox.Content>Schemas and Routes</CheckBox.Content>
+                                <CheckBox.ToolTip>
+                                    <TextBlock>
+                                        <Run FontWeight="Bold">Include API schemas and routes to help answer your question.</Run>
+                                        <LineBreak />
+                                        <Run FontStyle="Italic">Note: Increases the time to answer.</Run>
+                                    </TextBlock>
+                                </CheckBox.ToolTip>
+                            </CheckBox>
+                            <CheckBox IsChecked="{Binding ElementName=AiAssistantWindow1, Path=TabularQuery}" VerticalContentAlignment="Center">
+                                <CheckBox.Content>Tabular Query</CheckBox.Content>
+                                <CheckBox.ToolTip>
+                                    <TextBlock>
+                                        <Run>Instruct the AI to respond with a header and row style RQL response.</Run>
+                                    </TextBlock>
+                                </CheckBox.ToolTip>
+                            </CheckBox>
                         </StackPanel>
                     </StackPanel>
 

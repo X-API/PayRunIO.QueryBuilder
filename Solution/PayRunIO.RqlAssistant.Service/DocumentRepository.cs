@@ -37,14 +37,6 @@
         /// The <see cref="string"/>.
         /// </returns>
         string GetDocumentation(string formatType);
-
-        /// <summary>
-        /// The get cheat sheet method. Gets the RQL cheat sheet documentation.
-        /// </summary>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        string GetCheatSheet();
     }
 
     /// <summary>
@@ -137,17 +129,6 @@
             }
 
             return ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.RqlDocJson).GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// The get cheat sheet method. Gets the RQL cheat sheet documentation.
-        /// </summary>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        public string GetCheatSheet()
-        {
-            return ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.RqlCheatSheet).GetAwaiter().GetResult();
         }
 
         /// <summary>

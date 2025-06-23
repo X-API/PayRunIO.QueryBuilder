@@ -5,9 +5,9 @@
     using System.IO;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Input;
-    using System.Threading.Tasks;
 
     using Microsoft.Extensions.Configuration;
 
@@ -34,19 +34,12 @@
                 typeof(AiAssistantWindow),
                 new PropertyMetadata(default(Query)));
         
-        public static readonly DependencyProperty IncludeSchemasProperty = 
+        public static readonly DependencyProperty IncludeSchemasAndRoutesProperty = 
             DependencyProperty.Register(
-                nameof(IncludeSchemas), 
+                nameof(IncludeSchemasAndRoutes), 
                 typeof(bool), 
                 typeof(AiAssistantWindow), 
-                new PropertyMetadata(default(bool)));
-
-        public static readonly DependencyProperty IncludeRoutesProperty = 
-            DependencyProperty.Register(
-                nameof(IncludeRoutes), 
-                typeof(bool), 
-                typeof(AiAssistantWindow), 
-                new PropertyMetadata(default(bool)));
+                new PropertyMetadata(true));
 
         public static readonly DependencyProperty TabularQueryProperty = DependencyProperty.Register(nameof(TabularQuery), typeof(bool), typeof(AiAssistantWindow), new PropertyMetadata(default(bool)));
 
@@ -63,16 +56,10 @@
             set => this.SetValue(TabularQueryProperty, value);
         }
 
-        public bool IncludeRoutes
+        public bool IncludeSchemasAndRoutes
         {
-            get => (bool)GetValue(IncludeRoutesProperty);
-            set => this.SetValue(IncludeRoutesProperty, value);
-        }
-
-        public bool IncludeSchemas
-        {
-            get => (bool)GetValue(IncludeSchemasProperty);
-            set => this.SetValue(IncludeSchemasProperty, value);
+            get => (bool)GetValue(IncludeSchemasAndRoutesProperty);
+            set => this.SetValue(IncludeSchemasAndRoutesProperty, value);
         }
 
         public bool AutoProcessQuestion
@@ -166,8 +153,7 @@
                         this.rqlRagService
                             .AskQuestion(
                                 question,
-                                includeSchemas: this.IncludeSchemas,
-                                includeApiRoutes: this.IncludeRoutes,
+                                includeSchemasAndRoutes: this.IncludeSchemasAndRoutes,
                                 chatHistory: this.ChatHistoryControl.MessagesSource,
                                 format: this.TabularQuery ? ResponseType.TabularQuery : ResponseType.Conversation);
             }

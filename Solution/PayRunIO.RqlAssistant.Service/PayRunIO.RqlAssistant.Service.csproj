@@ -9,11 +9,9 @@
   <ItemGroup>
     <None Remove="Resources\answer-question-system-prompt.txt" />
     <None Remove="Resources\dtos.json" />
-    <None Remove="Resources\find-route-names-system-prompt.txt" />
-    <None Remove="Resources\find-schema-names-system-prompt.txt" />
+    <None Remove="Resources\find-schema-route-names.txt" />
     <None Remove="Resources\QuerySchema.xsd" />
     <None Remove="Resources\routes.json" />
-    <None Remove="Resources\rql-cheat-sheet.md" />
     <None Remove="Resources\rql-doc-json.md" />
     <None Remove="Resources\rql-doc-xml.md" />
     <None Remove="Resources\rql-doc.json.md" />
@@ -24,11 +22,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\answer-question-system-prompt.txt" />
     <EmbeddedResource Include="Resources\dtos.json" />
-    <EmbeddedResource Include="Resources\find-route-names-system-prompt.txt" />
-    <EmbeddedResource Include="Resources\find-schema-names-system-prompt.txt" />
+    <EmbeddedResource Include="Resources\find-schema-route-names.txt" />
     <EmbeddedResource Include="Resources\QuerySchema.xsd" />
     <EmbeddedResource Include="Resources\routes.json" />
-    <EmbeddedResource Include="Resources\rql-cheat-sheet.md" />
     <EmbeddedResource Include="Resources\rql-doc-json.md" />
     <EmbeddedResource Include="Resources\rql-doc-xml.md" />
     <EmbeddedResource Include="Resources\rql-tabular-queries.md" />

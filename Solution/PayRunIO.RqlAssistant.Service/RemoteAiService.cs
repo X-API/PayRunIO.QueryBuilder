@@ -172,6 +172,11 @@
                 {
                     if (doc.RootElement.TryGetProperty("error", out var error))
                     {
+                        if (error.ValueKind == JsonValueKind.String)
+                        {
+                            return error.GetRawText();
+                        }
+
                         return error.GetProperty("message").GetString();
                     }
                 }

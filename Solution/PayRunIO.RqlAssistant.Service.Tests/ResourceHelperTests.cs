@@ -7,7 +7,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         public async Task LoadResourceAsStringAsync_WithExistingResource_ReturnsContent()
         {
             // Arrange
-            var resourceName = ResourceHelper.FindSchemaNames;
+            var resourceName = ResourceHelper.FindSchemaAndRouteNames;
 
             // Act
             var result = await ResourceHelper.LoadResourceAsStringAsync(resourceName);
@@ -36,11 +36,9 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             // Arrange
             var knownResources = new[]
             {
-                ResourceHelper.FindSchemaNames,
-                ResourceHelper.FindRouteNames,
+                ResourceHelper.FindSchemaAndRouteNames,
                 ResourceHelper.AnswerQuestionSystemPrompt,
                 ResourceHelper.TabularRql,
-                ResourceHelper.RqlCheatSheet,
                 ResourceHelper.RqlDocJson,
                 ResourceHelper.RqlDocXml,
                 ResourceHelper.QuerySchema,

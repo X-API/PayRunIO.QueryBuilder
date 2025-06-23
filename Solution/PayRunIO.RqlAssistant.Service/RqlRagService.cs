@@ -4,6 +4,9 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Text.Json;
+    using System.Text.RegularExpressions;
+
     using PayRunIO.RqlAssistant.Service.Models;
 
     /// <summary>
@@ -16,8 +19,7 @@
         /// The ask question method.
         /// </summary>
         /// <param name="userQuestion">The user question.</param>
-        /// <param name="includeSchemas">Determines if the AI should attempt to find related schemas.</param>
-        /// <param name="includeApiRoutes">Determines is the AI should attempt to find related API routes.</param>
+        /// <param name="includeSchemasAndRoutes"></param>
         /// <param name="chatHistory">The chat History.</param>
         /// <param name="format">Determines the RQL response formatting. Either JSON, XML or Conversation.</param>
         /// <returns>
@@ -25,8 +27,7 @@
         /// </returns>
         Task<string> AskQuestion(
             string userQuestion,
-            bool includeSchemas = true,
-            bool includeApiRoutes = true,
+            bool includeSchemasAndRoutes = true,
             IEnumerable<ChatMessage>? chatHistory = null,
             ResponseType format = ResponseType.Conversation);
     }
@@ -64,24 +65,19 @@
         private bool isInitialised = false;
 
         /// <summary>
-        /// The find schema names resource.
+        /// The find schema and route names resource.
         /// </summary>
-        private string findSchemaNamesResource;
+        private string findSchemaAndRouteNamesResource;
 
         /// <summary>
         /// The cheat sheet resource.
         /// </summary>
-        private string cheatSheetResource;
+        private string cheatSheetResource_XXX;
 
         /// <summary>
         /// The answer question system prompt.
         /// </summary>
         private string answerQuestionSystemPrompt;
-
-        /// <summary>
-        /// The find route names resource.
-        /// </summary>
-        private string findRouteNamesResource;
 
         /// <summary>
         /// The tabular rql resource.
@@ -110,18 +106,16 @@
         /// The ask question method.
         /// </summary>
         /// <param name="userQuestion">The user question.</param>
-        /// <param name="includeSchemas">Determines if the AI should attempt to find related schemas.</param>
-        /// <param name="includeApiRoutes">Determines is the AI should attempt to find related API routes.</param>
+        /// <param name="includeSchemasAndRoutes"></param>
         /// <param name="chatHistory">The chat History.</param>
         /// <param name="format">Determines the RQL response formatting. Either JSON, XML or Conversation.</param>
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
         public async Task<string> AskQuestion(
-            string userQuestion, 
-            bool includeSchemas = true, 
-            bool includeApiRoutes = true, 
-            IEnumerable<ChatMessage>? chatHistory = null, 
+            string userQuestion,
+            bool includeSchemasAndRoutes = true,
+            IEnumerable<ChatMessage>? chatHistory = null,
             ResponseType format = ResponseType.Conversation)
         {
             if (string.IsNullOrWhiteSpace(userQuestion))
@@ -141,30 +135,40 @@
                 }
             }
 
-            // Discover schemas in user question
-            var schemaNameArray = Array.Empty<string>();
-            if (includeSchemas)
+            // Discover schemas and routes in user question
+            var results = new SchemaAndRoutes();
+
+            if (includeSchemasAndRoutes)
             {
-                var getSchemaPrompt = this.BuildSchemaExtractionRequest(userQuestion);
+                var getSchemaPrompt = this.BuildSchemaAndRouteExtractionRequest(userQuestion);
 
-                var schemaResponse = await this.remoteAiService.GetResponseAsync(getSchemaPrompt);
+                var schemaAndRouteResponse = await this.remoteAiService.GetResponseAsync(getSchemaPrompt);
 
-                schemaNameArray = schemaResponse?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray() ?? Array.Empty<string>();
-            }
+                /*
+                 * Example Response:
+                 *
+                 * {
+                 *   "routes": ["RouteNameA", "RouteNameB"],
+                 *   "schemas": ["SchemaNameA", "SchemaNameB"]
+                 * }
+                 *
+                 */
 
-            // Discover API routes associated with user question
-            var routeNameArray = Array.Empty<string>();
-            if (includeApiRoutes)
-            {
-                var getRouteNamesPrompt = this.BuildRouteMatchRequest(userQuestion);
+                var match = Regex.Match(
+                    schemaAndRouteResponse,
+                    "\\{\\s*\"routes\"\\s*:\\s*\\[.*?\\],\\s*\"schemas\"\\s*:\\s*\\[.*?\\]\\s*\\}");
 
-                var routeNameResponse = await this.remoteAiService.GetResponseAsync(getRouteNamesPrompt);
+                if (match.Success)
+                {
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-                routeNameArray = routeNameResponse?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray() ?? Array.Empty<string>();
+                    results = JsonSerializer.Deserialize<SchemaAndRoutes>(match.Value, options)
+                              ?? throw new InvalidOperationException("Failed to deserialize the JSON content.");
+                }
             }
 
             // Build augmented prompt
-            var augmentedPrompt = this.BuildQueryGenerationRequest(userQuestion, schemaNameArray, routeNameArray, chatHistory, format);
+            var augmentedPrompt = this.BuildQueryGenerationRequest(userQuestion, results.schemas, results.routes, chatHistory, format);
 
             // Get final answer
             var answer = await this.remoteAiService.GetResponseAsync(augmentedPrompt);
@@ -172,30 +176,11 @@
             return answer;
         }
 
-        /// <summary>
-        /// The build route match request.
-        /// </summary>
-        /// <param name="userQuestion">
-        /// The user question.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        private string BuildRouteMatchRequest(string userQuestion)
+        public class SchemaAndRoutes
         {
-            var allRouteNames = string.Join("\r\n * ", this.documentRepository.GetRouteDefinitions().Select(def => def.ClassName));
+            public string[] routes { get; set; } = new string[0];
 
-            var findRoutesSystemPrompt = this.findRouteNamesResource + allRouteNames;
-
-            var chatMessages = 
-                new Collection<ChatMessage>
-                    {
-                        new ChatMessage { Role = ParticipantType.System, Text = findRoutesSystemPrompt },
-                        new ChatMessage { Role = ParticipantType.User, Text = userQuestion }
-                    }
-                    .ToArray();
-
-            return this.requestBuilderService.CreateAiRequestJson(chatMessages);
+            public string[] schemas { get; set; } = new string[0];
         }
 
         /// <summary>
@@ -210,12 +195,8 @@
                             .ContinueWith(t => this.tabularRqlResource = t.Result),
                         Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.QuerySchema))
                             .ContinueWith(t => this.querySchema = t.Result),
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.FindSchemaNames))
-                            .ContinueWith(t => this.findSchemaNamesResource = t.Result),
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.FindRouteNames))
-                            .ContinueWith(t => this.findRouteNamesResource = t.Result),
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.RqlCheatSheet))
-                            .ContinueWith(t => this.cheatSheetResource = t.Result),
+                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.FindSchemaAndRouteNames))
+                            .ContinueWith(t => this.findSchemaAndRouteNamesResource = t.Result),
                         Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.AnswerQuestionSystemPrompt))
                             .ContinueWith(t => this.answerQuestionSystemPrompt = t.Result),
                     };
@@ -228,13 +209,12 @@
         /// </summary>
         /// <param name="userQuestion">The raw end‑user question.</param>
         /// <returns>JSON request string suitable for posting to the chat completions endpoint.</returns>
-        private string BuildSchemaExtractionRequest(string userQuestion)
+        private string BuildSchemaAndRouteExtractionRequest(string userQuestion)
         {
             var chatMessages =
                 new Collection<ChatMessage>
                         {
-                            new ChatMessage { Role = ParticipantType.System, Text = this.findSchemaNamesResource },
-                            new ChatMessage { Role = ParticipantType.System, Text = this.cheatSheetResource },
+                            new ChatMessage { Role = ParticipantType.System, Text = this.findSchemaAndRouteNamesResource },
                             new ChatMessage { Role = ParticipantType.User, Text = userQuestion }
                         }
                     .ToArray();
@@ -267,7 +247,6 @@
                 new List<string>
                     {
                         this.answerQuestionSystemPrompt,
-                        "RQL Quick Reference Cheat Sheet:\r\n" + this.cheatSheetResource,
                         "RQL Full Documentation:\r\n" + this.documentRepository.GetDocumentation(format == ResponseType.JsonOnly ? "JSON" : "XML")
                     };
 
