@@ -27,6 +27,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="1">
@@ -223,5 +224,18 @@
             </StackPanel>
         </Grid>
 
-</Grid>
+        <!-- OpenAI Settings Expander -->
+        <Expander Header="OpenAI Settings" Grid.Row="3" Margin="0,10,0,0" IsExpanded="False">
+            <StackPanel Margin="10">
+                <TextBlock Text="API Key:"/>
+                <PasswordBox x:Name="ApiKeyBox" PasswordChar="*"/>
+                <TextBlock Text="Endpoint:" Margin="0,10,0,0"/>
+                <TextBox x:Name="EndPointBox"/>
+                <TextBlock Text="Model:" Margin="0,10,0,0"/>
+                <TextBox x:Name="ModelBox"/>
+                <Button Content="Save" Click="OnSaveSettingsClick" Margin="0,10,0,0" Width="100" HorizontalAlignment="Left"/>
+            </StackPanel>
+        </Expander>
+
+    </Grid>
 </Window>

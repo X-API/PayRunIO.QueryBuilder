@@ -94,17 +94,25 @@
 
         public AiAssistantWindow()
         {
-            // Load settings
-            var configuration =
-                new ConfigurationBuilder()
-                    .SetBasePath(Directory.GetCurrentDirectory())
-                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                    .Build();
+            // Use user settings for OpenAI configuration
+            var userSettings = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+                .AddInMemoryCollection(new[]
+                {
+                    new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:ApiKey", PayRunIO.QueryBuilder.AppSettings.Default.OpenAI_ApiKey ?? string.Empty),
+                    new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Endpoint", PayRunIO.QueryBuilder.AppSettings.Default.OpenAI_EndPoint ?? string.Empty),
+                    new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Model", PayRunIO.QueryBuilder.AppSettings.Default.OpenAI_Model ?? string.Empty)
+                })
+                .Build();
 
             // Create the services
-            this.rqlRagService = ServiceFactory.CreateService(configuration);
+            this.rqlRagService = ServiceFactory.CreateService(userSettings);
 
             this.InitializeComponent();
+
+            // Load user settings into UI controls
+            ApiKeyBox.Password = AppSettings.Default.OpenAI_ApiKey ?? string.Empty;
+            EndPointBox.Text = AppSettings.Default.OpenAI_EndPoint ?? string.Empty;
+            ModelBox.Text = AppSettings.Default.OpenAI_Model ?? string.Empty;
 
             // Clear any existing chat history
             this.ChatHistoryControl.MessagesSource.Clear();
@@ -271,6 +279,16 @@
         private async void AskAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             await this.OnAskClick(sender, e);
+        }
+
+        private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
+        {
+            // Save settings from UI controls
+            AppSettings.Default.OpenAI_ApiKey = ApiKeyBox.Password;
+            AppSettings.Default.OpenAI_EndPoint = EndPointBox.Text;
+            AppSettings.Default.OpenAI_Model = ModelBox.Text;
+            AppSettings.Default.Save();
+            MessageBox.Show("Settings saved! Please restart the assistant for changes to take effect.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

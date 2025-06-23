@@ -129,5 +129,41 @@ namespace PayRunIO.QueryBuilder {
                 this["LastConnection"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OpenAI_ApiKey {
+            get {
+                return ((string)(this["OpenAI_ApiKey"]));
+            }
+            set {
+                this["OpenAI_ApiKey"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OpenAI_EndPoint {
+            get {
+                return ((string)(this["OpenAI_EndPoint"]));
+            }
+            set {
+                this["OpenAI_EndPoint"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OpenAI_Model {
+            get {
+                return ((string)(this["OpenAI_Model"]));
+            }
+            set {
+                this["OpenAI_Model"] = value;
+            }
+        }
     }
 }
