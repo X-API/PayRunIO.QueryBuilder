@@ -5,14 +5,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:models="clr-namespace:PayRunIO.RqlAssistant.Service.Models;assembly=PayRunIO.RqlAssistant.Service"
-    xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
+    xmlns:wpf="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
     mc:Ignorable="d" 
     d:DesignHeight="450" d:DesignWidth="800"
     x:Name="Root">
 
     <UserControl.Resources>
-        <converters:ChatMessageToFlowDocumentValueConverter x:Key="Converter" />
-
         <DataTemplate x:Key="ChatMessageTemplate" DataType="{x:Type models:ChatMessage}">
             <Border CornerRadius="8" Padding="8">
                 <Border.Style>
@@ -47,10 +45,7 @@
                 </Border.Style>
 
                 <!-- The actual message text -->
-                <FlowDocumentScrollViewer 
-                    VerticalScrollBarVisibility="Auto"
-                    Document="{Binding Converter={StaticResource Converter}}"
-                />
+                <wpf:MarkdownViewer Markdown="{Binding Text}" />
 
             </Border>
         </DataTemplate>
