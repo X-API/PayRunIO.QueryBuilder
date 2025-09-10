@@ -2,7 +2,6 @@
 {
     using System;
     using System.ComponentModel;
-    using System.IO;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -11,6 +10,7 @@
 
     using Microsoft.Extensions.Configuration;
 
+    using PayRunIO.QueryBuilder.Services;
     using PayRunIO.RqlAssistant.Service;
     using PayRunIO.RqlAssistant.Service.Models;
     using PayRunIO.v2.CSharp.SDK;
@@ -21,7 +21,9 @@
     /// </summary>
     public partial class AiAssistantWindow : Window, INotifyPropertyChanged
     {
-        private readonly IRqlRagService rqlRagService;
+        private readonly ISettingsService settingsService;
+
+        private IRqlRagService rqlRagService;
 
         private string initialQueryAsXml;
 
@@ -92,33 +94,42 @@
             }
         }
 
-        public AiAssistantWindow()
+        public AiAssistantWindow(ISettingsService settingsService)
         {
-            // Use user settings for OpenAI configuration
-            var userSettings = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-                .AddInMemoryCollection(new[]
-                {
-                    new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:ApiKey", PayRunIO.QueryBuilder.AppSettings.Default.OpenAI_ApiKey ?? string.Empty),
-                    new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Endpoint", PayRunIO.QueryBuilder.AppSettings.Default.OpenAI_EndPoint ?? string.Empty),
-                    new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Model", PayRunIO.QueryBuilder.AppSettings.Default.OpenAI_Model ?? string.Empty)
-                })
-                .Build();
-
-            // Create the services
-            this.rqlRagService = ServiceFactory.CreateService(userSettings);
-
+            this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             this.InitializeComponent();
 
             // Load user settings into UI controls
-            ApiKeyBox.Password = AppSettings.Default.OpenAI_ApiKey ?? string.Empty;
-            EndPointBox.Text = AppSettings.Default.OpenAI_EndPoint ?? string.Empty;
-            ModelBox.Text = AppSettings.Default.OpenAI_Model ?? string.Empty;
+            ApiKeyBox.Password = this.settingsService.UserSettings.OpenAI.ApiKey ?? string.Empty;
+            EndPointBox.Text = this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty;
+            ModelBox.Text = this.settingsService.UserSettings.OpenAI.Model ?? string.Empty;
+
+            // Create the services with current settings
+            this.CreateRqlRagService();
 
             // Clear any existing chat history
             this.ChatHistoryControl.MessagesSource.Clear();
 
             // Add loaded event handler
             this.Loaded += this.OnWindowLoaded;
+        }
+
+        private void CreateRqlRagService()
+        {
+            // Use user settings for OpenAI configuration
+            var userSettings = new ConfigurationBuilder()
+                .AddInMemoryCollection(
+                    new[]
+                        {
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:ApiKey", this.settingsService.UserSettings.OpenAI.ApiKey ?? string.Empty),
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Endpoint", this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty),
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Model", this.settingsService.UserSettings.OpenAI.Model ?? string.Empty),
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Temperature", this.settingsService.UserSettings.OpenAI.Temperature ?? string.Empty)
+                        })
+                .Build();
+
+            // Create the services
+            this.rqlRagService = ServiceFactory.CreateService(userSettings);
         }
 
         private async void OnWindowLoaded(object sender, RoutedEventArgs e)
@@ -284,11 +295,13 @@
         private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
         {
             // Save settings from UI controls
-            AppSettings.Default.OpenAI_ApiKey = ApiKeyBox.Password;
-            AppSettings.Default.OpenAI_EndPoint = EndPointBox.Text;
-            AppSettings.Default.OpenAI_Model = ModelBox.Text;
-            AppSettings.Default.Save();
-            MessageBox.Show("Settings saved! Please restart the assistant for changes to take effect.", "Info", MessageBoxButton.OK, MessageBoxImage.Information);
+            this.settingsService.UserSettings.OpenAI.ApiKey = ApiKeyBox.Password;
+            this.settingsService.UserSettings.OpenAI.Endpoint = EndPointBox.Text;
+            this.settingsService.UserSettings.OpenAI.Model = ModelBox.Text;
+            this.settingsService.SaveUserSettings();
+            
+            // Recreate the service with new settings
+            this.CreateRqlRagService();
         }
     }
 }

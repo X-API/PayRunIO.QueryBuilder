@@ -59,7 +59,8 @@
             var configuration1 = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             this.defaultModel = configuration1["OpenAI:Model"] ?? "gpt-4o-mini";
-            this.defaultTemperature = double.TryParse(configuration1["OpenAI:Temperature"], out var t) ? t : 0.7;
+            var temperatureAsString = configuration1["OpenAI:Temperature"];
+            this.defaultTemperature = double.TryParse(temperatureAsString, out var t) ? t : 0.7;
         }
 
         /// <inheritdoc />

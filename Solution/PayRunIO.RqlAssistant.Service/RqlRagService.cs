@@ -256,14 +256,14 @@
                     systemPrompts.Add("**Respond ONLY with the RQL statement enclosed in triple back‑ticks formatted as 'JSON'. Do not add explanations.**");
                     break;
                 case ResponseType.XmlOnly:
-                    systemPrompts.Add("**Respond ONLY with the RQL statement enclosed in triple back‑ticks formatted as 'XML'. Do not add explanations.**");
+                    systemPrompts.Add("**Respond ONLY with the RQL statement enclosed in triple back‑ticks formatted as 'XML'. XML Must not contain non-ASCII characters. Do not add explanations.** Do not include XML comments.");
                     break;
                 case ResponseType.Conversation:
-                    systemPrompts.Add("**Respond conversationally to the user prompt using markdown syntax. When responding with RQL statements, ensure they are in 'XML' format and wrapped in triple backticks.**");
+                    systemPrompts.Add("**Respond conversationally to the user prompt using markdown syntax. When responding with RQL statements, ensure they are in 'XML' format and wrapped in triple backticks. XML Must not contain non-ASCII characters.** Do not include XML comments.");
                     break;
                 case ResponseType.TabularQuery:
                     systemPrompts.Add(this.tabularRqlResource);
-                    systemPrompts.Add("**Respond conversationally to the user prompt using markdown syntax**. When responding with RQL statements, strictly enforce the use of the **Tabular Output Pattern** and use RQL in 'XML' format and **wrapped in triple backticks.**");
+                    systemPrompts.Add("**Respond conversationally to the user prompt using markdown syntax**. When responding with RQL statements, strictly enforce the use of the **Tabular Output Pattern** and use RQL in 'XML' format and **wrapped in triple backticks**. Do not include XML comments.");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(format), format, null);

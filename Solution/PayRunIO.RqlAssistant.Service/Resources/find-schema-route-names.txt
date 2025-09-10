@@ -36,276 +36,285 @@ Return your result as a **JSON object with two properties**:
 ---
 
 ### List of Known Route Names
-* GetActivePayInstructionsReportOutputRoute
- * GetAEAssessmentFromEmployeeRoute
- * GetAEAssessmentsFromEmployeeRoute
- * GetAEAssessmentsFromPayRunRoute
- * GetAllCisInstructionTagsRoute
- * GetAllCisLineTagsRoute
- * GetAllCisLineTypeTagsRoute
- * GetAllEmployeeTagsRoute
- * GetAllEmployerTagsRoute
- * GetAllHolidaySchemeTagsRoute
- * GetAllJournalLinesWithTagRoute
- * GetAllJournalLineTagsRoute
- * GetAllPayCodeTagsRoute
- * GetAllPayInstructionTagsRoute
- * GetAllPayLineTagsRoute
- * GetAllPayRunTagsRoute
- * GetAllPayScheduleTagsRoute
- * GetAllPermissionsWithTagRoute
- * GetAllPermissionTagsRoute
- * GetAllRtiTransactionTagsRoute
- * GetAllSubContractorTagsRoute
- * GetAllThirdPartyTransactionsWithTagRoute
- * GetAllThirdPartyTransactionTagsRoute
- * GetAllUsersWithTagRoute
- * GetAllUserTagsRoute
- * GetAoeLiabilityReportOutputRoute
- * GetApplicationSecretRoute
- * GetApplicationSecretsRoute
- * GetBatchJobInfoRoute
- * GetBatchJobProgressRoute
- * GetBatchJobsRoute
- * GetBatchJobStatusRoute
- * GetCisInstructionFromSubContractorRoute
- * GetCisInstructionsFromSubContractorRoute
- * GetCisInstructionsWithTagRoute
- * GetCisJobInfoRoute
- * GetCisJobProgressRoute
- * GetCisJobsRoute
- * GetCisJobStatusRoute
- * GetCisLineFromSubContractorRoute
- * GetCisLinesFromSubContractorRoute
- * GetCisLinesWithTagRoute
- * GetCisLineTypeFromEmployerRoute
- * GetCisLineTypesFromEmployerRoute
- * GetCisLineTypesWithTagRoute
- * GetCisTransactionFromEmployerRoute
- * GetCisTransactionsFromEmployerRoute
- * GetCommentariesFromEmployeeRoute
- * GetCommentariesFromPayRunRoute
- * GetCommentaryFromEmployeeRoute
- * GetCommentaryFromPayRunByEmployeeRoute
- * GetDpsJobInfoRoute
- * GetDpsJobProgressRoute
- * GetDpsJobsRoute
- * GetDpsJobStatusRoute
- * GetDpsMessageFromEmployerRoute
- * GetDpsMessageReportOutputRoute
- * GetDpsMessagesFromEmployerRoute
- * GetEmployeeByEffectiveDateRoute
- * GetEmployeeFromEmployerRoute
- * GetEmployeeGroupsByEffectiveDateRoute
- * GetEmployeeGroupsByRevisionNumberRoute
- * GetEmployeeGroupsRoute
- * GetEmployeeRevisionByNumberRoute
- * GetEmployeeRevisionsRoute
- * GetEmployeeRevisionSummariesRoute
- * GetEmployeeRevisionSummaryByNumberRoute
- * GetEmployeesByEffectiveDateRoute
- * GetEmployeeSecretRoute
- * GetEmployeeSecretsRoute
- * GetEmployeesFromEmployerRoute
- * GetEmployeesFromPayRunRoute
- * GetEmployeesFromPayScheduleOnEffectiveDateRoute
- * GetEmployeesFromPayScheduleRoute
- * GetEmployeesInPensionByEffectiveDateRoute
- * GetEmployeesInPensionByPensionRevisionRoute
- * GetEmployeesInPensionRoute
- * GetEmployeeSummariesByEffectiveDateRoute
- * GetEmployeeSummariesFromEmployerRoute
- * GetEmployeeSummaryByEffectiveDateRoute
- * GetEmployeeSummaryFromEmployerRoute
- * GetEmployeesWithTagRoute
- * GetEmployerByEffectiveDateRoute
- * GetEmployerCostSplitRoute
- * GetEmployerCostSplitsRoute
- * GetEmployerJobsRoute
- * GetEmployerRateRoute
- * GetEmployerRatesRoute
- * GetEmployerRevisionByNumberRoute
- * GetEmployerRevisionsRoute
- * GetEmployerRevisionSummariesRoute
- * GetEmployerRevisionSummaryByNumberRoute
- * GetEmployerRoute
- * GetEmployersByEffectiveDateRoute
- * GetEmployerSecretRoute
- * GetEmployerSecretsRoute
- * GetEmployersRoute
- * GetEmployerSummariesByEffectiveDateRoute
- * GetEmployerSummariesRoute
- * GetEmployerSummaryByEffectiveDateRoute
- * GetEmployerSummaryReportOutputRoute
- * GetEmployerSummaryRoute
- * GetEmployersWithTagRoute
- * GetFileListFromApplicationRoute
- * GetFileListFromEmployeeRoute
- * GetFileListFromEmployerRoute
- * GetFilesFromApplicationRoute
- * GetFilesFromEmployeeRoute
- * GetFilesFromEmployerRoute
- * GetGrossToNetReportOutputRoute
- * GetGroupEmployeesByEffectiveDateRoute
- * GetGroupEmployeesRoute
- * GetGroupRoute
- * GetGroupsRoute
- * GetHealthCheckRoute
- * GetHolidayBalanceReportOutputRoute
- * GetHolidaySchemeByEffectiveDateRoute
- * GetHolidaySchemeFromEmployerRoute
- * GetHolidaySchemeRevisionByNumberRoute
- * GetHolidaySchemeRevisionsRoute
- * GetHolidaySchemesByEffectiveDateRoute
- * GetHolidaySchemesFromEmployerRoute
- * GetHolidaySchemesWithTagRoute
- * GetJournalExpressionSchemaRoute
- * GetJournalInstructionFromEmployerRoute
- * GetJournalInstructionsFromEmployerRoute
- * GetJournalInstructionTemplateRoute
- * GetJournalInstructionTemplatesRoute
- * GetJournalLineFromEmployerRoute
- * GetJournalLinesFromEmployeeRoute
- * GetJournalLinesFromEmployerRoute
- * GetJournalLinesFromPayRunRoute
- * GetJournalLinesFromSubContractorRoute
- * GetJournalReportOutputRoute
- * GetLastPayDateReportOutputRoute
- * GetNetPayReportOutputRoute
- * GetNextPayPeriodDatesReportOutputRoute
- * GetNominalCodeFromEmployerRoute
- * GetNominalCodesFromEmployerRoute
- * GetP11SummaryReportOutputRoute
- * GetP32NetReportOutputRoute
- * GetP32SummaryNetReportOutputRoute
- * GetP45ReportOutputRoute
- * GetP60ReportOutputRoute
- * GetPapdisReportOutputRoute
- * GetPassReportOutputRoute
- * GetPayCodeByEffectiveDateRoute
- * GetPayCodeFromEmployerRoute
- * GetPayCodeRevisionByNumberRoute
- * GetPayCodeRevisionsRoute
- * GetPayCodesByEffectiveDateRoute
- * GetPayCodesFromEmployerRoute
- * GetPayCodesFromNominalCodeRoute
- * GetPayCodesWithTagRoute
- * GetPayDashboardPayslipReportOutputRoute
- * GetPayInstructionFromEmployeeRoute
- * GetPayInstructionsFromEmployeeRoute
- * GetPayInstructionsWithTagRoute
- * GetPayLineFromEmployeeRoute
- * GetPayLinesFromEmployeeRoute
- * GetPayLinesFromPayRunRoute
- * GetPayLinesWithTagRoute
- * GetPayRunFromPayScheduleRoute
- * GetPayRunJobInfoRoute
- * GetPayRunJobProgressRoute
- * GetPayRunJobsRoute
- * GetPayRunJobStatusRoute
- * GetPayRunOnDateFromPayScheduleRoute
- * GetPayRunsFromEmployeeRoute
- * GetPayRunsFromPayScheduleRoute
- * GetPayRunsWithTagRoute
- * GetPayScheduleFromEmployerRoute
- * GetPaySchedulesFromEmployerRoute
- * GetPaySchedulesWithTagRoute
- * GetPayslip3ReportOutputRoute
- * GetPensionByEffectiveDateRoute
- * GetPensionFromEmployerRoute
- * GetPensionLiabilityReportOutputRoute
- * GetPensionRevisionByNumberRoute
- * GetPensionRevisionsRoute
- * GetPensionsByEffectiveDateRoute
- * GetPensionsForEmployeeByEffectiveDateRoute
- * GetPensionsForEmployeeByEmployeeRevisionRoute
- * GetPensionsForEmployeeRoute
- * GetPensionsFromEmployerRoute
- * GetPermissionRoute
- * GetPermissionsRoute
- * GetQueryResponseRoute
- * GetReportDefinitionFromApplicationRoute
- * GetReportDefinitionsFromApplicationRoute
- * GetReportingInstructionFromEmployerRoute
- * GetReportingInstructionsFromEmployerRoute
- * GetReportLineFromEmployerRoute
- * GetReportLinesFromEmployerRoute
- * GetReportLinesFromPayRunRoute
- * GetReportOutputRoute
- * GetRtiJobInfoRoute
- * GetRtiJobProgressRoute
- * GetRtiJobsRoute
- * GetRtiJobStatusRoute
- * GetRtiTransactionFromEmployerRoute
- * GetRtiTransactionsFromEmployerRoute
- * GetRtiTransactionSummariesFromEmployerRoute
- * GetRtiTransactionSummaryFromEmployerRoute
- * GetRtiTransactionsWithTagRoute
- * GetSchemaRoute
- * GetSchemasRoute
- * GetSubContractorByEffectiveDateRoute
- * GetSubContractorFromEmployerRoute
- * GetSubContractorRevisionByNumberRoute
- * GetSubContractorRevisionsRoute
- * GetSubContractorsByEffectiveDateRoute
- * GetSubContractorsFromEmployerRoute
- * GetSubContractorsWithTagRoute
- * GetTagFromCisInstructionRoute
- * GetTagFromCisLineRoute
- * GetTagFromCisLineTypeRoute
- * GetTagFromEmployeeRevisionRoute
- * GetTagFromEmployeeRoute
- * GetTagFromEmployerRevisionRoute
- * GetTagFromEmployerRoute
- * GetTagFromHolidaySchemeRevisionRoute
- * GetTagFromHolidaySchemeRoute
- * GetTagFromJournalLineRoute
- * GetTagFromPayCodeRoute
- * GetTagFromPayInstructionRoute
- * GetTagFromPayLineRoute
- * GetTagFromPayRunRoute
- * GetTagFromPayScheduleRoute
- * GetTagFromPermissionRoute
- * GetTagFromRtiTransactionRoute
- * GetTagFromSubContractorRevisionRoute
- * GetTagFromSubContractorRoute
- * GetTagFromThirdPartyTransactionRoute
- * GetTagFromUserRoute
- * GetTagsFromCisInstructionRoute
- * GetTagsFromCisLineRoute
- * GetTagsFromCisLineTypeRoute
- * GetTagsFromEmployeeRevisionRoute
- * GetTagsFromEmployeeRoute
- * GetTagsFromEmployerRevisionRoute
- * GetTagsFromEmployerRoute
- * GetTagsFromHolidaySchemeRevisionRoute
- * GetTagsFromHolidaySchemeRoute
- * GetTagsFromJournalLineRoute
- * GetTagsFromPayCodeRoute
- * GetTagsFromPayInstructionRoute
- * GetTagsFromPayLineRoute
- * GetTagsFromPayRunRoute
- * GetTagsFromPayScheduleRoute
- * GetTagsFromPermissionRoute
- * GetTagsFromRtiTransactionRoute
- * GetTagsFromSubContractorRevisionRoute
- * GetTagsFromSubContractorRoute
- * GetTagsFromThirdPartyTransactionRoute
- * GetTagsFromUserRoute
- * GetTemplateModelRoute
- * GetTemplatesRoute
- * GetThirdPartyJobInfoRoute
- * GetThirdPartyJobProgressRoute
- * GetThirdPartyJobsRoute
- * GetThirdPartyJobStatusRoute
- * GetThirdPartyTransactionRoute
- * GetThirdPartyTransactionsRoute
- * GetTransformDefinitionFromApplicationRoute
- * GetTransformDefinitionsFromApplicationRoute
- * GetUserPermissionsRoute
- * GetUserRoute
- * GetUsersFromPermissionRoute
- * GetUsersRoute
+
+* GetAEAssessmentFromEmployee
+* GetActivePayInstructionsReportOutput
+* GetAEAssessmentsFromEmployee
+* GetAEAssessmentsFromPayRun
+* GetAllCisInstructionTags
+* GetAllCisLineTags
+* GetAllCisLineTypeTags
+* GetAllEmployeeTags
+* GetAllEmployerTags
+* GetAllHolidaySchemeTags
+* GetAllJournalLinesWithTag
+* GetAllJournalLineTags
+* GetAllPayCodeTags
+* GetAllPayInstructionTags
+* GetAllPayLineTags
+* GetAllPayRunTags
+* GetAllPayScheduleTags
+* GetAllPermissionsWithTag
+* GetAllPermissionTags
+* GetAllRtiTransactionTags
+* GetAllSubContractorTags
+* GetAllThirdPartyTransactionsWithTag
+* GetAllThirdPartyTransactionTags
+* GetAllUsersWithTag
+* GetAllUserTags
+* GetAoeLiabilityReportOutput
+* GetApplicationSecret
+* GetApplicationSecrets
+* GetBatchJobInfo
+* GetBatchJobProgress
+* GetBatchJobs
+* GetBatchJobStatus
+* GetCisInstructionFromSubContractor
+* GetCisInstructionsFromSubContractor
+* GetCisInstructionsWithTag
+* GetCisJobInfo
+* GetCisJobProgress
+* GetCisJobs
+* GetCisJobStatus
+* GetCisLineFromSubContractor
+* GetCisLinesFromSubContractor
+* GetCisLinesWithTag
+* GetCisLineTypeFromEmployer
+* GetCisLineTypesFromEmployer
+* GetCisLineTypesWithTag
+* GetCisTransactionFromEmployer
+* GetCisTransactionsFromEmployer
+* GetCommentariesFromEmployee
+* GetCommentariesFromPayRun
+* GetCommentaryFromEmployee
+* GetCommentaryFromPayRunByEmployee
+* GetDpsJobInfo
+* GetDpsJobProgress
+* GetDpsJobs
+* GetDpsJobStatus
+* GetDpsMessageFromEmployer
+* GetDpsMessageReportOutput
+* GetDpsMessagesFromEmployer
+* GetEmployeeByEffectiveDate
+* GetEmployeeFromEmployer
+* GetEmployeeGroups
+* GetEmployeeGroupsByEffectiveDate
+* GetEmployeeGroupsByRevisionNumber
+* GetEmployeeRevisionByNumber
+* GetEmployeeRevisions
+* GetEmployeeRevisionSummaries
+* GetEmployeeRevisionSummaryByNumber
+* GetEmployeesByEffectiveDate
+* GetEmployeeSecret
+* GetEmployeeSecrets
+* GetEmployeesFromEmployer
+* GetEmployeesFromPayRun
+* GetEmployeesFromPaySchedule
+* GetEmployeesFromPayScheduleOnEffectiveDate
+* GetEmployeesInPension
+* GetEmployeesInPensionByEffectiveDate
+* GetEmployeesInPensionByPensionRevision
+* GetEmployeeSummariesByEffectiveDate
+* GetEmployeeSummariesFromEmployer
+* GetEmployeeSummaryByEffectiveDate
+* GetEmployeeSummaryFromEmployer
+* GetEmployeesWithTag
+* GetEmployer
+* GetEmployerByEffectiveDate
+* GetEmployerCostSplit
+* GetEmployerCostSplits
+* GetEmployerJobs
+* GetEmployerPayComponent
+* GetEmployerPayComponents
+* GetEmployerRate
+* GetEmployerRates
+* GetEmployerRevisionByNumber
+* GetEmployerRevisions
+* GetEmployerRevisionSummaries
+* GetEmployerRevisionSummaryByNumber
+* GetEmployers
+* GetEmployersByEffectiveDate
+* GetEmployerSecret
+* GetEmployerSecrets
+* GetEmployerSummaries
+* GetEmployerSummariesByEffectiveDate
+* GetEmployerSummary
+* GetEmployerSummaryByEffectiveDate
+* GetEmployerSummaryReportOutput
+* GetEmployersWithTag
+* GetFileListFromApplication
+* GetFileListFromEmployee
+* GetFileListFromEmployer
+* GetFilesFromApplication
+* GetFilesFromEmployee
+* GetFilesFromEmployer
+* GetGrossToNetReportOutput
+* GetGroup
+* GetGroupEmployees
+* GetGroupEmployeesByEffectiveDate
+* GetGroups
+* GetHealthCheck
+* GetHolidayBalanceReportOutput
+* GetHolidaySchemeByEffectiveDate
+* GetHolidaySchemeFromEmployer
+* GetHolidaySchemeRevisionByNumber
+* GetHolidaySchemeRevisions
+* GetHolidaySchemesByEffectiveDate
+* GetHolidaySchemesFromEmployer
+* GetHolidaySchemesWithTag
+* GetItemFromPeriodTemplate
+* GetItemsFromPeriodTemplate
+* GetJournalDataAsTableFromPayRun
+* GetJournalExpressionSchema
+* GetJournalInstructionFromEmployer
+* GetJournalInstructionsFromEmployer
+* GetJournalInstructionTemplate
+* GetJournalInstructionTemplates
+* GetJournalLineFromEmployer
+* GetJournalLinesFromEmployee
+* GetJournalLinesFromEmployer
+* GetJournalLinesFromPayRun
+* GetJournalLinesFromSubContractor
+* GetJournalReportOutput
+* GetLastPayDateReportOutput
+* GetNetPayReportOutput
+* GetNextPayPeriodDatesReportOutput
+* GetNominalCodeFromEmployer
+* GetNominalCodesFromEmployer
+* GetP11SummaryReportOutput
+* GetP32NetReportOutput
+* GetP32SummaryNetReportOutput
+* GetP45ReportOutput
+* GetP60ReportOutput
+* GetPapdisReportOutput
+* GetPassReportOutput
+* GetPayCodeByEffectiveDate
+* GetPayCodeFromEmployer
+* GetPayCodeRevisionByNumber
+* GetPayCodeRevisions
+* GetPayCodesByEffectiveDate
+* GetPayCodesFromEmployer
+* GetPayCodesFromNominalCode
+* GetPayCodesWithTag
+* GetPayComponentsFromPeriodTemplate
+* GetPayDashboardPayslipReportOutput
+* GetPayInstructionFromEmployee
+* GetPayInstructionsFromEmployee
+* GetPayInstructionsWithTag
+* GetPayLineFromEmployee
+* GetPayLinesFromEmployee
+* GetPayLinesFromPayRun
+* GetPayLinesWithTag
+* GetPayRunFromPaySchedule
+* GetPayRunJobInfo
+* GetPayRunJobProgress
+* GetPayRunJobs
+* GetPayRunJobStatus
+* GetPayRunOnDateFromPaySchedule
+* GetPayRunsFromEmployee
+* GetPayRunsFromPaySchedule
+* GetPayRunsWithTag
+* GetPayScheduleFromEmployer
+* GetPaySchedulesFromEmployer
+* GetPaySchedulesWithTag
+* GetPayslip3ReportOutput
+* GetPensionByEffectiveDate
+* GetPensionFromEmployer
+* GetPensionLiabilityReportOutput
+* GetPensionRevisionByNumber
+* GetPensionRevisions
+* GetPensionsByEffectiveDate
+* GetPensionsForEmployee
+* GetPensionsForEmployeeByEffectiveDate
+* GetPensionsForEmployeeByEmployeeRevision
+* GetPensionsFromEmployer
+* GetPeriodTemplateFromPaySchedule
+* GetPeriodTemplatesFromPaySchedule
+* GetPeriodTemplateTableFromPaySchedule
+* GetPermission
+* GetPermissions
+* GetReportDefinitionFromApplication
+* GetReportDefinitionsFromApplication
+* GetReportingInstructionFromEmployer
+* GetReportingInstructionsFromEmployer
+* GetReportLineFromEmployer
+* GetReportLinesFromEmployer
+* GetReportLinesFromPayRun
+* GetReportOutput
+* GetRtiJobInfo
+* GetRtiJobProgress
+* GetRtiJobs
+* GetRtiJobStatus
+* GetRtiTransactionFromEmployer
+* GetRtiTransactionsFromEmployer
+* GetRtiTransactionSummariesFromEmployer
+* GetRtiTransactionSummaryFromEmployer
+* GetRtiTransactionsWithTag
+* GetSchema
+* GetSchemas
+* GetSubContractorByEffectiveDate
+* GetSubContractorFromEmployer
+* GetSubContractorRevisionByNumber
+* GetSubContractorRevisions
+* GetSubContractorsByEffectiveDate
+* GetSubContractorsFromEmployer
+* GetSubContractorsWithTag
+* GetTagFromCisInstruction
+* GetTagFromCisLine
+* GetTagFromCisLineType
+* GetTagFromEmployee
+* GetTagFromEmployeeRevision
+* GetTagFromEmployer
+* GetTagFromEmployerRevision
+* GetTagFromHolidayScheme
+* GetTagFromHolidaySchemeRevision
+* GetTagFromJournalLine
+* GetTagFromPayCode
+* GetTagFromPayInstruction
+* GetTagFromPayLine
+* GetTagFromPayRun
+* GetTagFromPaySchedule
+* GetTagFromPermission
+* GetTagFromRtiTransaction
+* GetTagFromSubContractor
+* GetTagFromSubContractorRevision
+* GetTagFromThirdPartyTransaction
+* GetTagFromUser
+* GetTagsFromCisInstruction
+* GetTagsFromCisLine
+* GetTagsFromCisLineType
+* GetTagsFromEmployee
+* GetTagsFromEmployeeRevision
+* GetTagsFromEmployer
+* GetTagsFromEmployerRevision
+* GetTagsFromHolidayScheme
+* GetTagsFromHolidaySchemeRevision
+* GetTagsFromJournalLine
+* GetTagsFromPayCode
+* GetTagsFromPayInstruction
+* GetTagsFromPayLine
+* GetTagsFromPayRun
+* GetTagsFromPaySchedule
+* GetTagsFromPermission
+* GetTagsFromRtiTransaction
+* GetTagsFromSubContractor
+* GetTagsFromSubContractorRevision
+* GetTagsFromThirdPartyTransaction
+* GetTagsFromUser
+* GetTemplateModel
+* GetTemplates
+* GetThirdPartyJobInfo
+* GetThirdPartyJobProgress
+* GetThirdPartyJobs
+* GetThirdPartyJobStatus
+* GetThirdPartyTransaction
+* GetThirdPartyTransactions
+* GetTransformDefinitionFromApplication
+* GetTransformDefinitionsFromApplication
+* GetUser
+* GetUserPermissions
+* GetUsers
+* GetUsersFromPermission
 
 ---
 
@@ -383,6 +392,7 @@ Return your result as a **JSON object with two properties**:
 * TaxYtdPayInstruction  
 * TerminationPayInstruction  
 * TerminationYtdPayInstruction  
+* PayComponent
 * PayLineSap  
 * PayLineShpp  
 * PayLineSmp  
@@ -404,7 +414,9 @@ Return your result as a **JSON object with two properties**:
 * PayLineTax  
 * PayLineTermination  
 * PayRun  
-* PaySchedule  
+* PaySchedule 
+* PeriodTemplate
+* PeriodTemplateItem 
 * Pension  
 * ReportLineApprenticeshipLevy  
 * ReportLineCisSuffered  

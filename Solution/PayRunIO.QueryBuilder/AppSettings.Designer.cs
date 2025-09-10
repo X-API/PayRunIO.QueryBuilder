@@ -165,5 +165,17 @@ namespace PayRunIO.QueryBuilder {
                 this["OpenAI_Model"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.0")]
+        public string OpenAI_Temperature {
+            get {
+                return ((string)(this["OpenAI_Temperature"]));
+            }
+            set {
+                this["OpenAI_Temperature"] = value;
+            }
+        }
     }
 }

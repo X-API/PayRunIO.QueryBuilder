@@ -18,9 +18,11 @@
 
     using ICSharpCode.AvalonEdit.Document;
 
+    using Microsoft.Extensions.DependencyInjection;
     using PayRunIO.ConnectionControls;
     using PayRunIO.QueryBuilder.Helpers;
     using PayRunIO.QueryBuilder.ViewModels;
+    using PayRunIO.QueryBuilder.Services;
     using PayRunIO.v2.CSharp.SDK;
     using PayRunIO.v2.Models;
     using PayRunIO.v2.Models.Reporting;
@@ -49,12 +51,40 @@
 
         private SelectableBase[] treeViewSource;
 
+        private readonly ISettingsService settingsService;
+
         private Query source;
 
-        public MainWindow()
+        /// <summary>
+        /// Initializes a new instance of the MainWindow class.
+        /// </summary>
+        /// <param name="settingsService">The settings service.</param>
+        public MainWindow(ISettingsService settingsService)
         {
+            this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             this.InitializeComponent();
-            this.QueryResultViewer.ConnectionPicker.SelectConnectionByName(AppSettings.Default.LastConnection);
+            this.QueryResultViewer.ConnectionPicker.SelectConnectionByName(this.settingsService.UserSettings.Connection.LastConnection);
+        }
+
+        /// <summary>
+        /// Creates a new MainWindow instance using the application's service provider.
+        /// </summary>
+        /// <returns>A new MainWindow instance.</returns>
+        public static MainWindow Create()
+        {
+            var app = (App)Application.Current;
+            var settingsService = app.ServiceProvider.GetRequiredService<ISettingsService>();
+            return new MainWindow(settingsService);
+        }
+
+        /// <summary>
+        /// Gets the settings service from the application's service provider.
+        /// </summary>
+        /// <returns>The settings service instance.</returns>
+        private ISettingsService GetSettingsService()
+        {
+            var app = (App)Application.Current;
+            return app.ServiceProvider.GetRequiredService<ISettingsService>();
         }
 
         public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register("SelectedItem", typeof(SelectableBase), typeof(MainWindow), new PropertyMetadata(default(SelectableBase), OnSelectedItemChanged));
@@ -240,7 +270,7 @@
 
             this.Source = this.CreateNewQuery();
 
-            AppSettings.Default.LastFileName = string.Empty;
+            this.settingsService.UserSettings.File.LastFileName = string.Empty;
             this.FileName = string.Empty;
             this.OriginalState = string.Empty;
 
@@ -304,43 +334,43 @@
 
         private void Window_OnSourceInitialised(object? sender, EventArgs e)
         {
-            if (AppSettings.Default.WindowTop > 0)
+            if (this.settingsService.UserSettings.Window.Top > 0)
             {
-                this.Top = AppSettings.Default.WindowTop;
+                this.Top = this.settingsService.UserSettings.Window.Top;
             }
 
-            if (AppSettings.Default.WindowLeft > 0)
+            if (this.settingsService.UserSettings.Window.Left > 0)
             {
-                this.Left = AppSettings.Default.WindowLeft;
+                this.Left = this.settingsService.UserSettings.Window.Left;
             }
 
-            if (AppSettings.Default.WindowHeight > 0)
+            if (this.settingsService.UserSettings.Window.Height > 0)
             {
-                this.Height = AppSettings.Default.WindowHeight;
+                this.Height = this.settingsService.UserSettings.Window.Height;
             }
 
-            if (AppSettings.Default.WindowWidth > 0)
+            if (this.settingsService.UserSettings.Window.Width > 0)
             {
-                this.Width = AppSettings.Default.WindowWidth;
+                this.Width = this.settingsService.UserSettings.Window.Width;
             }
 
-            if (AppSettings.Default.WindowMaximised)
+            if (this.settingsService.UserSettings.Window.IsMaximized)
             {
                 this.WindowState = WindowState.Maximized;
             }
 
-            var fileHistory = AppSettings.Default.FileHistory?.OfType<string>() ?? new string[0];
+            var fileHistory = this.settingsService.UserSettings.File.FileHistory ?? new List<string>();
 
             foreach (var file in fileHistory)
             {
                 this.FileHistory.Add(file);
             }
 
-            if (!string.IsNullOrEmpty(AppSettings.Default.LastFileName))
+            if (!string.IsNullOrEmpty(this.settingsService.UserSettings.File.LastFileName))
             {
-                this.FileName = AppSettings.Default.LastFileName;
+                this.FileName = this.settingsService.UserSettings.File.LastFileName;
 
-                this.LoadFromFile(AppSettings.Default.LastFileName);
+                this.LoadFromFile(this.settingsService.UserSettings.File.LastFileName);
             }
             else
             {
@@ -355,7 +385,7 @@
 
             SelectableBase root = new QueryViewModel(this.Source);
 
-            var selectedItem = this.FindByIndex(root, AppSettings.Default.LastTreeIndex);
+            var selectedItem = this.FindByIndex(root, this.settingsService.UserSettings.File.LastTreeIndex);
 
             if (selectedItem != null)
             {
@@ -405,45 +435,45 @@
 
         private void Window_OnClosing(object sender, CancelEventArgs e)
         {
-            AppSettings.Default.LastConnection = this.QueryResultViewer.ConnectionPicker.SelectedConnection?.Name;
+            this.settingsService.UserSettings.Connection.LastConnection = this.QueryResultViewer.ConnectionPicker.SelectedConnection?.Name ?? string.Empty;
 
             ConnectionCollectionHelper.SaveConnections();
 
             if (this.WindowState == WindowState.Maximized)
             {
-                AppSettings.Default.WindowTop = this.RestoreBounds.Top;
-                AppSettings.Default.WindowLeft = this.RestoreBounds.Left;
-                AppSettings.Default.WindowHeight = this.RestoreBounds.Height;
-                AppSettings.Default.WindowWidth = this.RestoreBounds.Width;
-                AppSettings.Default.WindowMaximised = true;
+                this.settingsService.UserSettings.Window.Top = this.RestoreBounds.Top;
+                this.settingsService.UserSettings.Window.Left = this.RestoreBounds.Left;
+                this.settingsService.UserSettings.Window.Height = this.RestoreBounds.Height;
+                this.settingsService.UserSettings.Window.Width = this.RestoreBounds.Width;
+                this.settingsService.UserSettings.Window.IsMaximized = true;
             }
             else
             {
-                AppSettings.Default.WindowTop = this.Top;
-                AppSettings.Default.WindowLeft = this.Left;
-                AppSettings.Default.WindowHeight = this.Height;
-                AppSettings.Default.WindowWidth = this.Width;
-                AppSettings.Default.WindowMaximised = false;
+                this.settingsService.UserSettings.Window.Top = this.Top;
+                this.settingsService.UserSettings.Window.Left = this.Left;
+                this.settingsService.UserSettings.Window.Height = this.Height;
+                this.settingsService.UserSettings.Window.Width = this.Width;
+                this.settingsService.UserSettings.Window.IsMaximized = false;
             }
 
             if (!string.IsNullOrEmpty(this.FileName))
             {
-                AppSettings.Default.LastFileName = this.FileName;
+                this.settingsService.UserSettings.File.LastFileName = this.FileName;
             }
 
-            AppSettings.Default.FileHistory = new StringCollection();
+            this.settingsService.UserSettings.File.FileHistory = new List<string>();
 
             foreach (var file in this.FileHistory.Distinct().Take(10))
             {
-                AppSettings.Default.FileHistory.Add(file);
+                this.settingsService.UserSettings.File.FileHistory.Add(file);
             }
 
             if (this.QueryTreeView.SelectedItem != null)
             {
-                AppSettings.Default.LastTreeIndex = this.QueryTreeView.SelectedItem.Index;
+                this.settingsService.UserSettings.File.LastTreeIndex = this.QueryTreeView.SelectedItem.Index;
             }
 
-            AppSettings.Default.Save();
+            this.settingsService.SaveUserSettings();
 
             if (this.IsDirty())
             {
@@ -501,7 +531,7 @@
 
             this.TreeViewSource = new SelectableBase[] { new QueryViewModel(this.Source) };
 
-            AppSettings.Default.LastFileName = filePath;
+            this.settingsService.UserSettings.File.LastFileName = filePath;
 
             if (this.FileHistory.Contains(filePath))
             {
@@ -633,7 +663,7 @@
 
         private void FileSelection_OnChange(object sender, SelectionChangedEventArgs e)
         {
-            if (AppSettings.Default.LastFileName == this.FileName)
+            if (this.settingsService.UserSettings.File.LastFileName == this.FileName)
             {
                 // No change in selected file name
                 return;
@@ -642,7 +672,7 @@
             if (!this.ConfirmReplaceSource())
             {
                 // Cancel file load
-                this.FileName = AppSettings.Default.LastFileName;
+                this.FileName = this.settingsService.UserSettings.File.LastFileName;
             }
             else if (!string.IsNullOrEmpty(this.FileName))
             {
@@ -750,7 +780,7 @@
         private void NewAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var aiAssistantWindow =
-                new AiAssistantWindow
+                new AiAssistantWindow(this.GetSettingsService())
                     {
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -764,7 +794,7 @@
         private void EditAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var aiAssistantWindow =
-                new AiAssistantWindow
+                new AiAssistantWindow(this.GetSettingsService())
                     {
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -788,7 +818,7 @@
         private void QuestionAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var aiAssistantWindow =
-                new AiAssistantWindow
+                new AiAssistantWindow(this.GetSettingsService())
                     {
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -805,7 +835,7 @@
                 $"Please help me understand this error message:\r\n\r\n```xml\r\n{XmlSerialiserHelper.SerialiseToXmlDoc(this.QueryResultViewer.LastErrorModel).Beautify()}\r\n```";
 
             var aiAssistantWindow =
-                new AiAssistantWindow
+                new AiAssistantWindow(this.GetSettingsService())
                     {
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner,

@@ -27,6 +27,8 @@ This pattern produces a tabular report as an XML or JSON response, structured in
  * Output key properties into variables for reuse in data rows.
  * These groups run once per query (typically single entity matched).
 - Rows Group
+ * The row group must have a group name of "Rows"
+ * The row group must have an item name of "Row"
  * The core repeating group representing each data row (e.g., each employee).
  * Selector points to the collection of entities to iterate over.
  * UniqueKeyVariable stores the unique key of each entity for nested selectors.
