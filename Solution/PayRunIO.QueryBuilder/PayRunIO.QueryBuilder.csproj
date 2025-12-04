@@ -19,7 +19,7 @@
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="MahApps.Metro.IconPacks.BoxIcons" Version="5.1.0" />
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
-	<PackageReference Include="PayRunIO.CSharp.SDK" Version="25.26.4.272" />
+	<PackageReference Include="PayRunIO.CSharp.SDK" Version="25.26.5.19" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.9" />
