@@ -70,11 +70,6 @@
         private string findSchemaAndRouteNamesResource;
 
         /// <summary>
-        /// The cheat sheet resource.
-        /// </summary>
-        private string cheatSheetResource_XXX;
-
-        /// <summary>
         /// The answer question system prompt.
         /// </summary>
         private string answerQuestionSystemPrompt;
@@ -83,11 +78,6 @@
         /// The tabular rql resource.
         /// </summary>
         private string tabularRqlResource;
-
-        /// <summary>
-        /// The query schema.
-        /// </summary>
-        private string querySchema;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RqlRagService"/> class.
@@ -193,8 +183,6 @@
                     {
                         Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.TabularRql))
                             .ContinueWith(t => this.tabularRqlResource = t.Result),
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.QuerySchema))
-                            .ContinueWith(t => this.querySchema = t.Result),
                         Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.FindSchemaAndRouteNames))
                             .ContinueWith(t => this.findSchemaAndRouteNamesResource = t.Result),
                         Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.AnswerQuestionSystemPrompt))

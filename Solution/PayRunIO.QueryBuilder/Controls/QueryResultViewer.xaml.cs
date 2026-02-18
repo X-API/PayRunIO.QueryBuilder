@@ -111,36 +111,7 @@
 
         private IRestApiHelperAsync BuildRestApiHelper(Connection connection)
         {
-            var contentHeader = connection.ContentType == ContentType.XML ? "application/xml" : "application/json";
-
-            IRestApiHelperAsync restApiHelper;
-
-            if (connection is Oauth1Connection oauth1Connection)
-            {
-                restApiHelper = 
-                    new AuditRestApiHelper(
-                        this.oAuthSignatureGenerator,
-                        consumerKey: oauth1Connection.ConsumerKey,
-                        consumerSecret: oauth1Connection.ConsumerSecret,
-                        hostEndpoint: oauth1Connection.EndPoint,
-                        contentTypeHeader: contentHeader,
-                        acceptHeader: contentHeader);
-            }
-            else if (connection is BearerTokenConnection bearerTokenConnection)
-            {
-                restApiHelper =
-                    new BearerTokenRestApiHelper(
-                        bearerToken: bearerTokenConnection.BearerToken,
-                        hostEndpoint: bearerTokenConnection.EndPoint,
-                        contentTypeHeader: contentHeader,
-                        acceptHeader: contentHeader);
-            }
-            else
-            {
-                throw new NotSupportedException($"Connection type '{connection.GetType().Name}' not currently supported");
-            }
-
-            return restApiHelper;
+            return KeyCloakTokenHelper.BuildApiHelper(connection);
         }
 
         private static async Task<(string, ErrorModel)> GetResponseText(IRestApiHelperAsync restApiHelper, Query query, ContentType responseType)
