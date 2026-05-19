@@ -15,6 +15,8 @@ builder.Logging.AddConsole(options =>
 
 builder.Services.AddSingleton<IDocumentRepository, DocumentRepository>();
 builder.Services.AddSingleton<IQueryValidator, QueryValidator>();
+builder.Services.AddSingleton<IRqlGrammarIndex, RqlGrammarIndex>();
+builder.Services.AddSingleton<IRqlToolDispatcher, RqlToolDispatcher>();
 
 builder.Services
     .AddMcpServer()

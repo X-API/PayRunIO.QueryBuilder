@@ -5,12 +5,12 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
 
     using ModelContextProtocol.Server;
 
-    using PayRunIO.RqlAssistant.Mcp.Dtos;
     using PayRunIO.RqlAssistant.Service;
-    using PayRunIO.RqlAssistant.Service.Models;
+    using PayRunIO.RqlAssistant.Service.Dtos;
 
     /// <summary>
-    /// MCP tools exposing PayRunIO entity schema lookups, backed by <see cref="IDocumentRepository"/>.
+    /// MCP tools exposing PayRunIO entity schema lookups. Thin shim over <see cref="RqlToolDispatcher"/>'s
+    /// conversion helpers so MCP and the in-process WPF caller share one DTO surface.
     /// </summary>
     [McpServerToolType]
     public static class SchemaTools
@@ -23,7 +23,7 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
         {
             return repository
                 .ListSchemas(filter)
-                .Select(ToSummary)
+                .Select(RqlToolDispatcher.ToSummary)
                 .ToArray();
         }
 
@@ -35,29 +35,7 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
         {
             var schema = repository.GetSchema(typeName);
 
-            return schema == null ? null : ToFull(schema);
+            return schema == null ? null : RqlToolDispatcher.ToFull(schema);
         }
-
-        private static SchemaSummaryDto ToSummary(ClassDefinition schema) =>
-            new SchemaSummaryDto
-                {
-                    Name = schema.ClassName ?? string.Empty,
-                    Description = schema.Description ?? string.Empty
-                };
-
-        private static SchemaDto ToFull(ClassDefinition schema) =>
-            new SchemaDto
-                {
-                    Name = schema.ClassName ?? string.Empty,
-                    Description = schema.Description ?? string.Empty,
-                    Properties = (schema.Properties ?? new List<PropertyDefinition>())
-                        .Select(p => new PropertyDto
-                            {
-                                Name = p.Name ?? string.Empty,
-                                Type = p.Type ?? string.Empty,
-                                Description = p.Description ?? string.Empty
-                            })
-                        .ToArray()
-                };
     }
 }

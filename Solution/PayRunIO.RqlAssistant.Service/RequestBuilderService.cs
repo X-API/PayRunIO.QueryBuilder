@@ -1,4 +1,4 @@
-﻿namespace PayRunIO.RqlAssistant.Service
+namespace PayRunIO.RqlAssistant.Service
 {
     using System;
     using System.Collections.Generic;
@@ -6,6 +6,7 @@
     using System.Text.Json;
 
     using Microsoft.Extensions.Configuration;
+    using PayRunIO.RqlAssistant.Service.Dtos;
     using PayRunIO.RqlAssistant.Service.Models;
 
     /// <summary>
@@ -14,15 +15,18 @@
     public interface IRequestBuilderService
     {
         /// <summary>
-        ///     Creates a JSON string representing the request payload expected by the OpenAI Chat Completions endpoint.
-        ///     Accepts separate collections of <c>system</c> and <c>user</c> prompts.
+        /// Creates a JSON string representing the request payload expected by the OpenAI Chat Completions endpoint.
         /// </summary>
-        /// <param name="chatPrompts">The chat prompt messages.</param>
+        /// <param name="chatPrompts">The full chat message history, in order. System messages are emitted first; all
+        /// other roles preserve their position so tool-call/tool-result pairing is intact.</param>
+        /// <param name="tools">Optional tool descriptors. When provided, the request includes a <c>tools</c> array and
+        /// <c>tool_choice:"auto"</c> so the model may emit <c>tool_calls</c> instead of (or before) a final reply.</param>
         /// <param name="model">(Optional) Override the model ID (defaults to configuration or GPT‑4o‑mini).</param>
         /// <param name="temperature">(Optional) Sampling temperature (defaults to configuration or 0.7).</param>
-        /// <returns>JSON string.</returns>
+        /// <returns>JSON string suitable for posting to the chat completions endpoint.</returns>
         string CreateAiRequestJson(
             ChatMessage[] chatPrompts,
+            IReadOnlyList<ToolDescriptor>? tools = null,
             string? model = null,
             double? temperature = null);
     }
@@ -30,30 +34,17 @@
     /// <inheritdoc />
     internal sealed class RequestBuilderService : IRequestBuilderService
     {
-        /// <summary>
-        /// The default model.
-        /// </summary>
         private readonly string defaultModel;
 
-        /// <summary>
-        /// The default temperature.
-        /// </summary>
         private readonly double defaultTemperature;
 
-        /// <summary>
-        /// The json serializer options.
-        /// </summary>
         private readonly JsonSerializerOptions jsonSerializerOptions =
             new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = false
-            };
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = false
+                };
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RequestBuilderService"/> class.
-        /// </summary>
-        /// <param name="configuration">The configuration.</param>
         public RequestBuilderService(IConfiguration configuration)
         {
             var configuration1 = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -66,6 +57,7 @@
         /// <inheritdoc />
         public string CreateAiRequestJson(
             ChatMessage[] chatPrompts,
+            IReadOnlyList<ToolDescriptor>? tools = null,
             string? model = null,
             double? temperature = null)
         {
@@ -76,28 +68,94 @@
 
             var messages = new List<object>();
 
-            var systemPrompts = chatPrompts.Where(p => p.Role == ParticipantType.System).ToArray();
-
-            // Add system messages first.
-            foreach (var s in systemPrompts)
+            // Emit system messages first so they remain pinned at the top of the conversation.
+            foreach (var s in chatPrompts.Where(p => p.Role == ParticipantType.System))
             {
                 messages.Add(new { role = "system", content = s.Text });
             }
 
-            // Add chat messages.
-            foreach (var u in chatPrompts.Where(p => p.Role != ParticipantType.System))
+            // Other roles keep their relative order so assistant tool_calls stay paired with their tool replies.
+            foreach (var m in chatPrompts.Where(p => p.Role != ParticipantType.System))
             {
-                messages.Add(new { role = u.Role.ToString().ToLower(), content = u.Text });
+                messages.Add(ToWireMessage(m));
             }
 
-            var requestPayload = new
+            object requestPayload;
+
+            if (tools != null && tools.Count > 0)
             {
-                model = model ?? this.defaultModel,
-                messages = messages.ToArray(),
-                temperature = temperature ?? this.defaultTemperature,
-            };
+                requestPayload = new
+                    {
+                        model = model ?? this.defaultModel,
+                        messages = messages.ToArray(),
+                        temperature = temperature ?? this.defaultTemperature,
+                        tools = tools.Select(ToWireTool).ToArray(),
+                        tool_choice = "auto"
+                    };
+            }
+            else
+            {
+                requestPayload = new
+                    {
+                        model = model ?? this.defaultModel,
+                        messages = messages.ToArray(),
+                        temperature = temperature ?? this.defaultTemperature
+                    };
+            }
 
             return JsonSerializer.Serialize(requestPayload, this.jsonSerializerOptions);
+        }
+
+        private static object ToWireMessage(ChatMessage message)
+        {
+            switch (message.Role)
+            {
+                case ParticipantType.Assistant when message.ToolCalls is { Count: > 0 }:
+                    return new
+                        {
+                            role = "assistant",
+                            content = message.Text ?? string.Empty,
+                            tool_calls = message.ToolCalls.Select(tc => new
+                                {
+                                    id = tc.Id,
+                                    type = "function",
+                                    function = new
+                                        {
+                                            name = tc.FunctionName,
+                                            arguments = tc.ArgumentsJson ?? "{}"
+                                        }
+                                }).ToArray()
+                        };
+
+                case ParticipantType.Tool:
+                    return new
+                        {
+                            role = "tool",
+                            tool_call_id = message.ToolCallId ?? string.Empty,
+                            content = message.Text ?? string.Empty
+                        };
+
+                default:
+                    return new { role = message.Role.ToString().ToLower(), content = message.Text };
+            }
+        }
+
+        private static object ToWireTool(ToolDescriptor descriptor)
+        {
+            // Parameters are pre-serialised JSON Schema fragments — parse them into a JsonElement so the
+            // outer serializer inlines the structure rather than emitting it as a quoted string.
+            using var doc = JsonDocument.Parse(descriptor.ParametersJsonSchema);
+
+            return new
+                {
+                    type = "function",
+                    function = new
+                        {
+                            name = descriptor.Name,
+                            description = descriptor.Description,
+                            parameters = doc.RootElement.Clone()
+                        }
+                };
         }
     }
 }

@@ -1,30 +1,19 @@
-﻿namespace PayRunIO.RqlAssistant.Service
+namespace PayRunIO.RqlAssistant.Service
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
     using System.Text.Json;
-    using System.Text.RegularExpressions;
 
     using PayRunIO.RqlAssistant.Service.Models;
 
     /// <summary>
-    /// Contract for the two‑phase Retrieval‑Augmented Generation (RAG) pipeline that turns a natural‑language
-    /// question into an RQL query suggestion.
+    /// Contract for the natural-language → RQL pipeline. The model is driven via OpenAI tool-calling
+    /// against <see cref="IRqlToolDispatcher"/> rather than prompt-stuffing the full grammar.
     /// </summary>
     public interface IRqlRagService
     {
-        /// <summary>
-        /// The ask question method.
-        /// </summary>
-        /// <param name="userQuestion">The user question.</param>
-        /// <param name="includeSchemasAndRoutes"></param>
-        /// <param name="chatHistory">The chat History.</param>
-        /// <param name="format">Determines the RQL response formatting. Either JSON, XML or Conversation.</param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
         Task<string> AskQuestion(
             string userQuestion,
             bool includeSchemasAndRoutes = true,
@@ -32,76 +21,41 @@
             ResponseType format = ResponseType.Conversation);
     }
 
-    /// <summary>
-    ///     Skeleton implementation of <see cref="IRqlRagService"/>. All heavy lifting is delegated to the
-    ///     <see cref="IRequestBuilderService"/> for JSON shaping; this class focuses on prompt engineering and
-    ///     document retrieval orchestration.
-    /// </summary>
-    internal sealed class RqlRagService : IRqlRagService
+    public sealed class RqlRagService : IRqlRagService
     {
         /// <summary>
-        /// The AI request service.
+        /// Maximum tool-call round trips per question. A complete walk (schema ×2, route, grammar ×2,
+        /// validate, fix, validate, finalise) takes ~9; 10 gives a small buffer before we surface the
+        /// loop as an error to the caller.
         /// </summary>
+        private const int MaxIterations = 10;
+
         private readonly IRequestBuilderService requestBuilderService;
 
-        /// <summary>
-        /// The document repository.
-        /// </summary>
-        private readonly DocumentRepository documentRepository;
-
-        /// <summary>
-        /// The remote AI service.
-        /// </summary>
         private readonly IRemoteAiService remoteAiService;
 
-        /// <summary>
-        /// The synchronisation lock instance.
-        /// </summary>
+        private readonly IRqlToolDispatcher toolDispatcher;
+
         private readonly object syncLock = new object();
 
-        /// <summary>
-        /// The is initialised value. Determines if the service has been initialised.
-        /// </summary>
-        private bool isInitialised = false;
+        private bool isInitialised;
 
-        /// <summary>
-        /// The find schema and route names resource.
-        /// </summary>
-        private string findSchemaAndRouteNamesResource;
+        private string answerQuestionSystemPrompt = string.Empty;
 
-        /// <summary>
-        /// The answer question system prompt.
-        /// </summary>
-        private string answerQuestionSystemPrompt;
+        private string grammarPrimer = string.Empty;
 
-        /// <summary>
-        /// The tabular rql resource.
-        /// </summary>
-        private string tabularRqlResource;
+        private string tabularRqlResource = string.Empty;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RqlRagService"/> class.
-        /// </summary>
-        /// <param name="requestBuilderService">The request Builder Service.</param>
-        /// <param name="documentRepository">The document Repository.</param>
-        /// <param name="remoteAiService">The remote AI service.</param>
-        public RqlRagService(IRequestBuilderService requestBuilderService, DocumentRepository documentRepository, IRemoteAiService remoteAiService)
+        public RqlRagService(
+            IRequestBuilderService requestBuilderService,
+            IRemoteAiService remoteAiService,
+            IRqlToolDispatcher toolDispatcher)
         {
             this.requestBuilderService = requestBuilderService ?? throw new ArgumentNullException(nameof(requestBuilderService));
-            this.documentRepository = documentRepository ?? throw new ArgumentNullException(nameof(documentRepository));
             this.remoteAiService = remoteAiService ?? throw new ArgumentNullException(nameof(remoteAiService));
+            this.toolDispatcher = toolDispatcher ?? throw new ArgumentNullException(nameof(toolDispatcher));
         }
 
-        /// <summary>
-        /// The ask question method.
-        /// </summary>
-        /// <param name="userQuestion">The user question.</param>
-        /// <param name="includeSchemasAndRoutes"></param>
-        /// <param name="chatHistory">The chat History.</param>
-        /// <param name="format">Determines the RQL response formatting. Either JSON, XML or Conversation.</param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
         public async Task<string> AskQuestion(
             string userQuestion,
             bool includeSchemasAndRoutes = true,
@@ -113,182 +67,149 @@
                 throw new ArgumentException("User question cannot be empty.", nameof(userQuestion));
             }
 
-            if (!this.isInitialised)
+            this.EnsureInitialised();
+
+            var conversation = this.BuildInitialConversation(userQuestion, chatHistory, format, includeSchemasAndRoutes);
+
+            for (var iteration = 0; iteration < MaxIterations; iteration++)
             {
-                lock (this.syncLock)
+                var requestJson = this.requestBuilderService.CreateAiRequestJson(
+                    conversation.ToArray(),
+                    this.toolDispatcher.Descriptors);
+
+                var response = await this.remoteAiService.GetChatResponseAsync(requestJson).ConfigureAwait(false);
+
+                if (!response.HasToolCalls)
                 {
-                    if (!this.isInitialised)
+                    return response.Content ?? string.Empty;
+                }
+
+                // Assistant turn with the tool_calls (no final content yet) — must be preserved verbatim
+                // so the matching tool reply messages line up with its tool_call ids.
+                conversation.Add(new ChatMessage
                     {
-                        this.LoadStaticResources();
-                        this.isInitialised = true;
-                    }
+                        Role = ParticipantType.Assistant,
+                        Text = response.Content ?? string.Empty,
+                        ToolCalls = response.ToolCalls
+                    });
+
+                foreach (var call in response.ToolCalls)
+                {
+                    conversation.Add(new ChatMessage
+                        {
+                            Role = ParticipantType.Tool,
+                            ToolCallId = call.Id,
+                            Text = this.DispatchToolCall(call)
+                        });
                 }
             }
 
-            // Discover schemas and routes in user question
-            var results = new SchemaAndRoutes();
+            throw new OpenAiException(
+                $"RQL assistant exceeded the maximum of {MaxIterations} tool-call iterations without producing a final reply.");
+        }
+
+        private string DispatchToolCall(OpenAiToolCall call)
+        {
+            JsonElement arguments;
+            try
+            {
+                using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(call.ArgumentsJson) ? "{}" : call.ArgumentsJson);
+                arguments = doc.RootElement.Clone();
+            }
+            catch (JsonException ex)
+            {
+                return JsonSerializer.Serialize(new
+                    {
+                        error = $"Tool '{call.FunctionName}' arguments are not valid JSON: {ex.Message}"
+                    });
+            }
+
+            return this.toolDispatcher.Dispatch(call.FunctionName, arguments);
+        }
+
+        private Collection<ChatMessage> BuildInitialConversation(
+            string userQuestion,
+            IEnumerable<ChatMessage>? chatHistory,
+            ResponseType format,
+            bool includeSchemasAndRoutes)
+        {
+            var conversation = new Collection<ChatMessage>();
+
+            conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = this.answerQuestionSystemPrompt });
+            conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = this.grammarPrimer });
 
             if (includeSchemasAndRoutes)
             {
-                var getSchemaPrompt = this.BuildSchemaAndRouteExtractionRequest(userQuestion);
-
-                var schemaAndRouteResponse = await this.remoteAiService.GetResponseAsync(getSchemaPrompt);
-
-                /*
-                 * Example Response:
-                 *
-                 * {
-                 *   "routes": ["RouteNameA", "RouteNameB"],
-                 *   "schemas": ["SchemaNameA", "SchemaNameB"]
-                 * }
-                 *
-                 */
-
-                var match = Regex.Match(
-                    schemaAndRouteResponse,
-                    "\\{\\s*\"routes\"\\s*:\\s*\\[.*?\\],\\s*\"schemas\"\\s*:\\s*\\[.*?\\]\\s*\\}");
-
-                if (match.Success)
-                {
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-                    results = JsonSerializer.Deserialize<SchemaAndRoutes>(match.Value, options)
-                              ?? throw new InvalidOperationException("Failed to deserialize the JSON content.");
-                }
-            }
-
-            // Build augmented prompt
-            var augmentedPrompt = this.BuildQueryGenerationRequest(userQuestion, results.schemas, results.routes, chatHistory, format);
-
-            // Get final answer
-            var answer = await this.remoteAiService.GetResponseAsync(augmentedPrompt);
-
-            return answer;
-        }
-
-        public class SchemaAndRoutes
-        {
-            public string[] routes { get; set; } = new string[0];
-
-            public string[] schemas { get; set; } = new string[0];
-        }
-
-        /// <summary>
-        /// The load static resources.
-        /// </summary>
-        private void LoadStaticResources()
-        {
-            var tasks = 
-                new Task[]
+                conversation.Add(new ChatMessage
                     {
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.TabularRql))
-                            .ContinueWith(t => this.tabularRqlResource = t.Result),
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.FindSchemaAndRouteNames))
-                            .ContinueWith(t => this.findSchemaAndRouteNamesResource = t.Result),
-                        Task.Run(() => ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.AnswerQuestionSystemPrompt))
-                            .ContinueWith(t => this.answerQuestionSystemPrompt = t.Result),
-                    };
-
-            Task.WaitAll(tasks);
-        }
-
-        /// <summary>
-        /// Builds the first‑pass request that asks the LLM to identify relevant RQL schemas.
-        /// </summary>
-        /// <param name="userQuestion">The raw end‑user question.</param>
-        /// <returns>JSON request string suitable for posting to the chat completions endpoint.</returns>
-        private string BuildSchemaAndRouteExtractionRequest(string userQuestion)
-        {
-            var chatMessages =
-                new Collection<ChatMessage>
-                        {
-                            new ChatMessage { Role = ParticipantType.System, Text = this.findSchemaAndRouteNamesResource },
-                            new ChatMessage { Role = ParticipantType.User, Text = userQuestion }
-                        }
-                    .ToArray();
-
-            return this.requestBuilderService.CreateAiRequestJson(chatMessages);
-        }
-
-        /// <summary>
-        /// The build query generation request method.
-        /// </summary>
-        /// <param name="userQuestion">The user question.</param>
-        /// <param name="schemaNames">The schema Names.</param>
-        /// <param name="routeNames">The API route names.</param>
-        /// <param name="chatHistory">The chat history.</param>
-        /// <param name="format">The content type format.</param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// User question cannot be null or empty.
-        /// </exception>
-        private string BuildQueryGenerationRequest(
-            string userQuestion,
-            string[] schemaNames,
-            string[] routeNames,
-            IEnumerable<ChatMessage>? chatHistory,
-            ResponseType format)
-        {
-            var systemPrompts = 
-                new List<string>
-                    {
-                        this.answerQuestionSystemPrompt,
-                        "RQL Full Documentation:\r\n" + this.documentRepository.GetDocumentation(format == ResponseType.JsonOnly ? "JSON" : "XML")
-                    };
-
-            switch (format)
-            {
-                case ResponseType.JsonOnly:
-                    systemPrompts.Add("**Respond ONLY with the RQL statement enclosed in triple back‑ticks formatted as 'JSON'. Do not add explanations.**");
-                    break;
-                case ResponseType.XmlOnly:
-                    systemPrompts.Add("**Respond ONLY with the RQL statement enclosed in triple back‑ticks formatted as 'XML'. XML Must not contain non-ASCII characters. Do not add explanations.** Do not include XML comments.");
-                    break;
-                case ResponseType.Conversation:
-                    systemPrompts.Add("**Respond conversationally to the user prompt using markdown syntax. When responding with RQL statements, ensure they are in 'XML' format and wrapped in triple backticks. XML Must not contain non-ASCII characters.** Do not include XML comments.");
-                    break;
-                case ResponseType.TabularQuery:
-                    systemPrompts.Add(this.tabularRqlResource);
-                    systemPrompts.Add("**Respond conversationally to the user prompt using markdown syntax**. When responding with RQL statements, strictly enforce the use of the **Tabular Output Pattern** and use RQL in 'XML' format and **wrapped in triple backticks**. Do not include XML comments.");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
+                        Role = ParticipantType.System,
+                        Text = "Use the available tools to ground your reply: 'list_schemas'/'get_schema' for entity shapes, "
+                               + "'list_routes'/'get_route' for API route URLs to use in Group Selector attributes, "
+                               + "'list_rql_topics'/'get_rql_syntax' for grammar details, and 'validate_query' to check XML before finalising. "
+                               + "Do not invent property names, route URLs, or RQL syntax — look them up."
+                    });
             }
 
-            // Fetch documentation snippets relevant to the identified schemaNames.
-            if (schemaNames.Any())
+            conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = FormatDirective(format) });
+
+            if (format == ResponseType.TabularQuery)
             {
-                // systemPrompts.Add(this.querySchema);
-                systemPrompts.AddRange(this.documentRepository.FindSchemaSnippets(schemaNames).Select(d => "# Entity Schema:\r\n" + d));
+                conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = this.tabularRqlResource });
             }
 
-            // Fetch documentation snippets relevant to the identified route names.
-            if (routeNames.Any())
-            {
-                var routeDefinitions = this.documentRepository.GetRouteDefinitions().Where(def => routeNames.Contains(def.ClassName));
-
-                systemPrompts.AddRange(routeDefinitions.Select(def => def.ToString()));
-            }
-
-            var chatMessages = new Collection<ChatMessage>();
-            foreach (var systemPrompt in systemPrompts)
-            {
-                chatMessages.Add(new ChatMessage { Role = ParticipantType.System, Text = systemPrompt });
-            }
-
-            if (chatHistory != null && chatHistory.Any())
+            if (chatHistory != null)
             {
                 foreach (var message in chatHistory)
                 {
-                    chatMessages.Add(message);
+                    conversation.Add(message);
                 }
             }
 
-            chatMessages.Add(new ChatMessage { Role = ParticipantType.User, Text = userQuestion });
+            conversation.Add(new ChatMessage { Role = ParticipantType.User, Text = userQuestion });
 
-            return this.requestBuilderService.CreateAiRequestJson(chatMessages.ToArray());
+            return conversation;
+        }
+
+        private static string FormatDirective(ResponseType format) =>
+            format switch
+                {
+                    ResponseType.JsonOnly =>
+                        "**Respond ONLY with the RQL statement enclosed in triple back-ticks formatted as 'JSON'. Do not add explanations.**",
+                    ResponseType.XmlOnly =>
+                        "**Respond ONLY with the RQL statement enclosed in triple back-ticks formatted as 'XML'. XML must not contain non-ASCII characters. Do not add explanations. Do not include XML comments.**",
+                    ResponseType.Conversation =>
+                        "**Respond conversationally to the user prompt using markdown syntax. When responding with RQL statements, ensure they are in 'XML' format and wrapped in triple back-ticks. XML must not contain non-ASCII characters. Do not include XML comments.**",
+                    ResponseType.TabularQuery =>
+                        "**Respond conversationally to the user prompt using markdown syntax**. When responding with RQL statements, strictly enforce the use of the **Tabular Output Pattern** and use RQL in 'XML' format wrapped in triple back-ticks. Do not include XML comments.",
+                    _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+                };
+
+        private void EnsureInitialised()
+        {
+            if (this.isInitialised)
+            {
+                return;
+            }
+
+            lock (this.syncLock)
+            {
+                if (this.isInitialised)
+                {
+                    return;
+                }
+
+                var primerTask = ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.RqlGrammarPrimer);
+                var systemPromptTask = ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.AnswerQuestionSystemPrompt);
+                var tabularTask = ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.TabularRql);
+
+                Task.WaitAll(primerTask, systemPromptTask, tabularTask);
+
+                this.grammarPrimer = primerTask.Result;
+                this.answerQuestionSystemPrompt = systemPromptTask.Result;
+                this.tabularRqlResource = tabularTask.Result;
+
+                this.isInitialised = true;
+            }
         }
     }
 }

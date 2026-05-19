@@ -1,4 +1,4 @@
-﻿namespace PayRunIO.RqlAssistant.Service.Models
+namespace PayRunIO.RqlAssistant.Service.Models
 {
 
     public enum ParticipantType
@@ -7,6 +7,8 @@
 
         Assistant = 1,
 
-        System = 2
+        System = 2,
+
+        Tool = 3
     }
 }

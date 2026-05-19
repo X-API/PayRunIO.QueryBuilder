@@ -1,4 +1,4 @@
-﻿namespace PayRunIO.RqlAssistant.Service
+namespace PayRunIO.RqlAssistant.Service
 {
     using Microsoft.Extensions.Configuration;
 
@@ -13,19 +13,28 @@
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            var remoteAiService = 
+            var remoteAiService =
                 new RemoteAiService(
-                    configuration, 
+                    configuration,
                     httpClient ?? new HttpClient
                         {
                             Timeout = TimeSpan.Parse(configuration["OpenAi:HttpClient:TimeOut"] ?? DefaultTimeoutAsString)
                         });
+
             var requestBuilderService = new RequestBuilderService(configuration);
             var documentRepository = new DocumentRepository();
+            var queryValidator = new QueryValidator();
+            var grammarIndex = new RqlGrammarIndex();
+            var toolDispatcher = new RqlToolDispatcher(documentRepository, queryValidator, grammarIndex);
 
-            var rqlRagService = new RqlRagService(requestBuilderService, documentRepository, remoteAiService);
-
-            return rqlRagService;
+            return new RqlRagService(requestBuilderService, remoteAiService, toolDispatcher);
         }
+
+        /// <summary>
+        /// Creates a standalone <see cref="IQueryValidator"/> instance. Useful when a caller (e.g. the WPF
+        /// assistant window) wants to validate the model's final XML reply directly, independent of the
+        /// tool-call loop, to drive its own retry.
+        /// </summary>
+        public static IQueryValidator CreateValidator() => new QueryValidator();
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.ComponentModel;
+    using System.Linq;
     using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
@@ -21,9 +22,17 @@
     /// </summary>
     public partial class AiAssistantWindow : Window, INotifyPropertyChanged
     {
+        /// <summary>
+        /// Maximum validator-driven retries when the model's RQL output fails XSD validation. Each retry
+        /// appends the diagnostics to the conversation as a synthetic user turn so the model can self-correct.
+        /// </summary>
+        private const int MaxValidationRetries = 2;
+
         private readonly ISettingsService settingsService;
 
         private IRqlRagService rqlRagService;
+
+        private IQueryValidator queryValidator;
 
         private string initialQueryAsXml;
 
@@ -130,6 +139,7 @@
 
             // Create the services
             this.rqlRagService = ServiceFactory.CreateService(userSettings);
+            this.queryValidator = ServiceFactory.CreateValidator();
         }
 
         private async void OnWindowLoaded(object sender, RoutedEventArgs e)
@@ -160,62 +170,143 @@
 
             this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.User, Text = question });
 
-            question += "\r\n\r\n" + queryAsXml;
+            var prompt = question + "\r\n\r\n" + queryAsXml;
 
             this.QuestionBox.Text = string.Empty;
 
-            string response;
             try
             {
-                response = 
-                    await
-                        this.rqlRagService
-                            .AskQuestion(
-                                question,
+                for (var attempt = 0; attempt <= MaxValidationRetries; attempt++)
+                {
+                    string response;
+                    try
+                    {
+                        response =
+                            await this.rqlRagService.AskQuestion(
+                                prompt,
                                 includeSchemasAndRoutes: this.IncludeSchemasAndRoutes,
                                 chatHistory: this.ChatHistoryControl.MessagesSource,
                                 format: this.TabularQuery ? ResponseType.TabularQuery : ResponseType.Conversation);
-            }
-            catch (OpenAiException exception)
-            {
-                this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.System, Text = $"[{exception.GetType().Name}] - {exception.StatusCode} - {exception.Message}" });
-                this.IsBusy = false;
-                return;
-            }
+                    }
+                    catch (OpenAiException exception)
+                    {
+                        this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.System, Text = $"[{exception.GetType().Name}] - {exception.StatusCode} - {exception.Message}" });
+                        return;
+                    }
 
-            // Find RQL within response:
+                    var validationFeedback = this.TryApplyResponse(response, isFinalAttempt: attempt == MaxValidationRetries);
+
+                    if (validationFeedback == null)
+                    {
+                        // Final reply applied (or no <Query> XML was present) — finish.
+                        return;
+                    }
+
+                    // Validation failed and retries remain. Record the assistant's failed reply, append the
+                    // diagnostics as a synthetic user turn, and re-ask so the model can self-correct.
+                    this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
+                    this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.User, Text = validationFeedback });
+
+                    prompt = validationFeedback;
+                }
+            }
+            finally
+            {
+                this.IsBusy = false;
+            }
+        }
+
+        /// <summary>
+        /// Extracts the first <c>&lt;Query&gt;</c> XML fenced block, validates it against the RQL XSD, and on
+        /// success applies it to <see cref="Query"/> and posts the trimmed reply to chat. Returns <c>null</c>
+        /// when the reply was successfully applied (or contained no query XML to apply); returns a synthetic
+        /// retry prompt with diagnostics when validation failed and retries should continue. On the final
+        /// attempt, falls back to the legacy MessageBox + raw reply rather than blocking the chat history.
+        /// </summary>
+        private string? TryApplyResponse(string response, bool isFinalAttempt)
+        {
             var xmlSections = Regex.Matches(response, "```xml\\s*([\\s\\S]*?)\\s*```", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+            Match? queryMatch = null;
+            string? queryXml = null;
 
             foreach (Match match in xmlSections)
             {
                 var innerCode = match.Groups[1].Value;
-
                 if (innerCode.Contains("<Query", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    try
-                    {
-                        var sourceXml = SetUtf8(innerCode);
-
-                        this.Query = XmlSerialiserHelper.Deserialise<Query>(sourceXml);
-
-                        response = response.Replace(match.Value, string.Empty);
-                    }
-                    catch (InvalidOperationException ex)
-                    {
-                        MessageBox.Show(
-                            this,
-                            "The assistants response could not be parsed into a valid query.\r\n\r\n" + ex.Message,
-                            "Invalid Query Response",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Exclamation);
-                    }
+                    queryMatch = match;
+                    queryXml = SetUtf8(innerCode);
+                    break;
                 }
             }
 
-            // Record the chat history for additional questions
-            this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
+            if (queryMatch == null || queryXml == null)
+            {
+                // No <Query> XML in the reply — nothing to validate. Treat as a final answer.
+                this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
+                return null;
+            }
 
-            this.IsBusy = false;
+            var validation = this.queryValidator.Validate(queryXml);
+
+            if (validation.IsValid)
+            {
+                try
+                {
+                    this.Query = XmlSerialiserHelper.Deserialise<Query>(queryXml);
+                    var trimmedResponse = response.Replace(queryMatch.Value, string.Empty);
+                    this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = trimmedResponse });
+                    return null;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    if (isFinalAttempt)
+                    {
+                        MessageBox.Show(
+                            this,
+                            "The assistants response could not be deserialised into a valid query.\r\n\r\n" + ex.Message,
+                            "Invalid Query Response",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Exclamation);
+
+                        this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
+                        return null;
+                    }
+
+                    return "The previous query passed XSD validation but failed to deserialise: "
+                           + ex.Message
+                           + "\r\n\r\nPlease produce a corrected <Query> XML. Call validate_query before finalising.";
+                }
+            }
+
+            if (isFinalAttempt)
+            {
+                var diagnosticSummary = string.Join("\r\n", validation.Diagnostics.Select(d =>
+                    $"[{d.Severity}] line {d.Line}, col {d.Column}: {d.Code} — {d.Message}"));
+
+                MessageBox.Show(
+                    this,
+                    "The assistants response failed schema validation after retries.\r\n\r\n" + diagnosticSummary,
+                    "Invalid Query Response",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
+
+                this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
+                return null;
+            }
+
+            return BuildRetryPrompt(validation);
+        }
+
+        private static string BuildRetryPrompt(ValidationResult validation)
+        {
+            var diagnostics = string.Join("\r\n", validation.Diagnostics.Select(d =>
+                $"  [{d.Severity}] line {d.Line}, col {d.Column}: {d.Code} — {d.Message}"));
+
+            return "The <Query> XML in your previous reply failed validation against QuerySchema.xsd:\r\n"
+                   + diagnostics
+                   + "\r\n\r\nProduce a corrected <Query> XML. Use get_schema / get_route / get_rql_syntax to confirm the right shape, and call validate_query before finalising.";
         }
 
         private static string SetUtf8(string xml) => xml.Replace(" encoding=\"utf-16\"", " encoding=\"utf-8\"");

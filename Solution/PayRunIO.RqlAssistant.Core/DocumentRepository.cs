@@ -40,17 +40,6 @@ namespace PayRunIO.RqlAssistant.Service
         /// The <see cref="RouteDefinition"/> enumeration.
         /// </returns>
         IEnumerable<RouteDefinition> GetRouteDefinitions();
-
-        /// <summary>
-        /// The get documentation method. Gets the RQL documentation for the specified format type: JSON or XML.
-        /// </summary>
-        /// <param name="formatType">
-        /// The format type. Either JSON or XML.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        string GetDocumentation(string formatType);
     }
 
     /// <summary>
@@ -150,25 +139,6 @@ namespace PayRunIO.RqlAssistant.Service
             }
 
             return this.routeDefinitions;
-        }
-
-        /// <summary>
-        /// The get documentation method. Gets the RQL documentation for the specified format type: JSON or XML.
-        /// </summary>
-        /// <param name="formatType">
-        /// The format type. Either JSON or XML.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        public string GetDocumentation(string formatType)
-        {
-            if (string.Equals(formatType, "XML", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.RqlDocXml).GetAwaiter().GetResult();
-            }
-
-            return ResourceHelper.LoadResourceAsStringAsync(ResourceHelper.RqlDocJson).GetAwaiter().GetResult();
         }
 
         /// <summary>

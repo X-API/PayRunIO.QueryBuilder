@@ -1,4 +1,4 @@
-namespace PayRunIO.RqlAssistant.Mcp.Dtos
+namespace PayRunIO.RqlAssistant.Service.Dtos
 {
     using System.ComponentModel;
 

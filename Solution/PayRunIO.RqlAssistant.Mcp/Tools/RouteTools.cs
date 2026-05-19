@@ -5,12 +5,12 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
 
     using ModelContextProtocol.Server;
 
-    using PayRunIO.RqlAssistant.Mcp.Dtos;
     using PayRunIO.RqlAssistant.Service;
-    using PayRunIO.RqlAssistant.Service.Models;
+    using PayRunIO.RqlAssistant.Service.Dtos;
 
     /// <summary>
-    /// MCP tools exposing PayRunIO API route lookups, backed by <see cref="IDocumentRepository"/>.
+    /// MCP tools exposing PayRunIO API route lookups. Thin shim over <see cref="RqlToolDispatcher"/>'s
+    /// conversion helpers so MCP and the in-process WPF caller share one DTO surface.
     /// </summary>
     [McpServerToolType]
     public static class RouteTools
@@ -42,7 +42,7 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
                                            && r.Tags.Any(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return routes.Select(ToSummary).ToArray();
+            return routes.Select(RqlToolDispatcher.ToSummary).ToArray();
         }
 
         [McpServerTool(Name = "get_route")]
@@ -60,29 +60,7 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
                 .GetRouteDefinitions()
                 .FirstOrDefault(r => string.Equals(r.ClassName, className, StringComparison.OrdinalIgnoreCase));
 
-            return route == null ? null : ToFull(route);
+            return route == null ? null : RqlToolDispatcher.ToFull(route);
         }
-
-        private static RouteSummaryDto ToSummary(RouteDefinition route) =>
-            new RouteSummaryDto
-                {
-                    ClassName = route.ClassName ?? string.Empty,
-                    Verb = route.Verb ?? string.Empty,
-                    RouteSignature = route.RouteSignature ?? string.Empty,
-                    Summary = route.Summary ?? string.Empty
-                };
-
-        private static RouteDto ToFull(RouteDefinition route) =>
-            new RouteDto
-                {
-                    ClassName = route.ClassName ?? string.Empty,
-                    Verb = route.Verb ?? string.Empty,
-                    RouteSignature = route.RouteSignature ?? string.Empty,
-                    OperationId = route.OperationId ?? string.Empty,
-                    Summary = route.Summary ?? string.Empty,
-                    Description = route.Description ?? string.Empty,
-                    ResponseType = route.ResponseType ?? string.Empty,
-                    Tags = (route.Tags ?? new List<string>()).ToArray()
-                };
     }
 }

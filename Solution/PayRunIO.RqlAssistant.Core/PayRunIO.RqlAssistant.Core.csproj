@@ -10,11 +10,10 @@
   <ItemGroup>
     <None Remove="Resources\answer-question-system-prompt.txt" />
     <None Remove="Resources\dtos.json" />
-    <None Remove="Resources\find-schema-route-names.txt" />
     <None Remove="Resources\QuerySchema.xsd" />
     <None Remove="Resources\routes.json" />
-    <None Remove="Resources\rql-doc-json.md" />
     <None Remove="Resources\rql-doc-xml.md" />
+    <None Remove="Resources\rql-grammar-primer.md" />
     <None Remove="Resources\rql-tabular-queries.md" />
   </ItemGroup>
 
@@ -25,20 +24,17 @@
     <EmbeddedResource Include="Resources\dtos.json">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.dtos.json</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\find-schema-route-names.txt">
-      <LogicalName>PayRunIO.RqlAssistant.Service.Resources.find-schema-route-names.txt</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\QuerySchema.xsd">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.QuerySchema.xsd</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\routes.json">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.routes.json</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\rql-doc-json.md">
-      <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-doc-json.md</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\rql-doc-xml.md">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-doc-xml.md</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\rql-grammar-primer.md">
+      <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-grammar-primer.md</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\rql-tabular-queries.md">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-tabular-queries.md</LogicalName>

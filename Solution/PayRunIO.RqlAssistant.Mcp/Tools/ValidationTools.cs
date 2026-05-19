@@ -5,9 +5,8 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
 
     using ModelContextProtocol.Server;
 
-    using PayRunIO.RqlAssistant.Mcp.Dtos;
     using PayRunIO.RqlAssistant.Service;
-    using PayRunIO.RqlAssistant.Service.Models;
+    using PayRunIO.RqlAssistant.Service.Dtos;
 
     [McpServerToolType]
     public static class ValidationTools
@@ -23,18 +22,8 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
             return new ValidationResultDto
                 {
                     IsValid = result.IsValid,
-                    Diagnostics = result.Diagnostics.Select(ToDto).ToArray()
+                    Diagnostics = result.Diagnostics.Select(RqlToolDispatcher.ToDto).ToArray()
                 };
         }
-
-        private static ValidationDiagnosticDto ToDto(ValidationDiagnostic diagnostic) =>
-            new ValidationDiagnosticDto
-                {
-                    Severity = diagnostic.Severity.ToString(),
-                    Line = diagnostic.Line,
-                    Column = diagnostic.Column,
-                    Code = diagnostic.Code,
-                    Message = diagnostic.Message
-                };
     }
 }

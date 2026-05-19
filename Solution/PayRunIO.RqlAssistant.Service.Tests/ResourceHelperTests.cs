@@ -7,7 +7,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         public async Task LoadResourceAsStringAsync_WithExistingResource_ReturnsContent()
         {
             // Arrange
-            var resourceName = ResourceHelper.FindSchemaAndRouteNames;
+            var resourceName = ResourceHelper.AnswerQuestionSystemPrompt;
 
             // Act
             var result = await ResourceHelper.LoadResourceAsStringAsync(resourceName);
@@ -36,11 +36,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             // Arrange
             var knownResources = new[]
             {
-                ResourceHelper.FindSchemaAndRouteNames,
                 ResourceHelper.AnswerQuestionSystemPrompt,
                 ResourceHelper.TabularRql,
-                ResourceHelper.RqlDocJson,
                 ResourceHelper.RqlDocXml,
+                ResourceHelper.RqlGrammarPrimer,
                 ResourceHelper.QuerySchema,
                 ResourceHelper.Routes,
                 ResourceHelper.Dtos
@@ -55,4 +54,4 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             }
         }
     }
-} 
+}
