@@ -23,9 +23,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             // Arrange
             var nonExistentResource = "non-existent-resource.txt";
 
+            Func<Task<string>> func = async () => await ResourceHelper.LoadResourceAsStringAsync(nonExistentResource);
+
             // Act & Assert
-            var exception = Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await ResourceHelper.LoadResourceAsStringAsync(nonExistentResource));
+            var exception = Assert.ThrowsAsync<InvalidOperationException>(func);
 
             Assert.That(exception.Message, Does.Contain(nonExistentResource));
         }

@@ -55,9 +55,9 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         {
             foreach (var descriptor in this.dispatcher.Descriptors)
             {
-                Assert.DoesNotThrow(
-                    () => JsonDocument.Parse(descriptor.ParametersJsonSchema).Dispose(),
-                    $"Tool '{descriptor.Name}' has invalid JSON schema parameters");
+                Action action = () => JsonDocument.Parse(descriptor.ParametersJsonSchema).Dispose();
+
+                Assert.DoesNotThrow(action, $"Tool '{descriptor.Name}' has invalid JSON schema parameters");
             }
         }
 

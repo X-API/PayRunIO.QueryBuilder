@@ -49,9 +49,13 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         {
             var service = this.CreateService();
 
-            Assert.ThrowsAsync<ArgumentException>(() => service.AskQuestion(null!));
-            Assert.ThrowsAsync<ArgumentException>(() => service.AskQuestion(string.Empty));
-            Assert.ThrowsAsync<ArgumentException>(() => service.AskQuestion("   "));
+            Func<Task<string>> funcA = () => service.AskQuestion(null!);
+            Func<Task<string>> funcB = () => service.AskQuestion(string.Empty);
+            Func<Task<string>> funcC = () => service.AskQuestion("   ");
+
+            Assert.ThrowsAsync<ArgumentException>(funcA);
+            Assert.ThrowsAsync<ArgumentException>(funcB);
+            Assert.ThrowsAsync<ArgumentException>(funcC);
         }
 
         [Test]
@@ -213,7 +217,9 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             var service = this.CreateService();
 
-            var ex = Assert.ThrowsAsync<OpenAiException>(() => service.AskQuestion("q"));
+            Func<Task<string>> func = () => service.AskQuestion("q");
+
+            var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex!.Message, Does.Contain("maximum"));
 
             this.remote.Verify(r => r.GetChatResponseAsync(It.IsAny<string>(), default), Times.Exactly(10));
@@ -228,7 +234,9 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             var service = this.CreateService();
 
-            var ex = Assert.ThrowsAsync<OpenAiException>(() => service.AskQuestion("q"));
+            Func<Task<string>> func = () => service.AskQuestion("q");
+
+            var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex!.Message, Is.EqualTo("network failure"));
         }
     }

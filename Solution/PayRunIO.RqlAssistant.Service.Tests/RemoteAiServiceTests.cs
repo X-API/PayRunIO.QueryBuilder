@@ -51,9 +51,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         public void GivenNullConfiguration_WhenCreatingService_ThenThrowsArgumentNullException()
         {
             // Arrange
+            Action action = () => ServiceFactory.CreateService(null);
+
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() =>
-                ServiceFactory.CreateService(null));
+            Assert.Throws<ArgumentNullException>(action);
         }
 
         /// <summary>
@@ -65,10 +66,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             // Arrange
             var config = new Mock<IConfiguration>();
             config.Setup(c => c["OpenAI:ApiKey"]).Returns((string)null);
+            Action action = () => ServiceFactory.CreateService(config.Object);
 
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() =>
-                ServiceFactory.CreateService(config.Object));
+            Assert.Throws<InvalidOperationException>(action);
         }
 
         /// <summary>
@@ -101,10 +102,12 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         {
             // Arrange
             var service = ServiceFactory.CreateService(config.Object, httpClient);
+            Func<Task<string>> func = () => service.AskQuestion(null);
+            Func<Task<string>> func2 = () => service.AskQuestion("   ");
 
             // Act & Assert
-            Assert.ThrowsAsync<ArgumentException>(() => service.AskQuestion(null));
-            Assert.ThrowsAsync<ArgumentException>(() => service.AskQuestion("   "));
+            Assert.ThrowsAsync<ArgumentException>(func);
+            Assert.ThrowsAsync<ArgumentException>(func2);
         }
 
         /// <summary>
@@ -123,9 +126,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             var service = ServiceFactory.CreateService(config.Object, httpClient);
 
+            Func<Task<string>> func = async () => await service.AskQuestion("test question");
+
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(async () =>
-                await service.AskQuestion("test question"));
+            var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Is.EqualTo("Test error"));
             Assert.That(ex.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -144,9 +148,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             var service = ServiceFactory.CreateService(config.Object, httpClient);
 
+            Func<Task<string>> func = async () => await service.AskQuestion("test question");
+
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(async () =>
-                await service.AskQuestion("test question"));
+            var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Does.Contain("Failed to parse OpenAI response JSON"));
         }
 
@@ -164,9 +169,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             var service = ServiceFactory.CreateService(config.Object, httpClient);
 
+            Func<Task<string>> func = async () => await service.AskQuestion("test question");
+
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(async () =>
-                await service.AskQuestion("test question"));
+            var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Does.Contain("Response JSON missing 'choices[0].message.content'"));
         }
 
@@ -186,9 +192,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             var service = ServiceFactory.CreateService(config.Object, httpClient);
 
+            Func<Task<string>> func = async () => await service.AskQuestion("test question");
+
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(async () =>
-                await service.AskQuestion("test question"));
+            var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Does.Contain("HTTP request to OpenAI failed."));
         }
     }

@@ -35,8 +35,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         public void GivenNullConfiguration_WhenCreatingService_ThenThrowsArgumentNullException()
         {
             // Arrange
+            Action action = () => ServiceFactory.CreateService(default);
+
             // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => ServiceFactory.CreateService(default));
+            Assert.Throws<ArgumentNullException>(action);
         }
 
         /// <summary>
@@ -97,9 +99,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             // Arrange
             config.Setup(c => c["OpenAI:ApiKey"]).Returns((string?)null);
 
+            Action action = () => ServiceFactory.CreateService(config.Object);
+
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() =>
-                ServiceFactory.CreateService(config.Object));
+            Assert.Throws<InvalidOperationException>(action);
         }
     }
 } 
