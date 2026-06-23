@@ -8054,6 +8054,11 @@
           "Description": "The date when the pay run was executed."
         },
         {
+          "Name": "FromTemplate",
+          "Type": "bool",
+          "Description": "Indicates if the pay run was generated from a period template."
+        },
+        {
           "Name": "TaxYear",
           "Type": "short",
           "Description": "The tax year the pay run was in."
@@ -10420,6 +10425,11 @@
           "Name": "PayFrequency",
           "Type": "PayFrequency",
           "Description": "The pay frequency of the pay run."
+        },
+        {
+          "Name": "PaySchedule",
+          "Type": "string",
+          "Description": ""
         },
         {
           "Name": "Value",

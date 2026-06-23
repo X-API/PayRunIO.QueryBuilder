@@ -59,8 +59,8 @@
                         <Setter Property="ContextMenu">
                             <Setter.Value>
                                 <ContextMenu>
-                                    <MenuItem Command="MoveUp" Icon="{iconPacks:BoxIcons Kind=SolidUpArrow}"/>
-                                    <MenuItem Command="MoveDown" Icon="{iconPacks:BoxIcons Kind=SolidDownArrow}" />
+                                    <MenuItem Command="MoveUp" Icon="{iconPacks:BoxIcons Kind=SolidArrowUp}"/>
+                                    <MenuItem Command="MoveDown" Icon="{iconPacks:BoxIcons Kind=SolidArrowDown}" />
                                     <MenuItem Command="Copy" Icon="{iconPacks:BoxIcons Kind=SolidCopy}" />
                                     <MenuItem Command="Cut" Icon="{iconPacks:BoxIcons Kind=RegularCut}" />
                                     <MenuItem Command="Paste" Icon="{iconPacks:BoxIcons Kind=SolidPaste}" />
@@ -110,14 +110,14 @@
 
                     <HierarchicalDataTemplate DataType="{x:Type viewModels:ConditionCollectionViewModel}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{iconPacks:BoxIconsImage Kind=SolidFileFind}" Style="{StaticResource ImageStyle}" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=SolidFileSearch}" Style="{StaticResource ImageStyle}" />
                             <TextBlock Text="Conditions" Style="{StaticResource TextBlockStyle}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <HierarchicalDataTemplate DataType="{x:Type viewModels:FilterCollectionViewModel}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{iconPacks:BoxIconsImage Kind=SolidFilterAlt}" Style="{StaticResource ImageStyle}" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=SolidFilter}" Style="{StaticResource ImageStyle}" />
                             <TextBlock Text="Filters" Style="{StaticResource TextBlockStyle}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
@@ -138,14 +138,14 @@
 
                     <HierarchicalDataTemplate DataType="{x:Type viewModels:GroupCollectionViewModel}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{iconPacks:BoxIconsImage Kind=SolidCoinStack}" Style="{StaticResource ImageStyle}" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=SolidCoins}" Style="{StaticResource ImageStyle}" />
                             <TextBlock Text="Groups" Style="{StaticResource TextBlockStyle}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
 
                     <DataTemplate DataType="{x:Type viewModels:ConditionViewModel}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularFileFind}" Style="{StaticResource ImageStyle}" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularFileSearch}" Style="{StaticResource ImageStyle}" />
                             <TextBlock  Style="{StaticResource TextBlockStyle}">
                             <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource ObjectToTypeNameConverter}, Path=Element}" />
                             <TextBlock Text=":" />
@@ -158,7 +158,7 @@
 
                     <DataTemplate DataType="{x:Type viewModels:FilterViewModel}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularFilterAlt}" Style="{StaticResource ImageStyle}" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularFilter}" Style="{StaticResource ImageStyle}" />
                             <ContentControl Content="{Binding Element}">
                                 <ContentControl.Resources>
 
