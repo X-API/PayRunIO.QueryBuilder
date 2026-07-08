@@ -1316,7 +1316,7 @@
                             <Button.ToolTip>
                                 <TextBlock>Apply XML text.</TextBlock>
                             </Button.ToolTip>
-                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularSave}" Width="24" Height="24" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularArchiveArrowUp}" Width="24" Height="24" />
                         </Button>
                         <Button 
                             Margin="5 5 25 5" 
@@ -1369,7 +1369,7 @@
                             <Button.ToolTip>
                                 <TextBlock>Apply JSON text changes.</TextBlock>
                             </Button.ToolTip>
-                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularSave}" Width="24" Height="24" />
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularArchiveArrowUp}" Width="24" Height="24" />
                         </Button>
                         <Button 
                             Margin="5 5 25 5" 

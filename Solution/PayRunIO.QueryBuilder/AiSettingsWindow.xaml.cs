@@ -20,6 +20,12 @@ namespace PayRunIO.QueryBuilder
             this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             this.InitializeComponent();
 
+            this.ProviderComboBox.Items.Add("OpenAI");
+            this.ProviderComboBox.Items.Add("Anthropic");
+
+            var provider = this.settingsService.UserSettings.OpenAI.Provider;
+            this.ProviderComboBox.SelectedItem = (provider == "OpenAI" || provider == "Anthropic") ? provider : "OpenAI";
+
             this.ApiKeyBox.Password = this.settingsService.UserSettings.OpenAI.ApiKey ?? string.Empty;
             this.EndPointBox.Text = this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty;
             this.ModelBox.Text = this.settingsService.UserSettings.OpenAI.Model ?? string.Empty;
@@ -27,11 +33,26 @@ namespace PayRunIO.QueryBuilder
 
         private void OnSaveClick(object sender, RoutedEventArgs e)
         {
-            this.settingsService.UserSettings.OpenAI.ApiKey = this.ApiKeyBox.Password;
-            this.settingsService.UserSettings.OpenAI.Endpoint = this.EndPointBox.Text;
-            this.settingsService.UserSettings.OpenAI.Model = this.ModelBox.Text;
+            string apiKey = this.ApiKeyBox.Password;
+            string endpoint = this.EndPointBox.Text;
+            string model = this.ModelBox.Text;
+            string provider = this.ProviderComboBox.SelectedItem as string;
+
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(endpoint) || string.IsNullOrWhiteSpace(model))
+            {
+                this.StatusText.Foreground = System.Windows.Media.Brushes.Red;
+                this.StatusText.Text = "API Key, Host and Model are all required.";
+                this.StatusText.Visibility = Visibility.Visible;
+                return;
+            }
+
+            this.settingsService.UserSettings.OpenAI.ApiKey = apiKey;
+            this.settingsService.UserSettings.OpenAI.Endpoint = endpoint;
+            this.settingsService.UserSettings.OpenAI.Model = model;
+            this.settingsService.UserSettings.OpenAI.Provider = provider ?? "OpenAI";
             this.settingsService.SaveUserSettings();
 
+            this.StatusText.Foreground = System.Windows.Media.Brushes.Green;
             this.StatusText.Text = $"Saved at {DateTime.Now:T}";
             this.StatusText.Visibility = Visibility.Visible;
         }

@@ -2,6 +2,8 @@ namespace PayRunIO.RqlAssistant.Service
 {
     using Microsoft.Extensions.Configuration;
 
+    using PayRunIO.RqlAssistant.Service.Wire;
+
     public static class ServiceFactory
     {
         private const string DefaultTimeoutAsString = "00:05:00";
@@ -13,15 +15,21 @@ namespace PayRunIO.RqlAssistant.Service
                 throw new ArgumentNullException(nameof(configuration));
             }
 
+            var provider = ProviderTypeParser.ParseOrDefault(configuration["OpenAI:Provider"]);
+            IChatWireFormat wireFormat = provider == ProviderType.Anthropic
+                                              ? new AnthropicWireFormat()
+                                              : new OpenAiWireFormat();
+
             var remoteAiService =
                 new RemoteAiService(
                     configuration,
                     httpClient ?? new HttpClient
                         {
                             Timeout = TimeSpan.Parse(configuration["OpenAi:HttpClient:TimeOut"] ?? DefaultTimeoutAsString)
-                        });
+                        },
+                    wireFormat);
 
-            var requestBuilderService = new RequestBuilderService(configuration);
+            var requestBuilderService = new RequestBuilderService(configuration, wireFormat);
             var documentRepository = new DocumentRepository();
             var queryValidator = new QueryValidator();
             var grammarIndex = new RqlGrammarIndex();

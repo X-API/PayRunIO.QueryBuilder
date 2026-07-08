@@ -21,6 +21,11 @@ namespace PayRunIO.QueryBuilder.Configuration
         public string Model { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the AI provider (e.g. "OpenAI", "Anthropic").
+        /// </summary>
+        public string Provider { get; set; } = "OpenAI";
+
+        /// <summary>
         /// Gets or sets the temperature setting for OpenAI requests.
         /// </summary>
         public string Temperature { get; set; } = "0.2";

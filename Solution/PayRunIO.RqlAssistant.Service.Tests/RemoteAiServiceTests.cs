@@ -152,7 +152,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<OpenAiException>(func);
-            Assert.That(ex.Message, Does.Contain("Failed to parse OpenAI response JSON"));
+            Assert.That(ex.Message, Does.Contain("Failed to parse the provider's response JSON"));
         }
 
         /// <summary>
@@ -196,7 +196,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             // Act & Assert
             var ex = Assert.ThrowsAsync<OpenAiException>(func);
-            Assert.That(ex.Message, Does.Contain("HTTP request to OpenAI failed."));
+            Assert.That(ex.Message, Does.Contain("HTTP request to the AI provider failed."));
         }
     }
 } 

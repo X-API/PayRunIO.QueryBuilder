@@ -140,12 +140,11 @@
         {
             if (this.settingsWindow == null)
             {
-                this.settingsWindow = new AiSettingsWindow(this.settingsService) { Owner = this };
+                this.settingsWindow = new AiSettingsWindow(this.settingsService) { Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner };
                 this.settingsWindow.Closed += (s, args) => this.settingsWindow = null;
             }
 
-            this.settingsWindow.Show();
-            this.settingsWindow.Activate();
+            this.settingsWindow.ShowDialog();
         }
 
         private void CreateRqlRagService()
@@ -158,7 +157,8 @@
                             new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:ApiKey", this.settingsService.UserSettings.OpenAI.ApiKey ?? string.Empty),
                             new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Endpoint", this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty),
                             new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Model", this.settingsService.UserSettings.OpenAI.Model ?? string.Empty),
-                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Temperature", this.settingsService.UserSettings.OpenAI.Temperature ?? string.Empty)
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Temperature", this.settingsService.UserSettings.OpenAI.Temperature ?? string.Empty),
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Provider", this.settingsService.UserSettings.OpenAI.Provider ?? "OpenAI")
                         })
                 .Build();
 

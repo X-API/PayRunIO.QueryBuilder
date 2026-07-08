@@ -80,8 +80,9 @@ namespace PayRunIO.QueryBuilder.Services
                 if (File.Exists(this.userSettingsPath))
                 {
                     var json = File.ReadAllText(this.userSettingsPath);
-                    var settings = JsonSerializer.Deserialize<UserSettings>(json);
-                    return settings ?? new UserSettings();
+                    var settings = JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+                    MigrateOpenAiEndpoint(settings.OpenAI);
+                    return settings;
                 }
             }
             catch (Exception ex)
@@ -90,6 +91,44 @@ namespace PayRunIO.QueryBuilder.Services
             }
 
             return new UserSettings();
+        }
+
+        /// <summary>
+        /// Old settings stored the full chat-completions URL in <see cref="OpenAISettings.Endpoint"/>
+        /// (e.g. "https://api.openai.com/v1/chat/completions"). The connection dialog now only takes a
+        /// host, and the completions path is inferred per provider — so on load, strip a recognised full-path
+        /// suffix down to host-only and, if <see cref="OpenAISettings.Provider"/> was never set, infer it
+        /// from which suffix matched. The migrated value is not written back to disk here; it is only
+        /// persisted the next time the user explicitly saves AI Settings.
+        /// </summary>
+        private static void MigrateOpenAiEndpoint(OpenAISettings openAi)
+        {
+            if (string.IsNullOrWhiteSpace(openAi.Endpoint))
+            {
+                return;
+            }
+
+            var trimmedEndpoint = openAi.Endpoint.TrimEnd('/');
+            var hasProvider = !string.IsNullOrWhiteSpace(openAi.Provider);
+
+            if (trimmedEndpoint.EndsWith("/v1/chat/completions", StringComparison.OrdinalIgnoreCase))
+            {
+                openAi.Endpoint = trimmedEndpoint.Substring(0, trimmedEndpoint.Length - "/v1/chat/completions".Length);
+
+                if (!hasProvider)
+                {
+                    openAi.Provider = "OpenAI";
+                }
+            }
+            else if (trimmedEndpoint.EndsWith("/v1/messages", StringComparison.OrdinalIgnoreCase))
+            {
+                openAi.Endpoint = trimmedEndpoint.Substring(0, trimmedEndpoint.Length - "/v1/messages".Length);
+
+                if (!hasProvider)
+                {
+                    openAi.Provider = "Anthropic";
+                }
+            }
         }
     }
 }

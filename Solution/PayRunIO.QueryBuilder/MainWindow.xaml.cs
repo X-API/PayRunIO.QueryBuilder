@@ -651,12 +651,44 @@
         {
             if (this.aiSettingsWindow == null)
             {
-                this.aiSettingsWindow = new AiSettingsWindow(this.GetSettingsService()) { Owner = this };
+                this.aiSettingsWindow = new AiSettingsWindow(this.GetSettingsService()) { Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner };
                 this.aiSettingsWindow.Closed += (s, args) => this.aiSettingsWindow = null;
             }
 
-            this.aiSettingsWindow.Show();
-            this.aiSettingsWindow.Activate();
+            this.aiSettingsWindow.ShowDialog();
+        }
+
+        /// <summary>
+        /// Ensures ApiKey/Endpoint/Model are populated before an AI Assistant window is opened, prompting
+        /// the user to complete AI Settings modally if not. Returns <c>false</c> if the user cancels out
+        /// without completing the required settings, in which case the caller should not open the assistant.
+        /// </summary>
+        private bool EnsureAiSettingsConfigured()
+        {
+            bool IsConfigured()
+            {
+                var openAi = this.GetSettingsService().UserSettings.OpenAI;
+                return !string.IsNullOrWhiteSpace(openAi.ApiKey)
+                       && !string.IsNullOrWhiteSpace(openAi.Endpoint)
+                       && !string.IsNullOrWhiteSpace(openAi.Model);
+            }
+
+            if (IsConfigured())
+            {
+                return true;
+            }
+
+            MessageBox.Show(
+                this,
+                "AI Settings must be configured before using the AI Assistant. Please supply a Provider, API Key, Host and Model.",
+                "AI Settings Required",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            var promptWindow = new AiSettingsWindow(this.GetSettingsService()) { Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+            promptWindow.ShowDialog();
+
+            return IsConfigured();
         }
 
         private void About_OnClick(object sender, RoutedEventArgs e)
@@ -793,6 +825,11 @@
 
         private void NewAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+            if (!this.EnsureAiSettingsConfigured())
+            {
+                return;
+            }
+
             var aiAssistantWindow =
                 new AiAssistantWindow(this.GetSettingsService())
                     {
@@ -807,6 +844,11 @@
 
         private void EditAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+            if (!this.EnsureAiSettingsConfigured())
+            {
+                return;
+            }
+
             var aiAssistantWindow =
                 new AiAssistantWindow(this.GetSettingsService())
                     {
@@ -831,6 +873,11 @@
 
         private void QuestionAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+            if (!this.EnsureAiSettingsConfigured())
+            {
+                return;
+            }
+
             var aiAssistantWindow =
                 new AiAssistantWindow(this.GetSettingsService())
                     {
@@ -845,6 +892,11 @@
 
         private void ErrorAiQueryCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+            if (!this.EnsureAiSettingsConfigured())
+            {
+                return;
+            }
+
             var questionText =
                 $"Please help me understand this error message:\r\n\r\n```xml\r\n{XmlSerialiserHelper.SerialiseToXmlDoc(this.QueryResultViewer.LastErrorModel).Beautify()}\r\n```";
 
