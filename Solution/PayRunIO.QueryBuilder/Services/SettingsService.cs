@@ -39,6 +39,9 @@ namespace PayRunIO.QueryBuilder.Services
         }
 
         /// <inheritdoc />
+        public event EventHandler SettingsChanged;
+
+        /// <inheritdoc />
         public UserSettings UserSettings => this.userSettings;
 
         /// <inheritdoc />
@@ -47,13 +50,15 @@ namespace PayRunIO.QueryBuilder.Services
             try
             {
                 var json = JsonSerializer.Serialize(
-                    this.userSettings, 
+                    this.userSettings,
                     new JsonSerializerOptions
                         {
                             WriteIndented = true
                         });
 
                 File.WriteAllText(this.userSettingsPath, json);
+
+                this.SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {

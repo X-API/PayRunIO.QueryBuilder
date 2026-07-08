@@ -23,7 +23,7 @@ namespace PayRunIO.QueryBuilder.Configuration
         /// <summary>
         /// Gets or sets the temperature setting for OpenAI requests.
         /// </summary>
-        public string Temperature { get; set; } = "1.0";
+        public string Temperature { get; set; } = "0.2";
 
         /// <summary>
         /// Gets or sets the HTTP client timeout for OpenAI requests.

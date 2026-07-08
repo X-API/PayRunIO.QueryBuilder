@@ -13,6 +13,7 @@
     <None Remove="Resources\QuerySchema.xsd" />
     <None Remove="Resources\routes.json" />
     <None Remove="Resources\rql-doc-xml.md" />
+    <None Remove="Resources\rql-examples.md" />
     <None Remove="Resources\rql-grammar-primer.md" />
     <None Remove="Resources\rql-tabular-queries.md" />
   </ItemGroup>
@@ -32,6 +33,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\rql-doc-xml.md">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-doc-xml.md</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\rql-examples.md">
+      <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-examples.md</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\rql-grammar-primer.md">
       <LogicalName>PayRunIO.RqlAssistant.Service.Resources.rql-grammar-primer.md</LogicalName>

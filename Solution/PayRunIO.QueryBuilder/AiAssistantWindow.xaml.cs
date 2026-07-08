@@ -103,15 +103,12 @@
             }
         }
 
+        private AiSettingsWindow settingsWindow;
+
         public AiAssistantWindow(ISettingsService settingsService)
         {
             this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             this.InitializeComponent();
-
-            // Load user settings into UI controls
-            ApiKeyBox.Password = this.settingsService.UserSettings.OpenAI.ApiKey ?? string.Empty;
-            EndPointBox.Text = this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty;
-            ModelBox.Text = this.settingsService.UserSettings.OpenAI.Model ?? string.Empty;
 
             // Create the services with current settings
             this.CreateRqlRagService();
@@ -119,8 +116,36 @@
             // Clear any existing chat history
             this.ChatHistoryControl.MessagesSource.Clear();
 
+            // Rebuild the RQL service immediately whenever settings are saved (from this window's
+            // Settings button or from MainWindow's AI Settings menu) — no close/reopen needed.
+            this.settingsService.SettingsChanged += this.OnSettingsChanged;
+
             // Add loaded event handler
             this.Loaded += this.OnWindowLoaded;
+            this.Closed += this.OnWindowClosed;
+        }
+
+        private void OnSettingsChanged(object sender, EventArgs e)
+        {
+            this.Dispatcher.Invoke(this.CreateRqlRagService);
+        }
+
+        private void OnWindowClosed(object sender, EventArgs e)
+        {
+            this.settingsService.SettingsChanged -= this.OnSettingsChanged;
+            this.settingsWindow?.Close();
+        }
+
+        private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
+        {
+            if (this.settingsWindow == null)
+            {
+                this.settingsWindow = new AiSettingsWindow(this.settingsService) { Owner = this };
+                this.settingsWindow.Closed += (s, args) => this.settingsWindow = null;
+            }
+
+            this.settingsWindow.Show();
+            this.settingsWindow.Activate();
         }
 
         private void CreateRqlRagService()
@@ -168,6 +193,11 @@
 
             this.IsBusy = true;
 
+            // Snapshot the history before adding the new question: AskQuestion appends the prompt
+            // as the final user turn itself, so including it in the history would show the model
+            // the question twice. MessagesSource stays display-only from here on.
+            var modelHistory = this.ChatHistoryControl.MessagesSource.ToList();
+
             this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.User, Text = question });
 
             var prompt = question + "\r\n\r\n" + queryAsXml;
@@ -185,7 +215,7 @@
                             await this.rqlRagService.AskQuestion(
                                 prompt,
                                 includeSchemasAndRoutes: this.IncludeSchemasAndRoutes,
-                                chatHistory: this.ChatHistoryControl.MessagesSource,
+                                chatHistory: modelHistory,
                                 format: this.TabularQuery ? ResponseType.TabularQuery : ResponseType.Conversation);
                     }
                     catch (OpenAiException exception)
@@ -202,8 +232,12 @@
                         return;
                     }
 
-                    // Validation failed and retries remain. Record the assistant's failed reply, append the
-                    // diagnostics as a synthetic user turn, and re-ask so the model can self-correct.
+                    // Validation failed and retries remain. Move the asked prompt and failed reply into
+                    // the model-facing history, surface both in the chat display, and re-ask with the
+                    // diagnostics as the new prompt so the model can self-correct.
+                    modelHistory.Add(new ChatMessage { Role = ParticipantType.User, Text = prompt });
+                    modelHistory.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
+
                     this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.Assistant, Text = response });
                     this.ChatHistoryControl.MessagesSource.Add(new ChatMessage { Role = ParticipantType.User, Text = validationFeedback });
 
@@ -383,16 +417,5 @@
             await this.OnAskClick(sender, e);
         }
 
-        private void OnSaveSettingsClick(object sender, RoutedEventArgs e)
-        {
-            // Save settings from UI controls
-            this.settingsService.UserSettings.OpenAI.ApiKey = ApiKeyBox.Password;
-            this.settingsService.UserSettings.OpenAI.Endpoint = EndPointBox.Text;
-            this.settingsService.UserSettings.OpenAI.Model = ModelBox.Text;
-            this.settingsService.SaveUserSettings();
-            
-            // Recreate the service with new settings
-            this.CreateRqlRagService();
-        }
     }
 }

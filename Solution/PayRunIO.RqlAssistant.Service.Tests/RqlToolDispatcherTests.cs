@@ -17,6 +17,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
         private Mock<IRqlGrammarIndex> grammarIndex = null!;
 
+        private Mock<IRqlExampleIndex> exampleIndex = null!;
+
+        private Mock<IRqlSemanticLinter> semanticLinter = null!;
+
         private RqlToolDispatcher dispatcher = null!;
 
         [SetUp]
@@ -25,8 +29,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             this.repository = new Mock<IDocumentRepository>(MockBehavior.Strict);
             this.validator = new Mock<IQueryValidator>(MockBehavior.Strict);
             this.grammarIndex = new Mock<IRqlGrammarIndex>(MockBehavior.Strict);
+            this.exampleIndex = new Mock<IRqlExampleIndex>(MockBehavior.Strict);
+            this.semanticLinter = new Mock<IRqlSemanticLinter>(MockBehavior.Strict);
 
-            this.dispatcher = new RqlToolDispatcher(this.repository.Object, this.validator.Object, this.grammarIndex.Object);
+            this.dispatcher = new RqlToolDispatcher(this.repository.Object, this.validator.Object, this.grammarIndex.Object, this.exampleIndex.Object, this.semanticLinter.Object);
         }
 
         private static JsonElement Args(string json) => JsonDocument.Parse(json).RootElement;
@@ -34,7 +40,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         private static JsonElement NoArgs() => JsonDocument.Parse("{}").RootElement;
 
         [Test]
-        public void Descriptors_ContainsAllSevenTools()
+        public void Descriptors_ContainsAllNineTools()
         {
             var names = this.dispatcher.Descriptors.Select(d => d.Name).ToArray();
 
@@ -46,7 +52,9 @@ namespace PayRunIO.RqlAssistant.Service.Tests
                     "get_route",
                     "validate_query",
                     "list_rql_topics",
-                    "get_rql_syntax"
+                    "get_rql_syntax",
+                    "list_examples",
+                    "get_example"
                 }));
         }
 
@@ -258,6 +266,10 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         [Test]
         public void ValidateQuery_ForwardsXmlToValidator_AndSerialisesResult()
         {
+            this.semanticLinter
+                .Setup(l => l.Lint("<Query/>"))
+                .Returns(Array.Empty<ValidationDiagnostic>());
+
             this.validator
                 .Setup(v => v.Validate("<Query/>"))
                 .Returns(new ValidationResult

@@ -12,17 +12,21 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
     public static class ValidationTools
     {
         [McpServerTool(Name = "validate_query")]
-        [Description("Validate a candidate RQL <Query> XML document against the PayRunIO QuerySchema.xsd. Returns structured diagnostics (line, column, code, message) so a caller can fix the query and retry. IsValid is true only when no Error-level diagnostics are produced; Warnings do not invalidate the query.")]
+        [Description(RqlToolDescriptions.ValidateQuery)]
         public static ValidationResultDto ValidateQuery(
             IQueryValidator validator,
-            [Description("The full RQL query XML to validate, starting at the <Query> root element.")] string xml)
+            IRqlSemanticLinter semanticLinter,
+            [Description(RqlToolDescriptions.ValidateQueryXmlParam)] string xml)
         {
             var result = validator.Validate(xml);
+
+            // Semantic lint warnings ride along with the XSD diagnostics; they never affect IsValid.
+            var lintDiagnostics = semanticLinter.Lint(xml);
 
             return new ValidationResultDto
                 {
                     IsValid = result.IsValid,
-                    Diagnostics = result.Diagnostics.Select(RqlToolDispatcher.ToDto).ToArray()
+                    Diagnostics = result.Diagnostics.Concat(lintDiagnostics).Select(RqlToolDispatcher.ToDto).ToArray()
                 };
         }
     }

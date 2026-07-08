@@ -12,6 +12,8 @@
 
         public const string RqlGrammarPrimer = "rql-grammar-primer.md";
 
+        public const string RqlExamples = "rql-examples.md";
+
         public const string QuerySchema = "QuerySchema.xsd";
 
         public const string Routes = "routes.json";

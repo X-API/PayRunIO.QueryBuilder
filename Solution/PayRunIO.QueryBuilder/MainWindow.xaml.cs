@@ -645,6 +645,20 @@
             this.LoadFromFile(openFileDialog.FileName);
         }
 
+        private AiSettingsWindow aiSettingsWindow;
+
+        private void AiSettings_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (this.aiSettingsWindow == null)
+            {
+                this.aiSettingsWindow = new AiSettingsWindow(this.GetSettingsService()) { Owner = this };
+                this.aiSettingsWindow.Closed += (s, args) => this.aiSettingsWindow = null;
+            }
+
+            this.aiSettingsWindow.Show();
+            this.aiSettingsWindow.Activate();
+        }
+
         private void About_OnClick(object sender, RoutedEventArgs e)
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName();

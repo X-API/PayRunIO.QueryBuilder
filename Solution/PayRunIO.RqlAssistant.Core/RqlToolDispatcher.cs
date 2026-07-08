@@ -32,13 +32,24 @@ namespace PayRunIO.RqlAssistant.Service
 
         private readonly IRqlGrammarIndex grammarIndex;
 
+        private readonly IRqlExampleIndex exampleIndex;
+
+        private readonly IRqlSemanticLinter semanticLinter;
+
         private readonly IReadOnlyList<ToolDescriptor> descriptors;
 
-        public RqlToolDispatcher(IDocumentRepository repository, IQueryValidator validator, IRqlGrammarIndex grammarIndex)
+        public RqlToolDispatcher(
+            IDocumentRepository repository,
+            IQueryValidator validator,
+            IRqlGrammarIndex grammarIndex,
+            IRqlExampleIndex exampleIndex,
+            IRqlSemanticLinter semanticLinter)
         {
             this.repository = repository ?? throw new ArgumentNullException(nameof(repository));
             this.validator = validator ?? throw new ArgumentNullException(nameof(validator));
             this.grammarIndex = grammarIndex ?? throw new ArgumentNullException(nameof(grammarIndex));
+            this.exampleIndex = exampleIndex ?? throw new ArgumentNullException(nameof(exampleIndex));
+            this.semanticLinter = semanticLinter ?? throw new ArgumentNullException(nameof(semanticLinter));
             this.descriptors = BuildDescriptors();
         }
 
@@ -67,6 +78,10 @@ namespace PayRunIO.RqlAssistant.Service
                     return this.ListRqlTopics();
                 case "get_rql_syntax":
                     return this.GetRqlSyntax(arguments);
+                case "list_examples":
+                    return this.ListExamples(arguments);
+                case "get_example":
+                    return this.GetExample(arguments);
                 default:
                     var available = string.Join(", ", this.descriptors.Select(d => "'" + d.Name + "'"));
                     return Error($"Unknown tool '{toolName}'. Available: {available}.");
@@ -107,8 +122,23 @@ namespace PayRunIO.RqlAssistant.Service
             var verb = TryGetString(arguments, "verb");
             var tag = TryGetString(arguments, "tag");
 
-            IEnumerable<RouteDefinition> routes = this.repository.GetRouteDefinitions();
+            var result = FilterRoutes(this.repository.GetRouteDefinitions(), filter, verb, tag)
+                .Select(ToSummary)
+                .ToArray();
 
+            return JsonSerializer.Serialize(result, SerializerOptions);
+        }
+
+        /// <summary>
+        /// Applies the list_routes filters: substring match on the route signature, exact verb
+        /// match, exact tag match. All case-insensitive, ANDed, and each optional.
+        /// </summary>
+        public static IEnumerable<RouteDefinition> FilterRoutes(
+            IEnumerable<RouteDefinition> routes,
+            string? filter,
+            string? verb,
+            string? tag)
+        {
             if (!string.IsNullOrWhiteSpace(filter))
             {
                 routes = routes.Where(r => r.RouteSignature != null
@@ -126,9 +156,7 @@ namespace PayRunIO.RqlAssistant.Service
                                            && r.Tags.Any(t => string.Equals(t, tag, StringComparison.OrdinalIgnoreCase)));
             }
 
-            var result = routes.Select(ToSummary).ToArray();
-
-            return JsonSerializer.Serialize(result, SerializerOptions);
+            return routes;
         }
 
         private string GetRoute(JsonElement arguments)
@@ -160,10 +188,13 @@ namespace PayRunIO.RqlAssistant.Service
 
             var result = this.validator.Validate(xml);
 
+            // Semantic lint warnings ride along with the XSD diagnostics; they never affect IsValid.
+            var lintDiagnostics = this.semanticLinter.Lint(xml);
+
             var dto = new ValidationResultDto
                 {
                     IsValid = result.IsValid,
-                    Diagnostics = result.Diagnostics.Select(ToDto).ToArray()
+                    Diagnostics = result.Diagnostics.Concat(lintDiagnostics).Select(ToDto).ToArray()
                 };
 
             return JsonSerializer.Serialize(dto, SerializerOptions);
@@ -197,6 +228,58 @@ namespace PayRunIO.RqlAssistant.Service
 
             // Markdown body returned as a JSON string so it round-trips cleanly through tool-call replies.
             return JsonSerializer.Serialize(new { topic, content = body }, SerializerOptions);
+        }
+
+        private string ListExamples(JsonElement arguments)
+        {
+            var filter = TryGetString(arguments, "filter");
+
+            var result = FilterExamples(this.exampleIndex.Examples, filter)
+                .Select(e => new { slug = e.Slug, title = e.Title, request = e.Request, tags = e.Tags })
+                .ToArray();
+
+            return JsonSerializer.Serialize(result, SerializerOptions);
+        }
+
+        private string GetExample(JsonElement arguments)
+        {
+            var slug = TryGetString(arguments, "slug");
+
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                return Error("Argument 'slug' is required.");
+            }
+
+            var example = this.exampleIndex.GetExample(slug);
+
+            if (example == null)
+            {
+                var available = string.Join(", ", this.exampleIndex.Examples.Select(e => "'" + e.Slug + "'"));
+                return Error($"Unknown example '{slug}'. Available: {available}.");
+            }
+
+            // Markdown body returned as a JSON string so it round-trips cleanly through tool-call replies.
+            return JsonSerializer.Serialize(new { slug = example.Slug, content = example.Body }, SerializerOptions);
+        }
+
+        /// <summary>
+        /// Case-insensitive keyword match over slug, title, request text and tags. Multiple
+        /// whitespace-separated terms are ANDed so 'pension employee' narrows rather than widens.
+        /// </summary>
+        public static IEnumerable<RqlExample> FilterExamples(IEnumerable<RqlExample> examples, string? filter)
+        {
+            if (string.IsNullOrWhiteSpace(filter))
+            {
+                return examples;
+            }
+
+            var terms = filter.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            return examples.Where(e => terms.All(term =>
+                e.Slug.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || e.Title.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || e.Request.Contains(term, StringComparison.OrdinalIgnoreCase)
+                || e.Tags.Any(t => t.Contains(term, StringComparison.OrdinalIgnoreCase))));
         }
 
         private static string? TryGetString(JsonElement arguments, string propertyName)
@@ -282,98 +365,66 @@ namespace PayRunIO.RqlAssistant.Service
                 {
                     new ToolDescriptor(
                         "list_schemas",
-                        "List all PayRunIO entity schemas. Returns name and description only — call get_schema for full property details. Optionally filter by a case-insensitive substring match on the schema name.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""filter"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""Optional case-insensitive substring filter applied to schema names. Omit to list all schemas.""
-                                }
-                            },
-                            ""required"": []
-                        }"),
+                        RqlToolDescriptions.ListSchemas,
+                        ParametersSchema(("filter", RqlToolDescriptions.ListSchemasFilterParam, false))),
                     new ToolDescriptor(
                         "get_schema",
-                        "Get the full definition of a single PayRunIO entity schema, including all of its properties. Use this to ground RQL queries against the real shape of entities like Employee, EmployeeSummary, PayRun, etc. Match is exact and case-insensitive; returns null if the name is unknown.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""typeName"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""The exact schema type name, e.g. 'Employee', 'EmployeeSummary', 'PayRun'. Case-insensitive.""
-                                }
-                            },
-                            ""required"": [""typeName""]
-                        }"),
+                        RqlToolDescriptions.GetSchema,
+                        ParametersSchema(("typeName", RqlToolDescriptions.GetSchemaTypeNameParam, true))),
                     new ToolDescriptor(
                         "list_routes",
-                        "List PayRunIO API routes. Returns class name, verb, URL template and a short summary — call get_route for the full description and response type. Filters are optional and ANDed together.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""filter"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""Optional case-insensitive substring filter applied to the route URL template (RouteSignature). E.g. 'Employee' matches '/Employer/{employerId}/Employee/{employeeId}'.""
-                                },
-                                ""verb"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""Optional HTTP verb filter, case-insensitive exact match. E.g. 'GET', 'POST', 'PUT', 'DELETE', 'PATCH'.""
-                                },
-                                ""tag"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""Optional tag filter, case-insensitive exact match against any tag on the route. E.g. 'Employee', 'PayRun', 'Reports'.""
-                                }
-                            },
-                            ""required"": []
-                        }"),
+                        RqlToolDescriptions.ListRoutes,
+                        ParametersSchema(
+                            ("filter", RqlToolDescriptions.ListRoutesFilterParam, false),
+                            ("verb", RqlToolDescriptions.ListRoutesVerbParam, false),
+                            ("tag", RqlToolDescriptions.ListRoutesTagParam, false))),
                     new ToolDescriptor(
                         "get_route",
-                        "Get the full definition of a single PayRunIO API route by its class name (the unique key returned by list_routes). Match is exact and case-insensitive; returns null if the class name is unknown.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""className"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""The exact route class name, e.g. 'GetEmployeeRoute', 'GetAEAssessmentFromEmployeeRoute'. Case-insensitive.""
-                                }
-                            },
-                            ""required"": [""className""]
-                        }"),
+                        RqlToolDescriptions.GetRoute,
+                        ParametersSchema(("className", RqlToolDescriptions.GetRouteClassNameParam, true))),
                     new ToolDescriptor(
                         "validate_query",
-                        "Validate a candidate RQL <Query> XML document against the PayRunIO QuerySchema.xsd. Returns structured diagnostics (line, column, code, message) so a caller can fix the query and retry. IsValid is true only when no Error-level diagnostics are produced; Warnings do not invalidate the query.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""xml"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""The full RQL query XML to validate, starting at the <Query> root element.""
-                                }
-                            },
-                            ""required"": [""xml""]
-                        }"),
+                        RqlToolDescriptions.ValidateQuery,
+                        ParametersSchema(("xml", RqlToolDescriptions.ValidateQueryXmlParam, true))),
                     new ToolDescriptor(
                         "list_rql_topics",
-                        "List every available RQL grammar topic that can be fetched with get_rql_syntax. Cheap to call — returns just slug + title for each topic. Use this to discover what's available before guessing topic names.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {},
-                            ""required"": []
-                        }"),
+                        RqlToolDescriptions.ListRqlTopics,
+                        ParametersSchema()),
                     new ToolDescriptor(
                         "get_rql_syntax",
-                        "Fetch a section of the RQL grammar documentation by topic slug. Returns the markdown for that section, including XML examples. Call list_rql_topics first if unsure which slug to use. Topics cover constructs like filters, ordering, conditions, outputs, variables, loop expressions, advanced features, etc.",
-                        @"{
-                            ""type"": ""object"",
-                            ""properties"": {
-                                ""topic"": {
-                                    ""type"": ""string"",
-                                    ""description"": ""The topic slug, e.g. 'filters', 'ordering', 'conditions-and-conditional-group-logic', 'outputs', 'variables', 'loop-expressions'. Case-insensitive.""
-                                }
-                            },
-                            ""required"": [""topic""]
-                        }")
+                        RqlToolDescriptions.GetRqlSyntax,
+                        ParametersSchema(("topic", RqlToolDescriptions.GetRqlSyntaxTopicParam, true))),
+                    new ToolDescriptor(
+                        "list_examples",
+                        RqlToolDescriptions.ListExamples,
+                        ParametersSchema(("filter", RqlToolDescriptions.ListExamplesFilterParam, false))),
+                    new ToolDescriptor(
+                        "get_example",
+                        RqlToolDescriptions.GetExample,
+                        ParametersSchema(("slug", RqlToolDescriptions.GetExampleSlugParam, true)))
                 };
+
+        /// <summary>
+        /// Builds an OpenAI-style JSON Schema parameters object from (name, description, required)
+        /// tuples. All tool parameters are strings, so the schema shape is uniform.
+        /// </summary>
+        private static string ParametersSchema(params (string Name, string Description, bool Required)[] parameters)
+        {
+            var properties = new Dictionary<string, object>();
+
+            foreach (var (name, description, _) in parameters)
+            {
+                properties[name] = new { type = "string", description };
+            }
+
+            var schema = new
+                {
+                    type = "object",
+                    properties,
+                    required = parameters.Where(p => p.Required).Select(p => p.Name).ToArray()
+                };
+
+            return JsonSerializer.Serialize(schema, SerializerOptions);
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
     public static class GrammarTools
     {
         [McpServerTool(Name = "list_rql_topics")]
-        [Description("List every available RQL grammar topic that can be fetched with get_rql_syntax. Cheap to call — returns just slug + title for each topic. Use this to discover what's available before guessing topic names.")]
+        [Description(RqlToolDescriptions.ListRqlTopics)]
         public static IEnumerable<RqlGrammarTopicDto> ListRqlTopics(IRqlGrammarIndex index)
         {
             return index.Topics
@@ -23,10 +23,10 @@ namespace PayRunIO.RqlAssistant.Mcp.Tools
         }
 
         [McpServerTool(Name = "get_rql_syntax")]
-        [Description("Fetch a section of the RQL grammar documentation by topic slug. Returns the markdown for that section, including XML examples. Call list_rql_topics first if unsure which slug to use.")]
+        [Description(RqlToolDescriptions.GetRqlSyntax)]
         public static RqlGrammarSectionDto? GetRqlSyntax(
             IRqlGrammarIndex index,
-            [Description("The topic slug, e.g. 'filters', 'ordering', 'conditions-and-conditional-group-logic', 'outputs', 'variables', 'loop-expressions'. Case-insensitive.")] string topic)
+            [Description(RqlToolDescriptions.GetRqlSyntaxTopicParam)] string topic)
         {
             var body = index.GetTopic(topic);
 

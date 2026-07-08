@@ -16,6 +16,8 @@ builder.Logging.AddConsole(options =>
 builder.Services.AddSingleton<IDocumentRepository, DocumentRepository>();
 builder.Services.AddSingleton<IQueryValidator, QueryValidator>();
 builder.Services.AddSingleton<IRqlGrammarIndex, RqlGrammarIndex>();
+builder.Services.AddSingleton<IRqlExampleIndex, RqlExampleIndex>();
+builder.Services.AddSingleton<IRqlSemanticLinter, RqlSemanticLinter>();
 builder.Services.AddSingleton<IRqlToolDispatcher, RqlToolDispatcher>();
 
 builder.Services

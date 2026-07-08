@@ -25,7 +25,9 @@ namespace PayRunIO.RqlAssistant.Service
             var documentRepository = new DocumentRepository();
             var queryValidator = new QueryValidator();
             var grammarIndex = new RqlGrammarIndex();
-            var toolDispatcher = new RqlToolDispatcher(documentRepository, queryValidator, grammarIndex);
+            var exampleIndex = new RqlExampleIndex();
+            var semanticLinter = new RqlSemanticLinter(documentRepository);
+            var toolDispatcher = new RqlToolDispatcher(documentRepository, queryValidator, grammarIndex, exampleIndex, semanticLinter);
 
             return new RqlRagService(requestBuilderService, remoteAiService, toolDispatcher);
         }

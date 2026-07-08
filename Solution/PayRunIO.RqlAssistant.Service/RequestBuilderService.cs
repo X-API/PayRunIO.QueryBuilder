@@ -22,7 +22,7 @@ namespace PayRunIO.RqlAssistant.Service
         /// <param name="tools">Optional tool descriptors. When provided, the request includes a <c>tools</c> array and
         /// <c>tool_choice:"auto"</c> so the model may emit <c>tool_calls</c> instead of (or before) a final reply.</param>
         /// <param name="model">(Optional) Override the model ID (defaults to configuration or GPT‑4o‑mini).</param>
-        /// <param name="temperature">(Optional) Sampling temperature (defaults to configuration or 0.7).</param>
+        /// <param name="temperature">(Optional) Sampling temperature (defaults to configuration or 0.2).</param>
         /// <returns>JSON string suitable for posting to the chat completions endpoint.</returns>
         string CreateAiRequestJson(
             ChatMessage[] chatPrompts,
@@ -51,7 +51,10 @@ namespace PayRunIO.RqlAssistant.Service
 
             this.defaultModel = configuration1["OpenAI:Model"] ?? "gpt-4o-mini";
             var temperatureAsString = configuration1["OpenAI:Temperature"];
-            this.defaultTemperature = double.TryParse(temperatureAsString, out var t) ? t : 0.7;
+
+            // DSL generation wants near-deterministic sampling; higher temperatures measurably
+            // increase schema-validation failures.
+            this.defaultTemperature = double.TryParse(temperatureAsString, out var t) ? t : 0.2;
         }
 
         /// <inheritdoc />

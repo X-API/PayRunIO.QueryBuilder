@@ -90,6 +90,8 @@
                     <MenuItem Header="_Edit Query" Command="helpers:CommonAiCommands.EditAiQueryCommand" />
                     <MenuItem Header="_Discuss Query" Command="helpers:CommonAiCommands.QuestionAiQueryCommand" />
                     <MenuItem Header="_Error Help" Command="helpers:CommonAiCommands.ErrorAiQueryCommand" />
+                    <Separator />
+                    <MenuItem Header="AI _Settings..." Click="AiSettings_OnClick" />
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header="_About" Click="About_OnClick"></MenuItem>

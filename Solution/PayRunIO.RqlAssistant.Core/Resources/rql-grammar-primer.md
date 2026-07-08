@@ -41,23 +41,31 @@ data from the PayRunIO UK payroll API. The root element is always `<Query>`. The
 
 ## How to work
 
-1. **Identify the entity.** Call `list_schemas` (filter by keyword) and `get_schema` to
+1. **Check the example bank.** Call `list_examples` (filter by keyword) to find a
+   validated example close to the request, then `get_example(slug)` and adapt it.
+   Adapting a known-good example beats free composition.
+2. **Identify the entity.** Call `list_schemas` (filter by keyword) and `get_schema` to
    confirm property names and types before referencing them.
-2. **Identify the route.** Call `list_routes` (filter by URL fragment, verb or tag) and
+3. **Identify the route.** Call `list_routes` (filter by URL fragment, verb or tag) and
    `get_route` to copy the exact route URL into the `Selector` attribute.
-3. **Look up grammar.** Call `get_rql_syntax(topic)` for any RQL construct you need —
+4. **Look up grammar.** Call `get_rql_syntax(topic)` for any RQL construct you need —
    filter operators, conditions, render types, etc. Use `list_rql_topics` to see the
    index.
-4. **Validate.** Call `validate_query(xml)` before finalising. Re-call until
+5. **Validate.** Call `validate_query(xml)` before finalising. Re-call until
    `IsValid: true`. Diagnostics name the line and column of any issue.
 
 ## Rules of thumb
 
-- All references to entity properties use `<Subject ref="PropertyName" />` shape;
-  literal values go in `<Object>value</Object>`.
-- Filter operators are XML elements (e.g. `<Equal>`, `<GreaterThan>`, `<Contain>`),
-  *not* attributes.
-- Group selectors always start with `/`.
+- Filters, conditions, outputs and orders are all `xsi:type`-discriminated elements with
+  attribute arguments, e.g. `<Filter xsi:type="EqualTo" Property="LastName" Value="Smith" />`,
+  `<Output xsi:type="Sum" Name="Total" Property="Value" />`.
+- Group children must appear in XSD sequence order: `<Condition>`, `<Filter>`, `<Output>`,
+  `<Order>`, then nested `<Group>` elements. All outputs come **before** sub-groups; to
+  render values *after* nested aggregation, put the render outputs in a trailing sub-group.
+- Group selectors always start with `/`. Variables in square brackets (e.g. `[EmployerKey]`)
+  are substituted into selectors, predicates, filter values and output values.
+- Initialise any variable written by `Sum`/`VariableSum` at the start of each iteration,
+  or the previous iteration's value leaks into rows with no matches.
 - XML must be ASCII; no XML comments inside `<Query>`.
 
 If a syntax detail is not in this primer, **do not invent it** — fetch it.
