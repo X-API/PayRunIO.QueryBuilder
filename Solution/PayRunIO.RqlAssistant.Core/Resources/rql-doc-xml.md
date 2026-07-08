@@ -19,10 +19,17 @@ position: 950
   - [RQL XML Structure (Hierarchy Tree)](#rql-xml-structure-hierarchy-tree)
   - [Element Summary](#element-summary)
   - [Notes for Tooling and LLMs](#notes-for-tooling-and-llms)
+  - [Execution Order and Dependency Rules](#execution-order-and-dependency-rules)
+- [Top-Level Options](#top-level-options)
+  - [`SuppressMetricAttributes`](#suppressmetricattributes)
+  - [`ExcludeNullOrEmptyElements`](#excludenulloremptyelements)
+  - [`Namespaces`](#namespaces)
+  - [`Required`](#required)
+  - [Quick Reference](#quick-reference)
 - [Groups  ](#groups--)
 - [Selectors](#selectors)
   - [Syntax Overview](#syntax-overview)
-  - [Selector Behavior](#selector-behavior)
+  - [Selector Behaviour](#selector-behaviour)
   - [Examples](#examples)
   - [Special Cases](#special-cases)
 - [Outputs  ](#outputs--)
@@ -68,9 +75,9 @@ position: 950
     - [WhenContains](#whencontains)
     - [WhenEqualTo](#whenequalto)
     - [WhenGreaterThan](#whengreaterthan)
-    - [WhenGreaterThanEqualTo](#whengreaterthanorequalto)
+    - [WhenGreaterThanOrEqualTo](#whengreaterthanorequalto)
     - [WhenLessThan](#whenlessthan)
-    - [WhenLessThanEqualTo](#whenlessthanorequalto)
+    - [WhenLessThanOrEqualTo](#whenlessthanorequalto)
     - [WhenNotContains](#whennotcontains)
     - [WhenNotEqualTo](#whennotequalto)
     - [WhenNotWithinArray](#whennotwithinarray)
@@ -107,6 +114,11 @@ position: 950
     - [StartsWith](#startswith)
     - [TakeFirst](#takefirst)
     - [WithinArray  ](#withinarray--)
+- [Predicates vs Filters](#predicates-vs-filters)
+  - [Predicate](#predicate-1)
+  - [Filter](#filter-1)
+  - [Important distinction](#important-distinction)
+  - [When to use each](#when-to-use-each)
 - [Predicate vs Filter vs Condition](#predicate-vs-filter-vs-condition)
   - [Summary Comparison](#summary-comparison)
   - [In Detail](#in-detail)
@@ -130,15 +142,15 @@ position: 950
   - [Output Lifecycle Overview](#output-lifecycle-overview)
   - [Variable Timing and Scope](#variable-timing-and-scope)
   - [Skipped Groups](#skipped-groups)
-  - [Empty Match Behavior](#empty-match-behavior)
+  - [Empty Match Behaviour](#empty-match-behaviour)
   - [Output Types and Evaluation Timing](#output-types-and-evaluation-timing)
   - [Nested Group Evaluation](#nested-group-evaluation)
-  - [Loop Expression Behavior](#loop-expression-behavior)
+  - [Loop Expression Behaviour](#loop-expression-behaviour)
   - [Example: Evaluation Flow](#example-evaluation-flow)
 - [Advanced Features Pt.1](#advanced-features-pt1)
   - [Filtering With Or  ](#filtering-with-or--)
   - [Wildcard URL support  ](#wildcard-url-support--)
-  - [Direct DB Predicates  ](#direct-db-predicates--)
+  - [Predicates  ](#predicates--)
     - [Predicate Patterns  ](#predicate-patterns--)
     - [Operators  ](#operators--)
     - [Special operators](#special-operators)
@@ -164,7 +176,7 @@ position: 950
   - [Payments and Deduction Elements](#payments-and-deduction-elements)
 
 
-Another feature of the API is reporting. By default, every account setup includes a suite of statutory reports that can be executed against your data. These reports represent some common payroll requirements and cannot be altered. But that is just a small aspect of the query engine…  
+A major feature of the API is **reporting**. By default, every account setup includes a suite of statutory reports that can be executed against your data. These reports represent some common payroll requirements and cannot be altered. But that is just a small aspect of the query engine…  
 
 The API includes a fully featured query language that allows you to create your own custom reports. Reports are saved queries that can be executed with variable values and are free to create as needed.  
 
@@ -486,6 +498,36 @@ This section provides a structural overview of the RQL query format. It shows ho
 
 This structure can be used as a reference when authoring queries or when building tools that support or interpret RQL.
 
+### Execution Order and Dependency Rules
+
+RQL query execution follows a strict, one-way evaluation pipeline.
+Later stages cannot influence or be referenced by earlier stages.
+
+#### Dependency rules
+
+* Predicates
+  * Execute before data retrieval
+  * Must not reference variables, outputs, or aggregates
+  * Operate only on internal entity state
+* Conditions
+  * Determine whether a group executes
+  * Must not reference outputs or aggregate values
+* Filters
+  * Execute after entities are fetched
+  * Must not reference aggregate outputs
+  * May reference only entity properties and existing variables
+* Ordering
+  * Applies to fetched entity properties
+  * Must not reference variables or outputs
+* Outputs
+  * Do not influence entity selection, filtering, or ordering
+  * Only affect rendered results or variables
+* Aggregates
+  * Execute after filtering and ordering
+  * Must not be referenced by predicates, conditions, filters, or ordering
+
+In general: a query stage may only depend on data produced earlier in the pipeline.
+
 ## Top-Level Options
 
 Top-level options control *result metadata* and *output shaping* for the entire query. These elements appear **directly under `<Query>`**, alongside `<RootNodeName>`, `<Variables>`, and `<Groups>`. They are optional unless stated otherwise.
@@ -651,7 +693,7 @@ Selectors determine **what data gets retrieved**, before filters or output gener
 
 ---
 
-### Selector Behavior
+### Selector Behaviour
 
 | Characteristic         | Description                                                        |
 |------------------------|--------------------------------------------------------------------|
@@ -1035,95 +1077,35 @@ To use this output you must specify the tax year, tax period number and pay freq
 
 --/CodeTabs--
 
-#### RenderTaxPeriod
+#### Render Tax Period
 
-**Purpose:** Renders a representation of the UK tax period inferred from a **Date** and **PayFrequency**.  
-**Output Category:** Singular  
-**Placement:** As an `<Output xsi:type="RenderTaxPeriod" .../>` inside a `<Group>`
+Use the **RenderTaxPeriod** output to include the tax period details as a formatted expression.  
+  
+The output provides 3 render options:  
+  
+* RenderOption: **AsString** (default) - Example: _W06-2025-26_
+* RenderOption: **PeriodOnly** - Example: 6
+* RenderOption: **YearOnly** - Example: 2025
 
-| Attribute      | Type     | Required | Description |
-|---|---|---|---|
-| `DisplayName`  | `string` | Yes | The element/attribute name to write in the result. |
-| `PayFrequency` | `string` | Yes | The pay frequency used to determine period (e.g., `Weekly`, `Monthly`, `TwoWeekly`, `FourWeekly`, `Quarterly`, `Biannually`, `Yearly`). |
-| `Date`         | `string` (date) | Yes | Any date within the period you want to render. Variables allowed (e.g., `[PaymentDate]`). |
-| `RenderOption` | `string` (enum) | No | Controls the render format: `AsString` (default), `PeriodOnly`, or `YearOnly`. |
-
-- **AsString (default):** Renders as `pp-yyyy/yy` (e.g., `M02-2025-26` for a monthly example; `W06-2025-26` for weekly).  
-- **PeriodOnly:** Renders the period number only (e.g., `6`).  
-- **YearOnly:** Renders the starting tax year only (e.g., `2025`).
-
-> Tax period string style may prefix the period with a frequency marker for clarity (e.g., `M02-2025-26`, `W06-2025-26`).
-
+--CodeTabs--
 ```xml
-<Group>
-  <!-- render the period as a formatted string (default) -->
-  <Output xsi:type="RenderTaxPeriod"
-          DisplayName="TaxPeriodAsString"
-          PayFrequency="Monthly"
-          Date="2025-05-22" />
-
-  <!-- render the period number only -->
-  <Output xsi:type="RenderTaxPeriod"
-          DisplayName="TaxPeriodPeriodOnly"
-          PayFrequency="Weekly"
-          Date="[PaymentDate]"
-          RenderOption="PeriodOnly" />
-
-  <!-- render the tax year number only -->
-  <Output xsi:type="RenderTaxPeriod"
-          DisplayName="TaxPeriodYear"
-          PayFrequency="FourWeekly"
-          Date="2025-05-22"
-          RenderOption="YearOnly" />
-</Group>
+<?xml version="1.0" encoding="utf-8"?>
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <RootNodeName>OutputExample</RootNodeName>
+  <Groups>
+    <Group>
+      <!-- render the period using the string notation: e.g. M02-2025-26 -->
+      <Output xsi:type="RenderTaxPeriod" DisplayName="TaxPeriodAsString" PayFrequency="Monthly" Date="2025-05-22" />
+      <!-- render the period number only -->
+      <Output xsi:type="RenderTaxPeriod" DisplayName="TaxPeriodPeriodOnly" PayFrequency="Weekly" Date="2025-05-22" RenderOption="PeriodOnly" />
+      <!-- render the tax year number only -->
+      <Output xsi:type="RenderTaxPeriod" DisplayName="TaxPeriodYear" PayFrequency="FourWeekly" Date="2025-05-22" RenderOption="YearOnly" />
+    </Group>
+  </Groups>
+</Query>
 ```
 
-#### RenderTaxPeriodDate
-
-**Purpose:** Emits either the **start** or **end** date for a given tax **TaxYear** + **TaxPeriod** combination (optionally considering **PayFrequency**).  
-**Output Category:** Singular  
-**Placement:** As an `<Output xsi:type="RenderTaxPeriodDate" .../>` inside a `<Group>`
-
-| Attribute      | Type      | Required | Default | Description |
-|---|---|---|---|---|
-| `DisplayName`  | `string`  | Yes      | —       | The element/attribute name to write in the result. |
-| `TaxYear`      | `string`  | Yes      | —       | Starting year of the tax year (e.g., `2025`). Variables allowed. |
-| `TaxPeriod`    | `string`  | Yes      | —       | The period number for the tax year. Variables allowed. |
-| `PayFrequency` | `string`  | No       | —       | Optional frequency context (`Weekly`, `Monthly`, etc.). |
-| `Format`       | `string`  | No       | —       | Optional date format string (e.g., `yyyy-MM-dd`). |
-| `EndDate`      | `boolean` | No       | `false` | If `true`, outputs the **period end** date; if `false` (or omitted), outputs the **period start** date. |
-
-- If `EndDate="false"` or omitted ⇒ outputs the **start** date of the given tax period.
-- If `EndDate="true"` ⇒ outputs the **end** date of the given tax period.
-- `Format` applies standard date formatting to the result (e.g., `yyyy-MM-dd`). If omitted, the engine’s default date string is used.
-
-```xml
-<Group>
-  <!-- Start date of Month 1 in the 2025 tax year -->
-  <Output xsi:type="RenderTaxPeriodDate"
-          DisplayName="TaxPeriodStartDate"
-          TaxYear="2025"
-          TaxPeriod="1"
-          PayFrequency="Monthly"
-          Format="yyyy-MM-dd" />
-
-  <!-- End date of Week 6 in the 2025 tax year -->
-  <Output xsi:type="RenderTaxPeriodDate"
-          DisplayName="TaxPeriodEndDate"
-          TaxYear="2025"
-          TaxPeriod="6"
-          PayFrequency="Weekly"
-          EndDate="true"
-          Format="yyyy-MM-dd" />
-
-  <!-- Using variables for year/period, defaulting to start date -->
-  <Output xsi:type="RenderTaxPeriodDate"
-          DisplayName="PeriodStart"
-          TaxYear="[TaxYear]"
-          TaxPeriod="[TaxPeriod]"
-          PayFrequency="[PayFrequency]" />
-</Group>
-```
+--/CodeTabs--
 
 #### Render Type Name
 
@@ -1495,7 +1477,8 @@ Variable substitution occurs in the following locations:
 
 #### Evaluation and Matching Rules
 
-- Variables are substituted using **find-and-replace on full matches only**.
+- Variables are substituted by replacing any [VariableName] tokens found within supported strings (selectors, values, predicates, etc.).
+- Substitution is token-based (only bracketed tokens), so ordinary [ ] text is left alone unless it matches a defined variable token.
 - No substitution is made if the variable is undefined — the placeholder remains as-is.
 - You can safely include square brackets (`[ ]`) in non-variable contexts without triggering substitution.
 - Example:
@@ -1522,6 +1505,18 @@ As described under **Variable Lifecycle and Scope**, variables persist globally 
 - If Employee A has matching pay-lines, a subgroup sums those lines and writes the result into `[NetPay]`.
 - If Employee B has no pay-lines, that subgroup is skipped (no `<Output xsi:type="VariableSum">` ever executes), so `[NetPay]` remains set to Employee A’s total.
 - When you finally render `[NetPay]` for Employee B, you mistakenly get Employee A’s value.
+
+:::warning
+**Important execution rule**  
+  
+In RQL, a group that does not execute (because it matches no entities or is skipped by conditions) behaves as if it *never ran at all*.
+
+* No outputs are evaluated
+* No variables are assigned
+* No default or zero values are implied
+
+Variables are only modified when an output explicitly executes.
+:::
 
 ##### Scenario Illustration
 
@@ -1646,98 +1641,229 @@ Will result in:
   
 ## Conditions and Conditional Group Logic
 
-Conditions in RQL are used to **dynamically include or exclude** an entire group of output logic 
-based on comparisons between variable values or literals.
+Conditions in RQL are used to **dynamically include or exclude** an entire group of output logic based on comparisons between variable values or literals.
 
-They act like **runtime `if` statements**, evaluated **before a group is processed**. 
-If any condition fails, the entire group (and all nested elements) is skipped—ensuring no data is processed, output, or written for that group.
+They act like **runtime `if` statements**, evaluated **before a group is processed**. If any condition fails, the entire group (and all nested elements) is skipped—ensuring no data is processed, output, or written for that group.
 
----
-### 🔹 Condition Syntax Overview (Canonical Form)
+Each `<Condition>` performs a comparison between `ValueA` and `ValueB`, with the comparison logic determined by the `xsi:type`. This enables branching based on string values, numeric ranges, dates, or array membership.
 
-```xml
-<Condition xsi:type="WhenEqualTo"
-           ValueA="[PayFrequency]"
-           ValueB="Monthly"
-           CaseSensitive="false" />
-```
+> Conditions are useful for customizing report outputs without rewriting query structure. They are evaluated in the order they appear and do not support compound logic (AND/OR) at the element level.
 
-**Attributes**:
-- **xsi:type** → The comparer type (see table below)
-- **ValueA** → Left operand (variable or literal)
-- **ValueB** → Right operand (variable or literal)
-- **CaseSensitive** *(optional)* → `true` or `false` (default = `false` for strings)
+Conditions are used to control whether a group (or output block) is processed, based on the current value of one or more variables. Below is a list of all supported condition types and stubs for their documentation.
+
+All conditions follow a common logic pattern of comparing "ValueA" against "ValueB". To help understand the condition logic, the name of the condition should be considered between the two values. 
+  
+For example: When "ValueA" Contains "ValueB".
+
+> The comparison values (A & B) can be either hard coded or a variable name.
 
 ---
+
 ### Available Condition Types
 
-| Condition Type             | Alias For        | Description                                                | Supported Data Types           |
-|----------------------------|------------------|------------------------------------------------------------|--------------------------------|
-| `WhenContains`             | —                | Determines if ValueA contains ValueB                       | String                         |
-| `WhenEqualTo`              | `When`           | Determines if ValueA is equal to ValueB                    | String, Numeric, Date, Boolean |
-| `WhenGreaterThan`          | —                | Determines if ValueA is greater than ValueB                | Numeric, Date                  |
-| `WhenGreaterThanEqualTo`   | —                | Determines if ValueA is greater than or equal to ValueB    | Numeric, Date                  |
-| `WhenLessThan`             | —                | Determines if ValueA is less than ValueB                   | Numeric, Date                  |
-| `WhenLessThanEqualTo`      | —                | Determines if ValueA is less than or equal to ValueB       | Numeric, Date                  |
-| `WhenNotContains`          | —                | Determines if ValueA is not contained within ValueB        | String                         |
-| `WhenNotEqualTo`           | `WhenNot`        | Determines if ValueA is not equal to ValueB                | String, Numeric, Date, Boolean |
-| `WhenNotWithinArray`       | —                | Determines if ValueA is not within the CSV array of ValueB | String, Numeric, Date          |
-| `WhenWithinArray`          | —                | Determines if ValueA is within the CSV array of ValueB     | String                         |
+| Condition Type             | Description                                                | Supported data types           |
+|----------------------------|------------------------------------------------------------|--------------------------------|
+| `WhenContains`             | Determines if ValueA contains ValueB                       | String                         |
+| `WhenEqualTo`              | Determines if ValueA is equal to ValueB                    | String, Numeric, Date, Boolean |
+| `WhenGreaterThan`          | Determines if ValueA is greater than ValueB                | Numeric, Date                  |
+| `WhenGreaterThanOrEqualTo` | Determines if ValueA is greater than or equal to ValueB    | Numeric, Date                  |
+| `WhenLessThan`             | Determines if ValueA is less than ValueB                   | Numeric, Date                  |
+| `WhenLessThanOrEqualTo`    | Determines if ValueA is less than or equal to ValueB       | Numeric, Date                  |
+| `WhenNotContains`          | Determines if ValueA is not contained within ValueB        | String                         |
+| `WhenNotEqualTo`           | Determines if ValueA is not equal to ValueB                | String, Numeric, Date, Boolean |
+| `WhenNotWithinArray`       | Determines if ValueA is not within the CSV array of ValueB | String, Numeric, Date          |
+| `When`                     | Determines if ValueA is equal to ValueB                    | String, Numeric, Date, Boolean |
+| `WhenNot`                  | Determines if ValueA is not equal to ValueB                | String, Numeric, Date, Boolean |
+| `WhenWithinArray`          | Determines if ValueA is within the CSV array of ValueB     | String                         |
 
 ---
-### Example Usages
 
-#### String comparison
+### Condition Examples
+
+#### WhenContains
+
+The **WhenContains** condition is used to test for the presence of one string within another.
+
+--CodeTabs--
 ```xml
-<Condition xsi:type="WhenContains" ValueA="[EmployeeName]" ValueB="Smith" CaseSensitive="false" />
+<Condition xsi:type="WhenContains" ValueA="ValueA" ValueB="ValueB" />
 ```
 
-#### Numeric comparison
+--/CodeTabs--
+
+#### WhenEqualTo
+
+The **WhenEqualTo** condition is used to positively test the equality of two values.
+
+--CodeTabs--
 ```xml
-<Condition xsi:type="WhenGreaterThan" ValueA="[GrossPay]" ValueB="0" />
+<Condition xsi:type="WhenEqualTo" ValueA="ValueA" ValueB="ValueB" />
 ```
 
-#### Date comparison
+--/CodeTabs--
+
+#### WhenGreaterThan
+
+The **WhenGreaterThan** condition is used to determine if one value is greater than another.
+
+--CodeTabs--
 ```xml
-<Condition xsi:type="WhenLessThanEqualTo" ValueA="[PaymentDate]" ValueB="2025-03-01" />
+<Condition xsi:type="WhenGreaterThan" ValueA="ValueA" ValueB="ValueB" />
 ```
 
-#### Array membership
+--/CodeTabs--
+
+#### WhenGreaterThanOrEqualTo
+
+The **WhenGreaterThanOrEqualTo** condition determines if one value is greater than or equal to another.
+
+--CodeTabs--
 ```xml
-<Condition xsi:type="WhenWithinArray" ValueA="[PayFrequency]" ValueB="Monthly,Weekly" />
+<Condition xsi:type="WhenGreaterThanEqualTo" ValueA="ValueA" ValueB="ValueB" />
 ```
+
+--/CodeTabs--
+
+#### WhenLessThan
+
+The **WhenLessThan** condition determines if one value is less than another.
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenLessThan" ValueA="ValueA" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+#### WhenLessThanOrEqualTo
+
+The **WhenLessThanOrEqualTo** condition is used to determine if one value is less than or equal to another.
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenLessThanOrEqualTo" ValueA="ValueA" ValueB="ValueB" />
+```
+
+#### WhenNotContains
+
+The **WhenNotContains** condition determines if one string value is not present within another.
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenNotContains" ValueA="ValueA" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+#### WhenNotEqualTo
+
+The **WhenNotEqualTo** condition is used to negatively test the equality of two values.
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenNotEqualTo" ValueA="ValueA" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+#### WhenNotWithinArray
+
+The **WhenNotWithinArray** condition is used to test if one value does not matches any of the values defined in the comma separated array.
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenNotWithinArray" ValueA="Item1,Item2" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+#### When
+
+The **When** condition is used to positively test the equality of two values.
+
+> Note: this condition has identical behaviour to **WhenEqualTo**
+
+--CodeTabs--
+```xml
+<Condition xsi:type="When" ValueA="ValueA" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+#### WhenNot
+
+The **WhenNot** condition is used to negatively test the equality of two values.
+
+> Note: this condition has identical behaviour to **WhenNotEqualTo**
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenNot" ValueA="ValueA" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+#### WhenWithinArray
+
+The **WhenWithinArray** condition is used to test if one value matches any of the values defined in the comma separated array.
+
+--CodeTabs--
+```xml
+<Condition xsi:type="WhenWithinArray" ValueA="Item1,Item2" ValueB="ValueB" />
+```
+
+--/CodeTabs--
+
+### Condition Timing and Evaluation Summary
+
+Conditions control **whether or not a group is processed**, and they are evaluated **before all other group logic**.
 
 ---
-### Execution Order Reminder
-Conditions are evaluated **first** in the group lifecycle:
+
+#### Evaluation Order Recap
+
+RQL groups are evaluated in the following strict sequence:
 
 1. **Conditions** – Must be satisfied before the group runs
 2. **Selector** – Entity path is evaluated only if condition passes
-3. **Predicate** – Narrows fetched data before retrieval
-4. **Filters** – Applies post-fetch filtering
+3. **Predicate** – Further narrows fetched data
+4. **Filters** – Applies post-fetch filtering logic
 5. **Ordering** – Sorts matched entities
-6. **Outputs** – Aggregate outputs first, then scalar values
+6. **Outputs** – Aggregate outputs run first, then scalar values
 
-If any `<Condition>` fails:
-- The group’s `@Selector`, `@Predicate`, `Filters`, and `Outputs` are **skipped**
+> **If any `<Condition>` fails**, the entire group and all its children are skipped.
+
+---
+
+#### What Is Skipped
+
+When a group fails its condition:
+- The `@Selector`, `@Predicate`, `Filters`, and `Outputs` are **not processed**
 - **No variables** are evaluated or set
 - **All nested groups** are skipped recursively
 
 ---
-### No `ElseGroup` Support
-If alternative logic is needed, create **two sibling groups** using opposite conditions (`WhenEqualTo` vs. `WhenNotEqualTo`) or mutually exclusive values.
+
+#### No `ElseGroup` Support
+
+There is no formal concept of an `else` branch in RQL.
+
+If alternative logic is needed (e.g., render X when true, render Y when false), you must create **two sibling groups** using opposite conditions (`When` vs. `WhenNot`) or mutually exclusive variable values.
 
 ```xml
 <Group GroupName="Monthly">
-  <Condition xsi:type="WhenEqualTo" ValueA="[PayFrequency]" ValueB="Monthly" />
+  <Condition xsi:type="When" ValueA="[PayFrequency]" ValueB="Monthly" />
   <Output xsi:type="RenderValue" Name="Example" Value="Value A" />
 </Group>
-
 <Group GroupName="Weekly">
-  <Condition xsi:type="WhenEqualTo" ValueA="[PayFrequency]" ValueB="Weekly" />
+  <Condition xsi:type="When" ValueA="[PayFrequency]" ValueB="Weekly" />
   <Output xsi:type="RenderValue" Name="Example" Value="Value B" />
 </Group>
 ```
+
+---
+
+Use conditions to cleanly separate query logic, eliminate unneeded data processing, and control which portions of the query structure are included at runtime.
 
 ## Filters  
   
@@ -2118,6 +2244,67 @@ Considers all values in comma-separated filter value and matches all properties 
 ```
 --/CodeTabs--
 
+## Predicates vs Filters
+
+> RQL supports two mechanisms for restricting data sets: Predicates and Filters.
+While they appear superficially similar, they operate at different stages and on different data models.
+
+### Predicate
+
+A Predicate is an advanced, internal query constraint applied before data is fetched.
+
+Predicates:
+
+* Are specified as a string expression on an EntityGroup
+* Are parsed by the PayRunIO query engine
+* Are translated into database queries by internal system logic
+* May reference internal entity properties that are not exposed in public API schemas
+* Are not SQL and must not be treated as such
+
+:::danger  
+**Predicates** are intended for advanced use cases and are not fully discoverable via public API schemas.
+:::
+
+Because predicates operate on internal models, only a limited, implementation-defined set of properties and operators are supported.
+
+### Filter
+
+A Filter is a schema-driven, post-fetch constraint applied to an entity group.
+
+Filters:
+
+* Are defined using explicit RQL elements
+* Operate on public, schema-visible properties
+* Are evaluated after data has been loaded
+* Are fully discoverable via the API’s public schemas
+* Support richer composition (multiple conditions, logical operators, nesting)
+
+### Important distinction
+
+Although predicates and filters both restrict result sets:
+
+* Predicates operate on internal system representations
+* Filters operate on externally visible API models
+
+As a result:
+
+* Not all filter expressions can be represented as predicates
+* Predicate behaviour may vary between entity types and endpoints
+* Filters are the recommended mechanism for most user-defined constraints
+
+### When to use each
+
+Use a Predicate when:
+
+* Performance requires restricting data before loading
+* Filtering must occur on internal system state
+
+Use a Filter when:
+
+* Query behaviour must be schema-discoverable
+* Constraints are based on public API fields
+* Predictable and portable behaviour is required
+
 ## Predicate vs Filter vs Condition
 
 In RQL, **Predicates**, **Filters**, and **Conditions** are all tools used to control query logic, but they differ in *where*, *when*, and *how* they act during query execution.
@@ -2172,9 +2359,7 @@ In RQL, **Predicates**, **Filters**, and **Conditions** are all tools used to co
 
   ```xml
   <Group>
-    <Condition>
-      <When xsi:type="WhenEqualTo" ValueA="[PayFrequency]" ValueB="Monthly" />
-    </Condition>
+    <Condition xsi:type="WhenEqualTo" ValueA="[PayFrequency]" ValueB="Monthly" />
   </Group>
   ```
 
@@ -2199,9 +2384,7 @@ In RQL, **Predicates**, **Filters**, and **Conditions** are all tools used to co
 ```xml
 <!-- Condition: skips entire group if not satisfied -->
 <Group GroupName="MonthlyTotals">
-  <Condition>
-    <When xsi:type="WhenEqualTo" ValueA="[PayFrequency]" ValueB="Monthly" />
-  </Condition>
+  <Condition xsi:type="WhenEqualTo" ValueA="[PayFrequency]" ValueB="Monthly" />
 </Group>
 ```
 
@@ -2414,7 +2597,7 @@ The evaluation order within a group follows this sequence:
 1. **Conditions** – Determines if the group should be processed at all.
 2. **Entity Selection** – Performed via `@Selector` and `@Predicate`.
 3. **Filtering** – Filters reduce the matched set of entities.
-4. **Ordering** – Orders the matched entities based on `Order` elements.
+4. **Ordering** – Sorts the matched entities based on `Order` elements.
 5. **Aggregate Outputs** – Aggregations (`Sum`, `Avg`, `Count`, etc.) are evaluated **first**.
 6. **Scalar Outputs** – Individual `Render*`, `RenderValue`, `RenderProperty`, etc., are evaluated **in declaration order**.
 
@@ -2438,7 +2621,7 @@ The evaluation order within a group follows this sequence:
 
 ---
 
-### Empty Match Behavior
+### Empty Match Behaviour
 
 - If a group’s `Selector` returns **zero matches**, the group and its child groups are **not processed**.
 - As a result, no outputs or variables are created from such groups.
@@ -2465,7 +2648,7 @@ The evaluation order within a group follows this sequence:
 
 ---
 
-### Loop Expression Behavior
+### Loop Expression Behaviour
 
 - Groups using `LoopExpression` evaluate once **per loop value**.
 - For each iteration:
@@ -2593,9 +2776,9 @@ Wildcard characters can only be used to replace entity unique keys on URLs that 
 **Valid**: /Employer/ER001/Employee/*/PayLines  
 :::
 
-### Direct DB Predicates  
+### Predicates  
   
-Direct DB predicates are a new group option which allow you to specify filters that are directly applied at the database query level.  
+**Entity Group** predicates are a new group option which allow you to specify filters that are directly applied at the database query level.  
   
 RQL filters are applied against the loaded API entities, so in order to find all items that match the specified filter, the query processor must first load that entity from the database and then compare it's properties to the filter specification.
 Entities that do not match are then excluded from the output processing.  
@@ -2610,6 +2793,17 @@ The Group RQL object now has a *Predicate* property which allows you include a d
 |-------------------|------------------------------------------|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | Filters           | After entities are loaded from database  | Allows for result set caching avoiding duplicated data retrieval | Loads all data set entites before discarding unwanted                                                |
 | Predicates        | Before entities are loaded from database | Reduces number of items loaded into result set                   | Not cached for reuse, requires specialised knowledge of entity internal properties and relationships |
+
+:::info
+**Predicate Limitations**  
+  
+* Predicate expressions are implementation-defined  
+* Supported properties and operators may vary by entity and endpoint  
+* Predicate syntax is not discoverable via public API schemas  
+* Client tools should not assume predicate portability or completeness  
+  
+For predictable and schema-driven behaviour, **prefer <Filter> elements**.
+:::
 
 **Filtering Example**  
   

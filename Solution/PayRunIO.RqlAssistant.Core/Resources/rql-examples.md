@@ -62,6 +62,9 @@ Multiple orders apply in the order declared.
 
 ## List all employees including API resource key (AKA Unique Key)
 
+- **Request:** List all employees for an employer, including each employee's API resource key (unique key) as an attribute.
+- **Tags:** employee, unique-key-variable, render-value, attribute
+
 Utilises the Entity Group unique key variable specification to capture the scoped entity unique key and then writes to an attribute output.
 
 ```xml
