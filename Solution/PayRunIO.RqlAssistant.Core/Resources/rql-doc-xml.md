@@ -3085,6 +3085,16 @@ All of these inherit from a common base type: **PayInstruction**.
 When accessing an employee’s pay instructions using an optimised group, **only the properties defined on `PayInstruction`** will be available.  
 Any subtype-specific fields will be excluded.
 
+The same limitation applies to any other collection endpoint backed by a polymorphic (subclassed) type. Two further examples:
+
+- **Pay Lines** — subtypes such as `PayLineTax`, `PayLineNi`, `PayLinePension`, `PayLineRate`, `PayLineAbsence`, etc. all inherit from a common base type: **PayLine**.  
+  When optimising a group over a Pay Lines collection, only the properties defined on `PayLine` will be available; subtype-specific fields (e.g. NI category on `PayLineNi`) are excluded.
+
+- **Report Lines** — subtypes such as `ReportLineTaxSummary`, `ReportLinePension`, `ReportLineEmployeeSummary`, `ReportLineHmrcPayment`, etc. all inherit from a common base type: **ReportLine**.  
+  When optimising a group over a Report Lines collection, only the properties defined on `ReportLine` will be available; subtype-specific fields are excluded.
+
+If a query needs subtype-specific properties from a Pay Instructions, Pay Lines, or Report Lines collection, do not use `Optimise="true"` on that group — or first filter with an `OFTYPE`-style predicate to narrow to a single subtype (see `advanced-features-pt1`), then reference that subtype's properties.
+
 ## Advanced Techniques
 
 ### Use Variable Assignment to Control Output

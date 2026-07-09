@@ -67,5 +67,9 @@ data from the PayRunIO UK payroll API. The root element is always `<Query>`. The
 - Initialise any variable written by `Sum`/`VariableSum` at the start of each iteration,
   or the previous iteration's value leaks into rows with no matches.
 - XML must be ASCII; no XML comments inside `<Query>`.
+- `Optimise="true"` on a `<Group>` over a polymorphic collection (Pay Instructions, Pay
+  Lines, Report Lines) only exposes properties on the shared base type — subtype-specific
+  properties (e.g. on `PayLineNi`, `TaxPayInstruction`) are dropped. Drop `Optimise` if 
+  non-base type properties are required).
 
 If a syntax detail is not in this primer, **do not invent it** — fetch it.

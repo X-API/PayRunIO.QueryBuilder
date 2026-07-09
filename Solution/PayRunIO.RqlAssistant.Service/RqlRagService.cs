@@ -16,7 +16,6 @@ namespace PayRunIO.RqlAssistant.Service
     {
         Task<string> AskQuestion(
             string userQuestion,
-            bool includeSchemasAndRoutes = true,
             IEnumerable<ChatMessage>? chatHistory = null,
             ResponseType format = ResponseType.Conversation);
     }
@@ -58,7 +57,6 @@ namespace PayRunIO.RqlAssistant.Service
 
         public async Task<string> AskQuestion(
             string userQuestion,
-            bool includeSchemasAndRoutes = true,
             IEnumerable<ChatMessage>? chatHistory = null,
             ResponseType format = ResponseType.Conversation)
         {
@@ -69,7 +67,7 @@ namespace PayRunIO.RqlAssistant.Service
 
             this.EnsureInitialised();
 
-            var conversation = this.BuildInitialConversation(userQuestion, chatHistory, format, includeSchemasAndRoutes);
+            var conversation = this.BuildInitialConversation(userQuestion, chatHistory, format);
 
             for (var iteration = 0; iteration < MaxIterations; iteration++)
             {
@@ -130,25 +128,20 @@ namespace PayRunIO.RqlAssistant.Service
         private Collection<ChatMessage> BuildInitialConversation(
             string userQuestion,
             IEnumerable<ChatMessage>? chatHistory,
-            ResponseType format,
-            bool includeSchemasAndRoutes)
+            ResponseType format)
         {
             var conversation = new Collection<ChatMessage>();
 
             conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = this.answerQuestionSystemPrompt });
             conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = this.grammarPrimer });
-
-            if (includeSchemasAndRoutes)
-            {
-                conversation.Add(new ChatMessage
-                    {
-                        Role = ParticipantType.System,
-                        Text = "Use the available tools to ground your reply: 'list_schemas'/'get_schema' for entity shapes, "
-                               + "'list_routes'/'get_route' for API route URLs to use in Group Selector attributes, "
-                               + "'list_rql_topics'/'get_rql_syntax' for grammar details, and 'validate_query' to check XML before finalising. "
-                               + "Do not invent property names, route URLs, or RQL syntax — look them up."
-                    });
-            }
+            conversation.Add(new ChatMessage
+                {
+                    Role = ParticipantType.System,
+                    Text = "Use the available tools to ground your reply: 'list_schemas'/'get_schema' for entity shapes, "
+                           + "'list_routes'/'get_route' for API route URLs to use in Group Selector attributes, "
+                           + "'list_rql_topics'/'get_rql_syntax' for grammar details, and 'validate_query' to check XML before finalising. "
+                           + "Do not invent property names, route URLs, or RQL syntax — look them up."
+                });
 
             conversation.Add(new ChatMessage { Role = ParticipantType.System, Text = FormatDirective(format) });
 
@@ -173,8 +166,6 @@ namespace PayRunIO.RqlAssistant.Service
         private static string FormatDirective(ResponseType format) =>
             format switch
                 {
-                    ResponseType.JsonOnly =>
-                        "**Respond ONLY with the RQL statement enclosed in triple back-ticks formatted as 'JSON'. Do not add explanations.**",
                     ResponseType.XmlOnly =>
                         "**Respond ONLY with the RQL statement enclosed in triple back-ticks formatted as 'XML'. XML must not contain non-ASCII characters. Do not add explanations. Do not include XML comments.**",
                     ResponseType.Conversation =>

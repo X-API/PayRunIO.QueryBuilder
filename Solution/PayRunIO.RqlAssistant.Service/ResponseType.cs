@@ -2,13 +2,11 @@
 {
     public enum ResponseType
     {
-        JsonOnly = 0,
+        XmlOnly = 0,
 
-        XmlOnly = 1,
+        Conversation = 1,
 
-        Conversation = 2,
-
-        TabularQuery = 3
+        TabularQuery = 2
     }
 }
 

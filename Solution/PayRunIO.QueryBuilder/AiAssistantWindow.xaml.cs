@@ -45,13 +45,6 @@
                 typeof(AiAssistantWindow),
                 new PropertyMetadata(default(Query)));
         
-        public static readonly DependencyProperty IncludeSchemasAndRoutesProperty = 
-            DependencyProperty.Register(
-                nameof(IncludeSchemasAndRoutes), 
-                typeof(bool), 
-                typeof(AiAssistantWindow), 
-                new PropertyMetadata(true));
-
         public static readonly DependencyProperty TabularQueryProperty = DependencyProperty.Register(nameof(TabularQuery), typeof(bool), typeof(AiAssistantWindow), new PropertyMetadata(default(bool)));
 
         public static readonly DependencyProperty AutoProcessQuestionProperty = 
@@ -65,12 +58,6 @@
         {
             get => (bool)GetValue(TabularQueryProperty);
             set => this.SetValue(TabularQueryProperty, value);
-        }
-
-        public bool IncludeSchemasAndRoutes
-        {
-            get => (bool)GetValue(IncludeSchemasAndRoutesProperty);
-            set => this.SetValue(IncludeSchemasAndRoutesProperty, value);
         }
 
         public bool AutoProcessQuestion
@@ -214,7 +201,6 @@
                         response =
                             await this.rqlRagService.AskQuestion(
                                 prompt,
-                                includeSchemasAndRoutes: this.IncludeSchemasAndRoutes,
                                 chatHistory: modelHistory,
                                 format: this.TabularQuery ? ResponseType.TabularQuery : ResponseType.Conversation);
                     }
