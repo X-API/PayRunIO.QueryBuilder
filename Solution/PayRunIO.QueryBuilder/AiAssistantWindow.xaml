@@ -11,7 +11,8 @@
         Title="Query Builder - Ai Assistant" 
         x:Name="AiAssistantWindow1"
         Height="800" 
-        Width="1000">
+        Width="1000"
+        ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <converters:QueryToTextDocumentConverter x:Key="XmlDocConverter" ContentType="XML" />
         <converters:QueryToTextDocumentConverter x:Key="JsonDocConverter" ContentType="Json" />
