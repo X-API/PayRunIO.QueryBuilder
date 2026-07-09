@@ -62,6 +62,7 @@
         <CommandBinding Command="helpers:CommonAiCommands.EditAiQueryCommand" CanExecute="EditAiQueryCommand_CanExecute" Executed="EditAiQueryCommand_Executed" />
         <CommandBinding Command="helpers:CommonAiCommands.QuestionAiQueryCommand" CanExecute="QuestionAiQueryCommand_CanExecute" Executed="QuestionAiQueryCommand_Executed" />
         <CommandBinding Command="helpers:CommonAiCommands.ErrorAiQueryCommand" CanExecute="ErrorAiQueryCommand_CanExecute" Executed="ErrorAiQueryCommand_Executed" />
+        <CommandBinding Command="helpers:CommonAiCommands.ShowHowToCommand" Executed="ShowHowToCommand_Executed" />
     </Window.CommandBindings>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -94,6 +95,8 @@
                     <MenuItem Header="AI _Settings..." Click="AiSettings_OnClick" />
                 </MenuItem>
                 <MenuItem Header="_Help">
+                    <MenuItem Header="_How To Use the AI Assistant..." Command="helpers:CommonAiCommands.ShowHowToCommand"></MenuItem>
+                    <Separator />
                     <MenuItem Header="_About" Click="About_OnClick"></MenuItem>
                 </MenuItem>
             </Menu>

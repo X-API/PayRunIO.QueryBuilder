@@ -1,0 +1,148 @@
+<Window x:Class="PayRunIO.QueryBuilder.HowToWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Query Builder - How To Use the AI Assistant"
+        x:Name="HowToWindow1"
+        Height="620"
+        Width="700"
+        WindowStyle="ToolWindow"
+        ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Helpers/CommonStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="StepHeaderStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="Margin" Value="0,0,0,4" />
+            </Style>
+            <Style x:Key="BodyTextStyle" TargetType="TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="Margin" Value="0,0,0,10" />
+            </Style>
+            <Style x:Key="TipTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextStyle}">
+                <Setter Property="FontStyle" Value="Italic" />
+                <Setter Property="Foreground" Value="DimGray" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <TextBlock Text="How To Use the AI Assistant" Style="{StaticResource Header1}" Margin="0,0,0,10" />
+                <TextBlock Style="{StaticResource BodyTextStyle}">
+                    The AI Assistant helps you build, edit, and understand PayRun.io RQL queries by describing what you
+                    want in plain English. It uses your own configured OpenAI or Anthropic account, so you'll need to
+                    set that up first.
+                </TextBlock>
+
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <TextBlock Text="1. Set Up Your AI Connection" Style="{StaticResource GroupBoxHeaderStyle}" />
+                    </GroupBox.Header>
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            Before using the assistant, open <Run FontWeight="Bold">AI Assistant → AI Settings...</Run> from the
+                            menu bar and enter your provider (OpenAI or Anthropic), API key, host, and model. Click
+                            <Run FontWeight="Bold">Save</Run> to store your settings. If you try to use the assistant
+                            before this is configured, you'll be prompted to set it up automatically.
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            The <Run FontWeight="Bold">Host</Run> field is the base URL of the AI provider's API that
+                            requests are sent to. For OpenAI, this is normally
+                            <Run FontFamily="Consolas" Background="Gainsboro">https://api.openai.com</Run>. You only
+                            need to change it from the default if you're using a proxy, a self-hosted/compatible
+                            endpoint, or a different region-specific URL supplied by your provider.
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <TextBlock Text="2. Create a New Query" Style="{StaticResource GroupBoxHeaderStyle}" />
+                    </GroupBox.Header>
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            Choose <Run FontWeight="Bold">AI Assistant → Create New Query</Run> to open the assistant with a
+                            blank starting point. Describe what you want the query to do — for example, which entities
+                            to list and any parameters such as an Employer Key — then submit your question. The
+                            assistant will propose an RQL query which you can review before bringing it into the
+                            builder.
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <TextBlock Text="3. Edit an Existing Query" Style="{StaticResource GroupBoxHeaderStyle}" />
+                    </GroupBox.Header>
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            With a query open in the builder, choose <Run FontWeight="Bold">AI Assistant → Edit Query</Run>
+                            to send your current query to the assistant along with a description of the change you
+                            want (e.g. "add a filter for active employees"). The assistant amends the query rather
+                            than starting from scratch.
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <TextBlock Text="4. Discuss a Query" Style="{StaticResource GroupBoxHeaderStyle}" />
+                    </GroupBox.Header>
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            Choose <Run FontWeight="Bold">AI Assistant → Discuss Query</Run> to ask the assistant to
+                            explain in plain English what your current query does — useful for understanding a query
+                            you've inherited or for double-checking your own logic before running it.
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <TextBlock Text="5. Get Help With an Error" Style="{StaticResource GroupBoxHeaderStyle}" />
+                    </GroupBox.Header>
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            If a query returns an error, choose <Run FontWeight="Bold">AI Assistant → Error Help</Run>.
+                            The assistant is automatically shown the last error message and will explain what went
+                            wrong and suggest a fix.
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Margin="0,0,0,10">
+                    <GroupBox.Header>
+                        <TextBlock Text="6. Working in the Assistant Window" Style="{StaticResource GroupBoxHeaderStyle}" />
+                    </GroupBox.Header>
+                    <StackPanel Margin="8">
+                        <TextBlock Style="{StaticResource BodyTextStyle}">
+                            Type your question or instructions into the box provided, then submit it to the AI. The
+                            assistant's reply and any proposed query appear in the window, where you can review the
+                            result, continue the conversation to refine it, or save the query once you're happy with
+                            it.
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource TipTextStyle}">
+                            Tip: Be specific about entities, filters, and parameters (such as an Employer Key) — the
+                            more detail you give, the closer the first result will be to what you need.
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Close" Click="OnCloseClick" Width="100" Margin="2,0" IsCancel="True" IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

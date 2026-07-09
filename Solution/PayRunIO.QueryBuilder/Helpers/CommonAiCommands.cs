@@ -28,5 +28,10 @@
             "Ask question",
             "AskAiQuery",
             typeof(CommonAiCommands));
+
+        public static RoutedUICommand ShowHowToCommand = new RoutedUICommand(
+            "How To Use the AI Assistant",
+            "ShowHowTo",
+            typeof(CommonAiCommands));
     }
 }

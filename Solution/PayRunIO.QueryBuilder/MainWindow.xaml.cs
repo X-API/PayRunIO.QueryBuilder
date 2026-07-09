@@ -691,6 +691,11 @@
             return IsConfigured();
         }
 
+        private void ShowHowToCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            new HowToWindow { Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner }.ShowDialog();
+        }
+
         private void About_OnClick(object sender, RoutedEventArgs e)
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName();

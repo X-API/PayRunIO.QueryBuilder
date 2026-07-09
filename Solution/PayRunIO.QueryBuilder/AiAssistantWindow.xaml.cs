@@ -134,6 +134,11 @@
             this.settingsWindow.ShowDialog();
         }
 
+        private void ShowHowToCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            new HowToWindow { Owner = this, WindowStartupLocation = WindowStartupLocation.CenterOwner }.ShowDialog();
+        }
+
         private void CreateRqlRagService()
         {
             // Use user settings for OpenAI configuration
