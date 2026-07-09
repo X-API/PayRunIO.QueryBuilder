@@ -513,3 +513,207 @@ derives calculated values, and renders every column in a final rendering group.
 **Notes:** Gross is derived as net plus the (negated, so positive) deductions; add further
 deduction types (`PayLineStudentLoan`, attachment orders, etc.) to the expression when the
 employer uses them. Every column rendered in the final group must match the header order.
+
+## Resolve pay run by payment date
+
+- **Request:** Given a pay schedule unique key and a payment date, resolve the matching pay
+  run instance and return its unique key so it can be used in further queries.
+- **Tags:** pay-run, pay-schedule, payment-date, direct-selector, render-entity, unique-key, unique-key-variable
+
+The API exposes a dedicated route that resolves a pay run directly by date, so this does not
+need a `Filter` over the `PayRuns` collection. Substitute the payment date straight into the
+selector path in place of the pay run's unique key. `UniqueKeyVariable` on the group captures
+the resolved pay run's own unique key — confirmed to work on single-entity selectors as well
+as collection selectors, so it is not limited to the iteration pattern shown elsewhere in this
+bank.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>PayRunForPaymentDate</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[PayScheduleKey]" Value="SCH001" />
+    <Variable Name="[PaymentDate]" Value="2025-05-31" />
+  </Variables>
+  <Groups>
+    <Group GroupName="PayRun" ItemName="PayRun" Selector="/Employer/[EmployerKey]/PaySchedule/[PayScheduleKey]/PayRun/[PaymentDate]" UniqueKeyVariable="[PayRunKey]">
+      <Output xsi:type="RenderValue" Output="Attribute" Name="PayRunKey" Value="[PayRunKey]" />
+      <Output xsi:type="RenderEntity" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** The selector `/Employer/{employerId}/PaySchedule/{payScheduleId}/PayRun/{effectiveDate:yyyy-MM-dd}`
+is a single-entity endpoint keyed by date rather than by unique key — pass the date literally
+(`2025-05-31`), not a wildcard or a `UniqueKeyVariable` on the selector path itself. This is
+faster and simpler than iterating `/PayRuns` with an `EqualTo` filter on `PaymentDate` when you
+already know the date. Because it targets a single entity, `Optimise` does not apply here
+(optimisation is collection-only); use `RenderEntity` or specific `RenderProperty` outputs as
+needed. The `PayRunKey` attribute captured here can be substituted into subsequent queries,
+e.g. `/Employer/[EmployerKey]/PaySchedule/[PayScheduleKey]/PayRun/[PayRunKey]/ReportLines`.
+
+## Using summary report lines
+
+- **Request:** Use the pre-summed pay run report lines to get gross pay, net pay and other
+  totals without loading every employee's pay lines.
+- **Tags:** report-lines, pay-run-summary, of-type, performance
+
+A pay run's `ReportLines` endpoint returns several report line types (per-employee summaries,
+tax summaries, pension summaries, the overall pay run summary, etc.) from one call. Use an
+`OfType` filter to select just the pay-run-level summary, which already carries gross, tax,
+NI, pension and net totals — no need to sum individual pay lines.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>PayRunSummary</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[PayScheduleKey]" Value="SCH001" />
+    <Variable Name="[PayRunKey]" Value="PR001" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Summary" ItemName="ReportLine" Selector="/Employer/[EmployerKey]/PaySchedule/[PayScheduleKey]/PayRun/[PayRunKey]/ReportLines">
+      <Filter xsi:type="OfType" Value="ReportLinePayRunSummary" />
+      <Output xsi:type="RenderProperty" Name="EmployeeCount" Property="EmployeeCount" />
+      <Output xsi:type="RenderProperty" Name="GrossPay" Property="GrossPay" />
+      <Output xsi:type="RenderProperty" Name="Tax" Property="Tax" />
+      <Output xsi:type="RenderProperty" Name="EmployeeNI" Property="EmployeeNI" />
+      <Output xsi:type="RenderProperty" Name="EmployerNI" Property="EmployerNI" />
+      <Output xsi:type="RenderProperty" Name="EmployeePension" Property="EmployeePension" />
+      <Output xsi:type="RenderProperty" Name="EmployerPension" Property="EmployerPension" />
+      <Output xsi:type="RenderProperty" Name="NetPay" Property="NetPay" />
+      <Output xsi:type="RenderProperty" Name="EmployerCost" Property="EmployerCost" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** `ReportLines` is a plural-type endpoint — always add an `OfType` filter naming the
+report line type you want (`ReportLinePayRunSummary`, `ReportLineEmployeeSummary`,
+`ReportLineTaxSummary`, `ReportLinePension`, etc.), otherwise every type is returned mixed
+together. `ReportLinePayRunSummary` is generated once per pay run calculation, so this is
+dramatically cheaper on large employers than summing `PayLines` per employee for the same
+totals — reach for it whenever the requirement is an aggregate figure rather than
+employee-level detail.
+
+## Using employee summary report lines for a gross-to-net report
+
+- **Request:** For each employee in a pay run, show their name, gross pay, tax, NI, pension
+  and net pay — without summing individual pay lines.
+- **Tags:** report-lines, employee-summary, of-type, gross-to-net, performance
+
+`ReportLineEmployeeSummary` is generated once per employee per pay run calculation and already
+carries the gross-to-net breakdown, so it replaces the pattern of iterating employees and
+summing `PayLines` (compare the "Tabular gross-to-net report" example) with a single flat
+collection fetch and an `OfType` filter.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>EmployeeSummaries</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[PayScheduleKey]" Value="SCH001" />
+    <Variable Name="[PayRunKey]" Value="PR001" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Employees" ItemName="ReportLine" Selector="/Employer/[EmployerKey]/PaySchedule/[PayScheduleKey]/PayRun/[PayRunKey]/ReportLines">
+      <Filter xsi:type="OfType" Value="ReportLineEmployeeSummary" />
+      <Output xsi:type="RenderProperty" Name="EmployeeCode" Property="EmployeeCode" />
+      <Output xsi:type="RenderProperty" Name="FirstName" Property="FirstName" />
+      <Output xsi:type="RenderProperty" Name="LastName" Property="LastName" />
+      <Output xsi:type="RenderProperty" Name="GrossPay" Property="GrossPay" />
+      <Output xsi:type="RenderProperty" Name="Tax" Property="Tax" />
+      <Output xsi:type="RenderProperty" Name="EmployeeNI" Property="EmployeeNI" />
+      <Output xsi:type="RenderProperty" Name="EmployeePension" Property="EmployeePension" />
+      <Output xsi:type="RenderProperty" Name="NetPay" Property="NetPay" />
+      <Order xsi:type="Ascending" Property="LastName" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** `ReportLineEmployeeSummary` carries `EmployeeKey` too, so it can drive further
+per-employee lookups (e.g. `/Employer/[EmployerKey]/Employee/[EmployeeKey]/...`) without an
+extra `Employees` group. It also has `EmployerNI` and `EmployerPension` for employer-side
+costs, and `Description`/`Value` fields inherited from the base `ReportLine` shape. As with
+the pay-run summary, always keep the `OfType="ReportLineEmployeeSummary"` filter — dropping it
+returns every report line type from the pay run mixed together in one collection.
+
+## Iterating employees with an optimised query
+
+- **Request:** List employees for an employer showing only code, first name and last name,
+  without loading the full employee object graph (address, bank account, base pay, cost
+  splits, etc).
+- **Tags:** employee, optimise, performance, render-property
+
+Add `Optimise="true"` to the entity group. The query engine then fetches only the properties
+referenced in `Output`, `Filter` and `Order` elements for that group, skipping nested child
+entities entirely.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>EmployeeList</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Employees" ItemName="Employee" Selector="/Employer/[EmployerKey]/Employees" Optimise="true">
+      <Output xsi:type="RenderProperty" Name="Code" Property="Code" />
+      <Output xsi:type="RenderProperty" Name="FirstName" Property="FirstName" />
+      <Output xsi:type="RenderProperty" Name="LastName" Property="LastName" />
+      <Order xsi:type="Ascending" Property="LastName" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** `Optimise` only applies to groups selecting a *collection* endpoint (e.g.
+`/Employer/[EmployerKey]/Employees`), not a single-entity lookup, and it is incompatible with
+`RenderEntity` — list only the specific `RenderProperty` outputs you need. On a
+plural-type/multi-type endpoint, an optimised group can only see properties defined on the
+common base type of the returned entities. Reach for this whenever a query only needs a
+handful of scalar fields from a large employee (or similarly heavy) collection.
+
+## Reporting on pay lines by pay code
+
+- **Request:** For each employee, total the value of pay lines matching a specific pay code
+  (e.g. a bonus or allowance) for a given payment date.
+- **Tags:** pay-lines, pay-code, filters, sum, variables
+
+`PayCode` is a loose linkage on the base `PayLine` type identifying the kind of payment or
+deduction (independent of the concrete pay line entity type). Filter on it directly rather
+than using `OfType`, which matches the .NET entity type instead.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>PayCodeReport</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[PaymentDate]" Value="2025-05-31" />
+    <Variable Name="[PayCode]" Value="BONUS" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Employees" ItemName="Employee" Selector="/Employer/[EmployerKey]/Employees" UniqueKeyVariable="[EmployeeKey]" Optimise="true">
+      <Output xsi:type="RenderValue" Output="Variable" Name="[PayCodeValue]" Value="0" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[FirstName]" Property="FirstName" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[LastName]" Property="LastName" />
+      <Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines" Predicate="PaymentDate = [PaymentDate]">
+        <Filter xsi:type="EqualTo" Property="PayCode" Value="[PayCode]" />
+        <Output xsi:type="Sum" Output="Variable" Name="[PayCodeValue]" Property="Value" />
+      </Group>
+      <Group>
+        <Output xsi:type="RenderValue" Name="FullName" Value="[FirstName] [LastName]" />
+        <Output xsi:type="RenderValue" Name="Value" Value="[PayCodeValue]" Format="0.00" />
+      </Group>
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** `[PayCodeValue]` is reset to `0` at the top of each employee iteration, same
+reasoning as the net pay example — otherwise an employee with no matching pay lines would
+repeat the previous employee's total. The employee group uses `Optimise="true"` since only
+name fields are needed from the employee entity itself; the nested `PayLines` group is
+unaffected by that setting. Swap the `EqualTo` filter for `WithinArray` to sum several pay
+codes at once, e.g. `Value="BONUS,COMMISSION"`.
