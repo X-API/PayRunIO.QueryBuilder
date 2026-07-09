@@ -60,6 +60,47 @@ instead when only specific fields are wanted.
 **Notes:** `<Order>` elements come after the `<Output>` elements (XSD sequence order).
 Multiple orders apply in the order declared.
 
+## Tabular employee listing
+
+- **Request:** A flat table of employees for an employer: code, first name, last name and
+  start date, one row per employee.
+- **Tags:** tabular, employee, headers-rows, render-property
+
+The tabular pattern applies just as well to a simple property listing as it does to a
+gross-to-net report (compare "Tabular gross-to-net report") — a static `Headers` group
+followed by a `Rows`/`Row` group with one `Output` per column, matched in order.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>Table</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Headers">
+      <Output xsi:type="RenderValue" Name="col" Value="Code" />
+      <Output xsi:type="RenderValue" Name="col" Value="FirstName" />
+      <Output xsi:type="RenderValue" Name="col" Value="LastName" />
+      <Output xsi:type="RenderValue" Name="col" Value="StartDate" />
+    </Group>
+    <Group GroupName="Rows" ItemName="Row" Selector="/Employer/[EmployerKey]/Employees" Optimise="true">
+      <Output xsi:type="RenderProperty" Name="col" Property="Code" />
+      <Output xsi:type="RenderProperty" Name="col" Property="FirstName" />
+      <Output xsi:type="RenderProperty" Name="col" Property="LastName" />
+      <Output xsi:type="RenderProperty" Name="col" Property="StartDate" Format="yyyy-MM-dd" />
+      <Order xsi:type="Ascending" Property="LastName" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** No aggregation is needed here, so unlike the gross-to-net tabular example there is
+no separate "capture into variables, then render in a final group" split — each row's columns
+are `RenderProperty` outputs reading straight off the in-scope employee, all sharing
+`Name="col"` the same way the `Headers` group does. `Optimise` is safe on the `Rows` group
+since only the four listed properties (plus `LastName` for ordering) are read from the
+employee entity.
+
 ## List all employees including API resource key (AKA Unique Key)
 
 - **Request:** List all employees for an employer, including each employee's API resource key (unique key) as an attribute.
@@ -679,7 +720,7 @@ handful of scalar fields from a large employee (or similarly heavy) collection.
 
 - **Request:** For each employee, total the value of pay lines matching a specific pay code
   (e.g. a bonus or allowance) for a given payment date.
-- **Tags:** pay-lines, pay-code, filters, sum, variables
+- **Tags:** pay-lines, pay-code, bonus, filters, sum, variables
 
 `PayCode` is a loose linkage on the base `PayLine` type identifying the kind of payment or
 deduction (independent of the concrete pay line entity type). Filter on it directly rather

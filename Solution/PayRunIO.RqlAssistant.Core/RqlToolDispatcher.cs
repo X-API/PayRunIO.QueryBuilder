@@ -97,6 +97,8 @@ namespace PayRunIO.RqlAssistant.Service
                 .Select(ToSummary)
                 .ToArray();
 
+            RqlToolCapture.Log("list_schemas", ("filter", filter), ("resultCount", result.Length.ToString()));
+
             return JsonSerializer.Serialize(result, SerializerOptions);
         }
 
@@ -110,6 +112,8 @@ namespace PayRunIO.RqlAssistant.Service
             }
 
             var schema = this.repository.GetSchema(typeName);
+
+            RqlToolCapture.Log("get_schema", ("typeName", typeName), ("hit", (schema != null).ToString()));
 
             return schema == null
                 ? "null"
@@ -125,6 +129,13 @@ namespace PayRunIO.RqlAssistant.Service
             var result = FilterRoutes(this.repository.GetRouteDefinitions(), filter, verb, tag)
                 .Select(ToSummary)
                 .ToArray();
+
+            RqlToolCapture.Log(
+                "list_routes",
+                ("filter", filter),
+                ("verb", verb),
+                ("tag", tag),
+                ("resultCount", result.Length.ToString()));
 
             return JsonSerializer.Serialize(result, SerializerOptions);
         }
@@ -172,6 +183,8 @@ namespace PayRunIO.RqlAssistant.Service
                 .GetRouteDefinitions()
                 .FirstOrDefault(r => string.Equals(r.ClassName, className, StringComparison.OrdinalIgnoreCase));
 
+            RqlToolCapture.Log("get_route", ("className", className), ("hit", (route != null).ToString()));
+
             return route == null
                 ? "null"
                 : JsonSerializer.Serialize(ToFull(route), SerializerOptions);
@@ -191,11 +204,18 @@ namespace PayRunIO.RqlAssistant.Service
             // Semantic lint warnings ride along with the XSD diagnostics; they never affect IsValid.
             var lintDiagnostics = this.semanticLinter.Lint(xml);
 
+            var diagnostics = result.Diagnostics.Concat(lintDiagnostics).Select(ToDto).ToArray();
+
             var dto = new ValidationResultDto
                 {
                     IsValid = result.IsValid,
-                    Diagnostics = result.Diagnostics.Concat(lintDiagnostics).Select(ToDto).ToArray()
+                    Diagnostics = diagnostics
                 };
+
+            RqlToolCapture.Log(
+                "validate_query",
+                ("isValid", result.IsValid.ToString()),
+                ("diagnosticCount", diagnostics.Length.ToString()));
 
             return JsonSerializer.Serialize(dto, SerializerOptions);
         }
@@ -205,6 +225,8 @@ namespace PayRunIO.RqlAssistant.Service
             var topics = this.grammarIndex.Topics
                 .Select(t => new { slug = t.Slug, title = t.Title })
                 .ToArray();
+
+            RqlToolCapture.Log("list_rql_topics", ("resultCount", topics.Length.ToString()));
 
             return JsonSerializer.Serialize(topics, SerializerOptions);
         }
@@ -219,6 +241,8 @@ namespace PayRunIO.RqlAssistant.Service
             }
 
             var body = this.grammarIndex.GetTopic(topic);
+
+            RqlToolCapture.Log("get_rql_syntax", ("topic", topic), ("hit", (body != null).ToString()));
 
             if (body == null)
             {
@@ -238,6 +262,8 @@ namespace PayRunIO.RqlAssistant.Service
                 .Select(e => new { slug = e.Slug, title = e.Title, request = e.Request, tags = e.Tags })
                 .ToArray();
 
+            RqlToolCapture.Log("list_examples", ("filter", filter), ("resultCount", result.Length.ToString()));
+
             return JsonSerializer.Serialize(result, SerializerOptions);
         }
 
@@ -251,6 +277,8 @@ namespace PayRunIO.RqlAssistant.Service
             }
 
             var example = this.exampleIndex.GetExample(slug);
+
+            RqlToolCapture.Log("get_example", ("slug", slug), ("hit", (example != null).ToString()));
 
             if (example == null)
             {
