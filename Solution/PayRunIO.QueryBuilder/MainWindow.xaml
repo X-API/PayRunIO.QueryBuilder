@@ -1310,6 +1310,17 @@
                             </avalonEdit:TextEditor.ContextMenu>
                         </avalonEdit:TextEditor>
                         <Button 
+                            Margin="5 5 105 5" 
+                            Padding="2" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Right"
+                            Command="helpers:CommonAiCommands.EditAiQueryCommand">
+                            <Button.ToolTip>
+                                <TextBlock>Launch AI Assistant.</TextBlock>
+                            </Button.ToolTip>
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularCognition}" Width="24" Height="24" />
+                        </Button>
+                        <Button 
                             Margin="5 5 65 5" 
                             Padding="2" 
                             VerticalAlignment="Top" 
@@ -1362,6 +1373,17 @@
                                 </ContextMenu>
                             </avalonEdit:TextEditor.ContextMenu>
                         </avalonEdit:TextEditor>
+                        <Button 
+                            Margin="5 5 105 5" 
+                            Padding="2" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Right"
+                            Command="helpers:CommonAiCommands.EditAiQueryCommand">
+                            <Button.ToolTip>
+                                <TextBlock>Launch AI Assistant.</TextBlock>
+                            </Button.ToolTip>
+                            <Image Source="{iconPacks:BoxIconsImage Kind=RegularCognition}" Width="24" Height="24" />
+                        </Button>
                         <Button 
                             Margin="5 5 65 5" 
                             Padding="2" 
