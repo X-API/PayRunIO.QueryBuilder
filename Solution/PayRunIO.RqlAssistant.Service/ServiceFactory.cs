@@ -16,9 +16,14 @@ namespace PayRunIO.RqlAssistant.Service
             }
 
             var provider = ProviderTypeParser.ParseOrDefault(configuration["OpenAI:Provider"]);
-            IChatWireFormat wireFormat = provider == ProviderType.Anthropic
-                                              ? new AnthropicWireFormat()
-                                              : new OpenAiWireFormat();
+            var reasoningEffort = configuration["OpenAI:ReasoningEffort"];
+
+            IChatWireFormat wireFormat = provider switch
+                {
+                    ProviderType.Anthropic => new AnthropicWireFormat(),
+                    ProviderType.OpenAiResponses => new OpenAiResponsesWireFormat(reasoningEffort),
+                    _ => new OpenAiWireFormat(reasoningEffort)
+                };
 
             var remoteAiService =
                 new RemoteAiService(
@@ -46,5 +51,13 @@ namespace PayRunIO.RqlAssistant.Service
         /// tool-call loop, to drive its own retry.
         /// </summary>
         public static IQueryValidator CreateValidator() => new QueryValidator();
+
+        /// <summary>
+        /// Creates a standalone <see cref="IRqlQueryReviewer"/> combining XSD validation with semantic
+        /// linting (route, property and variable checks) — the full 'validate_query' check set. Hosts
+        /// use it to gate the model's final XML reply and feed diagnostics back for correction.
+        /// </summary>
+        public static IRqlQueryReviewer CreateQueryReviewer() =>
+            new RqlQueryReviewer(new QueryValidator(), new RqlSemanticLinter(new DocumentRepository()));
     }
 }

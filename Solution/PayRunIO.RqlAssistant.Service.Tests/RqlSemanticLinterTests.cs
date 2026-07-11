@@ -174,6 +174,305 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         [Test]
+        public void Lint_VariableSegmentOverRouteLiteral_WarnsUnknownRoute()
+        {
+            // '[RowKey]/PaySchedule' must not match '/Employees/Tag/{tagId}': variables only
+            // substitute into route parameter slots, never literal segments like 'Tag'.
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\" UniqueKeyVariable=\"[RowKey]\">"
+                + "<Group Selector=\"/Employer/[EmployerKey]/Employees/[RowKey]/PaySchedule\">"
+                + "<Output xsi:type=\"RenderEntity\" /></Group>"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownRoute"));
+        }
+
+        [Test]
+        public void Lint_LiteralFailingTypedParameterConstraint_WarnsUnknownRoute()
+        {
+            // '/Employer/{id}/PayRuns' is not a real route; the literal 'PayRuns' must not be
+            // swallowed by the '/Employer/{id}/{effectiveDate:datetime(yyyy-MM-dd)}' catch-all.
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/PayRuns\"><Output xsi:type=\"RenderEntity\" /></Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownRoute"));
+        }
+
+        [Test]
+        public void Lint_LiteralSatisfyingTypedParameterConstraint_NoWarning()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees/2024-04-06\"><Output xsi:type=\"RenderEntity\" /></Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.No.Member("UnknownRoute"));
+        }
+
+        [Test]
+        public void Lint_OrderInEntityLessGroup_Warns()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Group><Order xsi:type=\"Ascending\" Property=\"LastName\" /></Group>"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("OrderInEntityLessGroup"));
+        }
+
+        [Test]
+        public void Lint_FilterInEntityLessGroup_Warns()
+        {
+            var xml = Query(
+                "<Groups><Group>"
+                + "<Filter xsi:type=\"TakeFirst\" Value=\"1\" />"
+                + "<Output xsi:type=\"RenderValue\" Name=\"X\" Value=\"1\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("FilterInEntityLessGroup"));
+        }
+
+        [Test]
+        public void Lint_OrderInGroupWithSelector_NoWarning()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderEntity\" />"
+                + "<Order xsi:type=\"Ascending\" Property=\"LastName\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.No.Member("OrderInEntityLessGroup"));
+        }
+
+        [Test]
+        public void Lint_RoutePinnedScope_UnknownPropertyOnSelectedEntity_Warns()
+        {
+            // 'PaymentDate' is not an Employee property; the Employees route pins the scope so the
+            // global property-name fallback must not mask the mistake.
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"col\" Property=\"PaymentDate\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownProperty"));
+        }
+
+        [Test]
+        public void Lint_RoutePinnedScope_ValidPropertyOnSelectedEntity_NoWarning()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"col\" Property=\"FirstName\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_TableQuery_CollectionRenderWithoutTakeFirst_Warns()
+        {
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group GroupName=\"Rows\" ItemName=\"Row\" Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayRuns\">"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"col\" Property=\"PaymentDate\" />"
+                + "<Order xsi:type=\"Descending\" Property=\"PaymentDate\" />"
+                + "</Group>"
+                + "</Group></Groups></Query>";
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("CollectionRenderInTableRow"));
+        }
+
+        [Test]
+        public void Lint_TableQuery_CollectionRenderWithTakeFirst_NoWarning()
+        {
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group GroupName=\"Rows\" ItemName=\"Row\" Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayRuns\">"
+                + "<Filter xsi:type=\"TakeFirst\" Value=\"1\" />"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"col\" Property=\"PaymentDate\" />"
+                + "<Order xsi:type=\"Descending\" Property=\"PaymentDate\" />"
+                + "</Group>"
+                + "</Group></Groups></Query>";
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.No.Member("CollectionRenderInTableRow"));
+        }
+
+        [Test]
+        public void Lint_TableQuery_CollectionCaptureToVariable_NoWarning()
+        {
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group GroupName=\"Rows\" ItemName=\"Row\" Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayRuns\">"
+                + "<Output xsi:type=\"RenderProperty\" Output=\"Variable\" Name=\"[LastPayment]\" Property=\"PaymentDate\" />"
+                + "<Order xsi:type=\"Descending\" Property=\"PaymentDate\" />"
+                + "</Group>"
+                + "</Group></Groups></Query>";
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.No.Member("CollectionRenderInTableRow"));
+        }
+
+        [Test]
+        public void Lint_TableQuery_RowsGroupDirectlyUnderGroups_NoPlacementWarning()
+        {
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Headers\"><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"Code\" /></Group>"
+                + "<Group GroupName=\"Rows\" ItemName=\"Row\" Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderProperty\" Output=\"Variable\" Name=\"[Code]\" Property=\"Code\" />"
+                + "<Group><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"[Code]\" /></Group>"
+                + "</Group>"
+                + "</Groups></Query>";
+
+            var codes = this.linter.Lint(xml).Select(d => d.Code).ToList();
+
+            Assert.That(codes, Has.No.Member("TabularRowsNested"));
+            Assert.That(codes, Has.No.Member("TabularMissingRowsGroup"));
+        }
+
+        [Test]
+        public void Lint_TableQuery_RowsGroupNestedInsideNamedGroup_WarnsTabularRowsNested()
+        {
+            // The failing shape: an outer "Schedules"/"Schedule" group wraps the Rows group, so rows
+            // render as Table > Schedules > Schedule > Rows > Row and the flat reader finds no rows.
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Headers\"><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"Code\" /></Group>"
+                + "<Group GroupName=\"Schedules\" ItemName=\"Schedule\" Selector=\"/Employer/[EmployerKey]/PaySchedules\" UniqueKeyVariable=\"[ScheduleKey]\">"
+                + "<Group GroupName=\"Rows\" ItemName=\"Row\" Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"[ScheduleKey]\" />"
+                + "</Group>"
+                + "</Group>"
+                + "</Groups></Query>";
+
+            var codes = this.linter.Lint(xml).Select(d => d.Code).ToList();
+
+            Assert.That(codes, Has.Member("TabularRowsNested"));
+        }
+
+        [Test]
+        public void Lint_TableQuery_NoRowsGroup_WarnsTabularMissingRowsGroup()
+        {
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Headers\"><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"Code\" /></Group>"
+                + "<Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"col\" Property=\"Code\" />"
+                + "</Group>"
+                + "</Groups></Query>";
+
+            var codes = this.linter.Lint(xml).Select(d => d.Code).ToList();
+
+            Assert.That(codes, Has.Member("TabularMissingRowsGroup"));
+        }
+
+        [Test]
+        public void Lint_NonTableQuery_NoRowsPlacementWarning()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\"><Output xsi:type=\"RenderEntity\" /></Group></Groups>");
+
+            var codes = this.linter.Lint(xml).Select(d => d.Code).ToList();
+
+            Assert.That(codes, Has.No.Member("TabularMissingRowsGroup"));
+            Assert.That(codes, Has.No.Member("TabularRowsNested"));
+        }
+
+        [Test]
+        public void Lint_ReportBuilderExampleQuery_FlagsAllKnownDefects()
+        {
+            // The real defective query produced by the Report Builder assistant: an invalid nested
+            // route, an Order in an entity-less trailing group, an unassigned [RowKey] variable and
+            // a per-entity render over the PayRuns collection.
+            const string Xml = """
+                <Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <RootNodeName>Table</RootNodeName>
+                  <Variables>
+                    <Variable Name="[EmployerKey]" Value="CP002" />
+                  </Variables>
+                  <Groups>
+                    <Group GroupName="Headers">
+                      <Output xsi:type="RenderValue" Name="col" Value="Code" />
+                      <Output xsi:type="RenderValue" Name="col" Value="MostRecentPaymentDate" />
+                    </Group>
+                    <Group GroupName="Rows" ItemName="Row" Selector="/Employer/[EmployerKey]/Employees" Optimise="true">
+                      <Output xsi:type="RenderProperty" Name="col" Property="Code" />
+                      <Group Selector="/Employer/[EmployerKey]/Employees/[RowKey]/PaySchedule">
+                        <Output xsi:type="RenderProperty" Name="col" Property="PaySchedule" />
+                      </Group>
+                      <Group GroupName="RecentPayments" Selector="/Employer/[EmployerKey]/Employee/[RowKey]/PayRuns" Optimise="true">
+                        <Output xsi:type="RenderProperty" Name="col" Property="PaymentDate" Format="yyyy-MM-dd" />
+                        <Order xsi:type="Descending" Property="PaymentDate" />
+                      </Group>
+                      <Group>
+                        <Order xsi:type="Ascending" Property="LastName" />
+                      </Group>
+                    </Group>
+                  </Groups>
+                </Query>
+                """;
+
+            var codes = this.linter.Lint(Xml).Select(d => d.Code).ToList();
+
+            Assert.That(codes, Has.Member("UnknownRoute"), "invalid PaySchedule route");
+            Assert.That(codes, Has.Member("OrderInEntityLessGroup"), "order in trailing empty group");
+            Assert.That(codes, Has.Member("UnassignedVariable"), "[RowKey] never assigned");
+            Assert.That(codes, Has.Member("CollectionRenderInTableRow"), "per-entity render over PayRuns collection");
+        }
+
+        [Test]
         public void Lint_MalformedXml_ReturnsNoDiagnostics()
         {
             Assert.That(this.linter.Lint("<Query><oops"), Is.Empty);

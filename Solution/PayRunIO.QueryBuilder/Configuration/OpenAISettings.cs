@@ -21,9 +21,15 @@ namespace PayRunIO.QueryBuilder.Configuration
         public string Model { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the AI provider (e.g. "OpenAI", "Anthropic").
+        /// Gets or sets the AI provider (e.g. "OpenAI", "OpenAI (Responses)", "Anthropic").
         /// </summary>
         public string Provider { get; set; } = "OpenAI";
+
+        /// <summary>
+        /// Gets or sets the reasoning effort for OpenAI reasoning models ("", "none", "minimal",
+        /// "low", "medium", "high"). Empty means the parameter is not sent and temperature applies.
+        /// </summary>
+        public string ReasoningEffort { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets or sets the temperature setting for OpenAI requests.

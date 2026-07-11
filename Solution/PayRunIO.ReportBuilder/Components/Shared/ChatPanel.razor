@@ -1,0 +1,144 @@
+@using Markdig
+@using PayRunIO.RqlAssistant.Service.Models
+@inject ReportChatService ChatService
+@inject IJSRuntime JsRuntime
+
+<div class="chat-panel">
+    <div class="pane-header">
+        <h2>AI assistant</h2>
+        <div class="pane-actions">
+            <button class="button subtle" @onclick="ResetConversation" disabled="@isBusy">New conversation</button>
+        </div>
+    </div>
+
+    <div class="chat-messages" @ref="messagesElement">
+        @if (ChatService.History.Count == 0 && !isBusy)
+        {
+            <div class="chat-empty">
+                <p>Describe the report you need and the assistant will build the RQL query for you. For example:</p>
+                <ul>
+                    <li>"A report of all employees with their tax code and NI letter."</li>
+                    <li>"Gross to net for employer ER005, May 2025 payment dates."</li>
+                    <li>"Add a pension contributions column to the current report."</li>
+                </ul>
+                <p>You can also ask for help when a report fails to run — the assistant sees the current query and the last error.</p>
+            </div>
+        }
+
+        @foreach (var message in ChatService.History.Where(m => m.Role != ParticipantType.Tool))
+        {
+            <div class="chat-message @RoleClass(message.Role)">
+                <div class="chat-role">@RoleLabel(message.Role)</div>
+                <div class="chat-text">@((MarkupString)RenderMarkdown(message.Text))</div>
+            </div>
+        }
+
+        @if (isBusy)
+        {
+            <div class="chat-message assistant busy">
+                <div class="chat-role">Assistant</div>
+                <div class="chat-text">Working on it — looking up schemas, routes and validating the query…</div>
+            </div>
+        }
+    </div>
+
+    <div class="chat-input">
+        <textarea placeholder="Describe the report you need…"
+                  @bind="draft"
+                  @bind:event="oninput"
+                  disabled="@isBusy"></textarea>
+        <button class="button primary"
+                @onclick="SendDraftAsync"
+                disabled="@(isBusy || string.IsNullOrWhiteSpace(draft))">
+            Send
+        </button>
+    </div>
+</div>
+
+@code {
+    private static readonly MarkdownPipeline MarkdownPipeline =
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().DisableHtml().Build();
+
+    private ElementReference messagesElement;
+
+    private string draft = string.Empty;
+
+    private bool isBusy;
+
+    [Parameter]
+    public string? CurrentQueryXml { get; set; }
+
+    [Parameter]
+    public string? LastError { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnQueryProduced { get; set; }
+
+    public async Task SendPromptAsync(string prompt)
+    {
+        if (this.isBusy || string.IsNullOrWhiteSpace(prompt))
+        {
+            return;
+        }
+
+        this.isBusy = true;
+        this.StateHasChanged();
+
+        try
+        {
+            var turn = await this.ChatService.AskAsync(prompt, this.CurrentQueryXml, this.LastError);
+
+            if (turn.UpdatedQueryXml != null)
+            {
+                await this.OnQueryProduced.InvokeAsync(turn.UpdatedQueryXml);
+            }
+        }
+        finally
+        {
+            this.isBusy = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await this.JsRuntime.InvokeVoidAsync("reportBuilder.scrollToBottom", this.messagesElement);
+    }
+
+    private async Task SendDraftAsync()
+    {
+        var prompt = this.draft.Trim();
+
+        if (prompt.Length == 0)
+        {
+            return;
+        }
+
+        this.draft = string.Empty;
+
+        await this.SendPromptAsync(prompt);
+    }
+
+    private void ResetConversation()
+    {
+        this.ChatService.Reset();
+    }
+
+    private static string RoleClass(ParticipantType role) =>
+        role switch
+            {
+                ParticipantType.User => "user",
+                ParticipantType.Assistant => "assistant",
+                _ => "system",
+            };
+
+    private static string RoleLabel(ParticipantType role) =>
+        role switch
+            {
+                ParticipantType.User => "You",
+                ParticipantType.Assistant => "Assistant",
+                _ => "System",
+            };
+
+    private static string RenderMarkdown(string? text) =>
+        Markdown.ToHtml(text ?? string.Empty, MarkdownPipeline);
+}

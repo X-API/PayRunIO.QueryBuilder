@@ -1,0 +1,55 @@
+@page "/"
+@attribute [Authorize]
+@inject ReportSessionStore SessionStore
+
+<PageTitle>Reports — PayRun.io Report Builder</PageTitle>
+
+<h1>Custom report builder</h1>
+<p class="lede">
+    Describe the tabular payroll report you need in plain language, refine it with the AI assistant,
+    run it against the PayRun.io API with your own credentials, and download the results.
+</p>
+
+<div class="report-cards">
+    @if (hasDraft)
+    {
+        <div class="report-card continue-report">
+            <h2>Continue where you left off</h2>
+            <p>Return to the report query you were working on — your query, parameters and assistant conversation are restored.</p>
+            <a class="button primary" href="report">Continue current query</a>
+        </div>
+    }
+    <div class="report-card new-report">
+        <h2>New blank report</h2>
+        <p>Start from scratch — tell the assistant what data you need and it will build the report query for you.</p>
+        <a class="button @(hasDraft ? "" : "primary")" href="report?new=true">Create report</a>
+    </div>
+    @foreach (var template in CommonReportCatalog.All)
+    {
+        <div class="report-card">
+            <h2>@template.Name</h2>
+            <p>@template.Description</p>
+            <a class="button" href="report?template=@template.Key">Open report</a>
+        </div>
+    }
+</div>
+
+@code {
+    private bool hasDraft;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // localStorage is only reachable after the first interactive render.
+        hasDraft = await this.SessionStore.HasDraftAsync();
+
+        if (hasDraft)
+        {
+            this.StateHasChanged();
+        }
+    }
+}

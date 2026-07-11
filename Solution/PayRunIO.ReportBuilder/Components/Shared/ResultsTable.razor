@@ -1,0 +1,32 @@
+@if (Table != null)
+{
+    <div class="results-meta">@Table.Rows.Count row@(Table.Rows.Count == 1 ? string.Empty : "s")</div>
+    <div class="results-scroll">
+        <table class="results-table">
+            <thead>
+                <tr>
+                    @foreach (var column in Table.Columns)
+                    {
+                        <th>@column</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Table.Rows)
+                {
+                    <tr>
+                        @for (var i = 0; i < Table.Columns.Count; i++)
+                        {
+                            <td>@(i < row.Count ? row[i] : string.Empty)</td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public TabularResult? Table { get; set; }
+}

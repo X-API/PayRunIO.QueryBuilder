@@ -150,7 +150,8 @@
                             new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Endpoint", this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty),
                             new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Model", this.settingsService.UserSettings.OpenAI.Model ?? string.Empty),
                             new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Temperature", this.settingsService.UserSettings.OpenAI.Temperature ?? string.Empty),
-                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Provider", this.settingsService.UserSettings.OpenAI.Provider ?? "OpenAI")
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:Provider", this.settingsService.UserSettings.OpenAI.Provider ?? "OpenAI"),
+                            new System.Collections.Generic.KeyValuePair<string, string>("OpenAI:ReasoningEffort", this.settingsService.UserSettings.OpenAI.ReasoningEffort ?? string.Empty)
                         })
                 .Build();
 

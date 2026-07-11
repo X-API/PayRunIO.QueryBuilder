@@ -21,10 +21,22 @@ namespace PayRunIO.QueryBuilder
             this.InitializeComponent();
 
             this.ProviderComboBox.Items.Add("OpenAI");
+            this.ProviderComboBox.Items.Add("OpenAI (Responses)");
             this.ProviderComboBox.Items.Add("Anthropic");
 
             var provider = this.settingsService.UserSettings.OpenAI.Provider;
-            this.ProviderComboBox.SelectedItem = (provider == "OpenAI" || provider == "Anthropic") ? provider : "OpenAI";
+            this.ProviderComboBox.SelectedItem = this.ProviderComboBox.Items.Contains(provider) ? provider : "OpenAI";
+
+            this.ReasoningEffortComboBox.Items.Add(string.Empty);
+            this.ReasoningEffortComboBox.Items.Add("none");
+            this.ReasoningEffortComboBox.Items.Add("minimal");
+            this.ReasoningEffortComboBox.Items.Add("low");
+            this.ReasoningEffortComboBox.Items.Add("medium");
+            this.ReasoningEffortComboBox.Items.Add("high");
+
+            var reasoningEffort = this.settingsService.UserSettings.OpenAI.ReasoningEffort ?? string.Empty;
+            this.ReasoningEffortComboBox.SelectedItem =
+                this.ReasoningEffortComboBox.Items.Contains(reasoningEffort) ? reasoningEffort : string.Empty;
 
             this.ApiKeyBox.Password = this.settingsService.UserSettings.OpenAI.ApiKey ?? string.Empty;
             this.EndPointBox.Text = this.settingsService.UserSettings.OpenAI.Endpoint ?? string.Empty;
@@ -50,6 +62,7 @@ namespace PayRunIO.QueryBuilder
             this.settingsService.UserSettings.OpenAI.Endpoint = endpoint;
             this.settingsService.UserSettings.OpenAI.Model = model;
             this.settingsService.UserSettings.OpenAI.Provider = provider ?? "OpenAI";
+            this.settingsService.UserSettings.OpenAI.ReasoningEffort = this.ReasoningEffortComboBox.SelectedItem as string ?? string.Empty;
             this.settingsService.SaveUserSettings();
 
             this.StatusText.Foreground = System.Windows.Media.Brushes.Green;

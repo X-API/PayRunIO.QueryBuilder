@@ -177,6 +177,71 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         /// <summary>
+        /// Test that: Given a model that rejects the temperature parameter, when asking a question,
+        /// then the request is retried without temperature and subsequent calls omit it up front.
+        /// </summary>
+        [Test]
+        public async Task GivenTemperatureUnsupportedError_WhenAskingQuestion_ThenRetriesWithoutTemperatureAndRemembers()
+        {
+            // Arrange
+            var requestBodies = new List<string>();
+            var successJson = "{\"choices\":[{\"message\":{\"content\":\"Hello!\"}}]}";
+            var temperatureErrorJson = "{\"error\":{\"message\":\"Unsupported parameter: 'temperature' is not supported with this model.\"}}";
+
+            SetupHttpResponse(request =>
+            {
+                var body = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+                requestBodies.Add(body);
+
+                return body.Contains("\"temperature\"")
+                    ? new HttpResponseMessage(HttpStatusCode.BadRequest) { Content = new StringContent(temperatureErrorJson) }
+                    : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(successJson) };
+            });
+
+            var service = ServiceFactory.CreateService(config.Object, httpClient);
+
+            // Act
+            var first = await service.AskQuestion("test question");
+            var second = await service.AskQuestion("another question");
+
+            // Assert
+            Assert.That(first, Is.EqualTo("Hello!"));
+            Assert.That(second, Is.EqualTo("Hello!"));
+
+            // Call 1: with temperature (rejected), call 2: retry without, call 3: second question strips it up front.
+            Assert.That(requestBodies, Has.Count.EqualTo(3));
+            Assert.That(requestBodies[0], Does.Contain("\"temperature\""));
+            Assert.That(requestBodies[1], Does.Not.Contain("\"temperature\""));
+            Assert.That(requestBodies[2], Does.Not.Contain("\"temperature\""));
+        }
+
+        /// <summary>
+        /// Test that: Given an unrelated error, when asking a question, then no retry happens.
+        /// </summary>
+        [Test]
+        public void GivenUnrelatedError_WhenAskingQuestion_ThenNoRetry()
+        {
+            // Arrange
+            var callCount = 0;
+            SetupHttpResponse(_ =>
+            {
+                callCount++;
+                return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                {
+                    Content = new StringContent("{\"error\":{\"message\":\"Invalid API key\"}}")
+                };
+            });
+
+            var service = ServiceFactory.CreateService(config.Object, httpClient);
+
+            Func<Task<string>> func = async () => await service.AskQuestion("test question");
+
+            // Act & Assert
+            Assert.ThrowsAsync<OpenAiException>(func);
+            Assert.That(callCount, Is.EqualTo(1));
+        }
+
+        /// <summary>
         /// Test that: Given a network error, when asking a question, then an OpenAiException is thrown
         /// </summary>
         [Test]

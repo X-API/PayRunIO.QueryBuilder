@@ -39,7 +39,7 @@ namespace PayRunIO.RqlAssistant.Service
             "The exact route class name, e.g. 'GetEmployeeRoute', 'GetAEAssessmentFromEmployeeRoute'. Case-insensitive.";
 
         public const string ValidateQuery =
-            "Validate a candidate RQL <Query> XML document against the PayRunIO QuerySchema.xsd, plus semantic lint checks: selectors that match no known API route, property names that exist on no entity schema, and variables used but never assigned. Returns structured diagnostics (line, column, code, message) so a caller can fix the query and retry. IsValid is true only when no Error-level diagnostics are produced; Warnings (including all lint findings) do not invalidate the query but usually indicate a mistake worth fixing.";
+            "Validate a candidate RQL <Query> XML document against the PayRunIO QuerySchema.xsd, plus semantic lint checks: selectors that match no known GET API route (variables like [Key] only substitute into route parameter slots), property names that do not exist on the entity type the group selects, variables used but never assigned, Order/Filter elements in entity-less groups (silently ignored), and per-entity renders over collection selectors inside Table query rows (column misalignment). Returns structured diagnostics (line, column, code, message) so a caller can fix the query and retry. IsValid is true only when no Error-level diagnostics are produced; Warnings (including all lint findings) do not invalidate the query but almost always indicate a real mistake — resolve them all before finalising.";
 
         public const string ValidateQueryXmlParam =
             "The full RQL query XML to validate, starting at the <Query> root element.";

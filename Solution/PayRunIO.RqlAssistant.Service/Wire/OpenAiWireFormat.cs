@@ -21,12 +21,24 @@ namespace PayRunIO.RqlAssistant.Service.Wire
     {
         private const string PathSuffix = "/v1/chat/completions";
 
+        private readonly string? reasoningEffort;
+
         private readonly JsonSerializerOptions jsonSerializerOptions =
             new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     WriteIndented = false
                 };
+
+        /// <param name="reasoningEffort">Optional reasoning effort. Reasoning models (GPT-5 family)
+        /// reject function tools on this endpoint unless reasoning_effort is "none" — set it to keep
+        /// using Chat Completions with such models, or switch the provider to "OpenAI (Responses)".
+        /// When set, <c>temperature</c> is omitted because reasoning-capable models reject sampling
+        /// parameters.</param>
+        public OpenAiWireFormat(string? reasoningEffort = null)
+        {
+            this.reasoningEffort = string.IsNullOrWhiteSpace(reasoningEffort) ? null : reasoningEffort.Trim();
+        }
 
         /// <inheritdoc />
         public string BuildRequestJson(
@@ -49,41 +61,32 @@ namespace PayRunIO.RqlAssistant.Service.Wire
                 messages.Add(ToWireMessage(m));
             }
 
-            object requestPayload;
+            var payload = new Dictionary<string, object?>
+                {
+                    ["model"] = model,
+                    ["messages"] = messages.ToArray()
+                };
 
-            if (tools != null && tools.Count > 0)
+            if (this.reasoningEffort != null)
             {
-                requestPayload = new
-                    {
-                        model,
-                        messages = messages.ToArray(),
-                        temperature,
-                        tools = tools.Select(ToWireTool).ToArray(),
-                        tool_choice = "auto"
-                    };
+                payload["reasoning_effort"] = this.reasoningEffort;
             }
             else
             {
-                requestPayload = new
-                    {
-                        model,
-                        messages = messages.ToArray(),
-                        temperature
-                    };
+                payload["temperature"] = temperature;
             }
 
-            return JsonSerializer.Serialize(requestPayload, this.jsonSerializerOptions);
+            if (tools != null && tools.Count > 0)
+            {
+                payload["tools"] = tools.Select(ToWireTool).ToArray();
+                payload["tool_choice"] = "auto";
+            }
+
+            return JsonSerializer.Serialize(payload, this.jsonSerializerOptions);
         }
 
         /// <inheritdoc />
-        public string BuildRequestUrl(string host)
-        {
-            var trimmedHost = host.TrimEnd('/');
-
-            return trimmedHost.EndsWith(PathSuffix, StringComparison.OrdinalIgnoreCase)
-                       ? trimmedHost
-                       : trimmedHost + PathSuffix;
-        }
+        public string BuildRequestUrl(string host) => ApiPathNormaliser.BuildUrl(host, PathSuffix);
 
         /// <inheritdoc />
         public void ApplyAuthHeaders(HttpClient httpClient, string apiKey)

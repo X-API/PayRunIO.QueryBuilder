@@ -57,6 +57,13 @@ namespace PayRunIO.RqlAssistant.Service
 
         private readonly string endpoint;
 
+        /// <summary>
+        /// Set once the provider rejects the 'temperature' parameter (reasoning models accept no
+        /// sampling parameters). Subsequent requests in this service's lifetime strip it up front
+        /// instead of paying a failed round trip every call.
+        /// </summary>
+        private bool temperatureUnsupported;
+
         public RemoteAiService(IConfiguration configuration, HttpClient httpClient, IChatWireFormat wireFormat)
         {
             this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
@@ -101,26 +108,43 @@ namespace PayRunIO.RqlAssistant.Service
 
             try
             {
-                using var content = new StringContent(promptJson, Encoding.UTF8, "application/json");
-                using var response = await this.httpClient
-                    .PostAsync(this.endpoint, content, cancellationToken)
-                    .ConfigureAwait(false);
+                var payload = this.temperatureUnsupported ? RemoveTemperature(promptJson) : promptJson;
 
-                var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                var (statusCode, responseBody, isSuccess) = await this.PostAsync(payload, cancellationToken).ConfigureAwait(false);
 
-                if (!response.IsSuccessStatusCode)
+                if (!isSuccess)
                 {
-                    var errorMessage = this.wireFormat.ExtractErrorMessage(responseBody) ?? response.ReasonPhrase ?? "Unknown error";
-                    throw new OpenAiException(errorMessage, response.StatusCode);
+                    var errorMessage = this.wireFormat.ExtractErrorMessage(responseBody) ?? "Unknown error";
+
+                    // Reasoning models reject sampling parameters, and which models do isn't knowable
+                    // from configuration — adapt on first rejection and remember for this session.
+                    if (!this.temperatureUnsupported && IsTemperatureUnsupportedError(errorMessage))
+                    {
+                        this.temperatureUnsupported = true;
+
+                        (statusCode, responseBody, isSuccess) = await this
+                            .PostAsync(RemoveTemperature(promptJson), cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (!isSuccess)
+                        {
+                            errorMessage = this.wireFormat.ExtractErrorMessage(responseBody) ?? "Unknown error";
+                            throw new OpenAiException(errorMessage, statusCode);
+                        }
+                    }
+                    else
+                    {
+                        throw new OpenAiException(errorMessage, statusCode);
+                    }
                 }
 
                 try
                 {
-                    return this.wireFormat.ParseResponse(responseBody, response.StatusCode);
+                    return this.wireFormat.ParseResponse(responseBody, statusCode);
                 }
                 catch (JsonException jex)
                 {
-                    throw new OpenAiException("Failed to parse the provider's response JSON.", response.StatusCode, jex);
+                    throw new OpenAiException("Failed to parse the provider's response JSON.", statusCode, jex);
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -131,6 +155,45 @@ namespace PayRunIO.RqlAssistant.Service
             {
                 throw new OpenAiException("HTTP request to the AI provider failed.", null, hex);
             }
+        }
+
+        private async Task<(HttpStatusCode StatusCode, string Body, bool IsSuccess)> PostAsync(
+            string payload,
+            CancellationToken cancellationToken)
+        {
+            using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            using var response = await this.httpClient
+                .PostAsync(this.endpoint, content, cancellationToken)
+                .ConfigureAwait(false);
+
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+            return (response.StatusCode, responseBody, response.IsSuccessStatusCode);
+        }
+
+        private static bool IsTemperatureUnsupportedError(string? errorMessage) =>
+            errorMessage != null
+            && errorMessage.Contains("temperature", StringComparison.OrdinalIgnoreCase)
+            && (errorMessage.Contains("not supported", StringComparison.OrdinalIgnoreCase)
+                || errorMessage.Contains("unsupported", StringComparison.OrdinalIgnoreCase));
+
+        private static string RemoveTemperature(string promptJson)
+        {
+            try
+            {
+                var root = System.Text.Json.Nodes.JsonNode.Parse(promptJson);
+
+                if (root is System.Text.Json.Nodes.JsonObject payload && payload.Remove("temperature"))
+                {
+                    return root.ToJsonString();
+                }
+            }
+            catch (JsonException)
+            {
+                // Malformed payloads surface as provider errors on the original request instead.
+            }
+
+            return promptJson;
         }
     }
 }

@@ -206,7 +206,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         [Test]
         public void AskQuestion_ExceedsIterationCap_ThrowsOpenAiException()
         {
-            // Always return a tool call — never a final reply. After MaxIterations (=10) the service must give up.
+            // Always return a tool call — never a final reply. After MaxIterations (=15) the service must give up.
             this.remote
                 .Setup(r => r.GetChatResponseAsync(It.IsAny<string>(), default))
                 .ReturnsAsync(ToolCalls(("c", "get_schema", "{}")));
@@ -222,7 +222,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             var ex = Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex!.Message, Does.Contain("maximum"));
 
-            this.remote.Verify(r => r.GetChatResponseAsync(It.IsAny<string>(), default), Times.Exactly(10));
+            this.remote.Verify(r => r.GetChatResponseAsync(It.IsAny<string>(), default), Times.Exactly(15));
         }
 
         [Test]

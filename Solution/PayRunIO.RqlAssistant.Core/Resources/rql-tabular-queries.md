@@ -128,6 +128,42 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 </Query>
 ```
  
+## Common Mistakes to Avoid
+
+- **Referencing `[RowKey]` (or any per-row key) without declaring it.**
+  A nested selector such as `/Employer/[EmployerKey]/Employee/[RowKey]/PayLines` only works when the
+  Rows group declares `UniqueKeyVariable="[RowKey]"`. Without it, substitution leaves the literal text
+  `[RowKey]` in the URL and the query fails.
+- **Ordering or filtering in an entity-less group.**
+  `<Order>` and `<Filter>` elements only act on the entities matched by *their own group's* Selector.
+  A `<Group>` with no Selector matches nothing, so an Order/Filter placed there is silently ignored.
+  To sort the report rows, put the `<Order>` inside the Rows group itself.
+- **Rendering directly from a nested collection selector.**
+  An `<Output xsi:type="RenderProperty">` inside a nested group renders once per matched entity. If the
+  selector returns a collection (e.g. `/Employer/[EmployerKey]/Employee/[RowKey]/PayRuns`), the row gains
+  one value per entity and the columns no longer line up with the headers. Instead capture the value into
+  a variable (`Output="Variable"`) and render it from the final entity-less rendering group.
+- **"Most recent X" needs order-then-take-one.**
+  To fetch the latest entity from a collection, combine a descending order with a take-first filter:
+  `<Order xsi:type="Descending" Property="PaymentDate" />` plus `<Filter xsi:type="TakeFirst" Value="1" />`.
+  An Order alone still returns every entity.
+- **Header/row column mismatch.**
+  Every `col` output in the Headers group must correspond to exactly one `col` value rendered per row,
+  in the same sequence. Whenever you add, remove or reorder a column, update both groups together.
+- **Inventing nested routes.**
+  Selectors must match a real GET API route. Child data is reached through its own route
+  (e.g. employee pay lines are at `/Employer/{employerId}/Employee/{employeeId}/PayLines`), not by
+  appending entity names to a collection URL. Verify every selector with `list_routes`.
+- **Wrapping the Rows group inside an outer named group.**
+  There must be exactly one `Rows`/`Row` group, and it must sit **directly under the root `<Groups>`**,
+  after the Headers group. Do not enclose it in an outer group with a `GroupName` or `ItemName`
+  (e.g. a `Schedules`/`Schedule` group emitting one section per schedule). That wrapper adds its own
+  container elements around every row, producing `Table > Schedules > Schedule > Rows > Row`. The
+  tabular consumers (CSV export, the report table) read rows from a single root-level `Rows` group, so
+  the nested shape yields headers with no rows and an empty export. To vary rows by an outer entity,
+  fold that entity into the `Rows` selector, or iterate it in an **un-named** `<Group>` (no `GroupName`
+  or `ItemName`) that captures the outer key into a variable which the `Rows` selector then references.
+
 This fundamental tubular output pattern is highly reusable across different reporting scenarios by adjusting: 
   
 * The filter variables for scope control.

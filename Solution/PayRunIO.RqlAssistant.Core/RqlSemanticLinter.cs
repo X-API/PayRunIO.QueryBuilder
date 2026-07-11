@@ -42,11 +42,22 @@ namespace PayRunIO.RqlAssistant.Service
                 "Variable", "VariableSum", "VariableAppend", "VariablePrepend"
             };
 
+        /// <summary>
+        /// Output types that render once per matched entity (as opposed to aggregates such as Sum,
+        /// which collapse the group to a single value). Rendering these directly from a collection
+        /// selector inside a table row produces a variable number of columns.
+        /// </summary>
+        private static readonly string[] PerEntityRenderTypes =
+            {
+                "RenderProperty", "RenderEntity", "RenderLink", "RenderTypeName",
+                "RenderUniqueKeyFromLink", "RenderIndex", "RenderTagValue"
+            };
+
         private readonly IDocumentRepository repository;
 
         private readonly object syncLock = new object();
 
-        private IReadOnlyList<string[]>? routeSegments;
+        private IReadOnlyList<(RouteDefinition Route, string[] Segments)>? getRoutes;
 
         private HashSet<string>? allPropertyNames;
 
@@ -84,6 +95,9 @@ namespace PayRunIO.RqlAssistant.Service
             this.CheckSelectors(root, diagnostics);
             this.CheckPropertyReferences(root, diagnostics);
             CheckVariableAssignments(root, diagnostics);
+            CheckEntityLessGroupOperations(root, diagnostics);
+            this.CheckTabularCollectionRenders(root, diagnostics);
+            CheckTabularRowsPlacement(root, diagnostics);
 
             return diagnostics;
         }
@@ -92,22 +106,14 @@ namespace PayRunIO.RqlAssistant.Service
         {
             foreach (var group in root.Descendants("Group"))
             {
-                var selector = group.Attribute("Selector")?.Value;
+                var segments = SelectorSegments(group);
 
-                if (string.IsNullOrWhiteSpace(selector))
+                if (segments == null)
                 {
                     continue;
                 }
 
-                // A selector that is (or starts with) a variable can resolve to anything — unknowable statically.
-                if (!selector.StartsWith('/'))
-                {
-                    continue;
-                }
-
-                var segments = selector.Trim('/').Split('/');
-
-                if (this.GetRouteSegments().Any(route => SegmentsMatch(route, segments)))
+                if (this.MatchRoutes(segments).Count > 0)
                 {
                     continue;
                 }
@@ -115,8 +121,27 @@ namespace PayRunIO.RqlAssistant.Service
                 diagnostics.Add(Warn(
                     group,
                     "UnknownRoute",
-                    $"Selector '{selector}' does not match any known GET API route. Use list_routes to find the correct URL template."));
+                    $"Selector '{group.Attribute("Selector")?.Value}' does not match any known GET API route. "
+                    + "Variables like [Key] only substitute into route parameter slots such as {employerId}. "
+                    + "Use list_routes to find the correct URL template."));
             }
+        }
+
+        /// <summary>
+        /// Returns the group's selector split into segments, or null when the selector is absent or
+        /// starts with a variable — a selector that is (or starts with) a variable can resolve to
+        /// anything and is unknowable statically.
+        /// </summary>
+        private static string[]? SelectorSegments(XElement group)
+        {
+            var selector = group.Attribute("Selector")?.Value;
+
+            if (string.IsNullOrWhiteSpace(selector) || !selector.StartsWith('/'))
+            {
+                return null;
+            }
+
+            return selector.Trim('/').Split('/');
         }
 
         private void CheckPropertyReferences(XElement root, List<ValidationDiagnostic> diagnostics)
@@ -133,6 +158,7 @@ namespace PayRunIO.RqlAssistant.Service
 
                 var scopedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var scopeKnown = ofTypeSchemas.Length > 0;
+                var scopeNames = ofTypeSchemas;
 
                 foreach (var typeName in ofTypeSchemas)
                 {
@@ -157,6 +183,26 @@ namespace PayRunIO.RqlAssistant.Service
                     }
                 }
 
+                // No OfType: try to pin the scope from the entity type the selector's route returns.
+                if (ofTypeSchemas.Length == 0)
+                {
+                    var routeEntity = this.ResolveSelectorEntity(group);
+
+                    if (routeEntity != null)
+                    {
+                        scopeKnown = true;
+                        scopeNames = new[] { routeEntity.ClassName ?? string.Empty };
+
+                        foreach (var property in routeEntity.Properties ?? Enumerable.Empty<Models.PropertyDefinition>())
+                        {
+                            if (property.Name != null)
+                            {
+                                scopedProperties.Add(property.Name);
+                            }
+                        }
+                    }
+                }
+
                 foreach (var element in group.Elements().Where(e => e.Name.LocalName is "Output" or "Filter" or "Order"))
                 {
                     var property = element.Attribute("Property")?.Value;
@@ -174,7 +220,7 @@ namespace PayRunIO.RqlAssistant.Service
                             diagnostics.Add(Warn(
                                 element,
                                 "UnknownProperty",
-                                $"Property '{property}' does not exist on {string.Join("/", ofTypeSchemas)}. Use get_schema to confirm property names."));
+                                $"Property '{property}' does not exist on {string.Join("/", scopeNames)} (the entity type selected by this group). Use get_schema to confirm property names."));
                         }
                     }
                     else if (!this.GetAllPropertyNames().Contains(property))
@@ -185,6 +231,249 @@ namespace PayRunIO.RqlAssistant.Service
                             $"Property '{property}' does not exist on any known entity schema. Use get_schema to confirm property names."));
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Resolves the entity schema a group's selector yields, or null when it cannot be pinned to
+        /// exactly one type. Single-entity routes name their type in ResponseType; collection routes
+        /// report 'LinkCollection', so the type is inferred by singularising the last literal route
+        /// segment (Employees → Employee). Ambiguity across candidate routes falls back to null.
+        /// </summary>
+        private ClassDefinition? ResolveSelectorEntity(XElement group)
+        {
+            var segments = SelectorSegments(group);
+
+            if (segments == null)
+            {
+                return null;
+            }
+
+            var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var route in this.MatchRoutes(segments))
+            {
+                var schema = this.ResolveRouteEntity(route);
+
+                if (schema?.ClassName == null)
+                {
+                    // A matched route with no resolvable entity keeps the scope unknowable.
+                    return null;
+                }
+
+                candidates.Add(schema.ClassName);
+            }
+
+            return candidates.Count == 1 ? this.repository.GetSchema(candidates.Single()) : null;
+        }
+
+        private ClassDefinition? ResolveRouteEntity(RouteDefinition route)
+        {
+            var responseType = route.ResponseType;
+
+            if (!string.IsNullOrWhiteSpace(responseType)
+                && !string.Equals(responseType, "LinkCollection", StringComparison.OrdinalIgnoreCase))
+            {
+                // Strip namespace qualifiers such as 'Models.Tag'.
+                var typeName = responseType.Contains('.') ? responseType[(responseType.LastIndexOf('.') + 1)..] : responseType;
+                var schema = this.repository.GetSchema(typeName);
+
+                if (schema != null)
+                {
+                    return schema;
+                }
+            }
+
+            var lastLiteral = route.RouteSignature?
+                .Trim('/')
+                .Split('/')
+                .LastOrDefault(s => !s.StartsWith('{') && !s.Contains('('));
+
+            if (string.IsNullOrWhiteSpace(lastLiteral))
+            {
+                return null;
+            }
+
+            foreach (var candidate in SingularCandidates(lastLiteral))
+            {
+                var schema = this.repository.GetSchema(candidate);
+
+                if (schema != null)
+                {
+                    return schema;
+                }
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> SingularCandidates(string plural)
+        {
+            yield return plural;
+
+            if (plural.EndsWith("ies", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return plural[..^3] + "y";
+            }
+
+            if (plural.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+            {
+                yield return plural[..^1];
+            }
+        }
+
+        /// <summary>
+        /// A group with no Selector and no LoopExpression matches no entities, so Order and Filter
+        /// elements inside it silently do nothing — a frequent generation mistake (e.g. attempting
+        /// to sort the report by adding an Order to a trailing empty group).
+        /// </summary>
+        private static void CheckEntityLessGroupOperations(XElement root, List<ValidationDiagnostic> diagnostics)
+        {
+            foreach (var group in root.Descendants("Group"))
+            {
+                var hasEntityScope = !string.IsNullOrWhiteSpace(group.Attribute("Selector")?.Value)
+                                     || !string.IsNullOrWhiteSpace(group.Attribute("LoopExpression")?.Value);
+
+                if (hasEntityScope)
+                {
+                    continue;
+                }
+
+                foreach (var element in group.Elements().Where(e => e.Name.LocalName is "Order" or "Filter"))
+                {
+                    var kind = element.Name.LocalName;
+
+                    diagnostics.Add(Warn(
+                        element,
+                        kind == "Order" ? "OrderInEntityLessGroup" : "FilterInEntityLessGroup",
+                        $"<{kind}> appears in a group with no Selector or LoopExpression, so it has no entities to "
+                        + $"{(kind == "Order" ? "order" : "filter")} and is silently ignored. Move it into the group "
+                        + "whose Selector loads the entities it should apply to."));
+                }
+            }
+        }
+
+        /// <summary>
+        /// In a Table query every row must render the same number of 'col' values. A nested group
+        /// whose selector returns a collection and which renders per-entity outputs directly emits
+        /// one value per matched entity, so column counts drift with the data. The value should be
+        /// captured into a variable (or the group narrowed with Order + TakeFirst) instead.
+        /// </summary>
+        private void CheckTabularCollectionRenders(XElement root, List<ValidationDiagnostic> diagnostics)
+        {
+            if (!string.Equals(root.Element("RootNodeName")?.Value, "Table", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            foreach (var group in root.Descendants("Group").Where(g => g.Parent?.Name.LocalName == "Group"))
+            {
+                var segments = SelectorSegments(group);
+
+                if (segments == null)
+                {
+                    continue;
+                }
+
+                var matchedRoutes = this.MatchRoutes(segments);
+
+                // Unknown routes are already reported; only warn when every possible match is a collection.
+                if (matchedRoutes.Count == 0
+                    || !matchedRoutes.All(r => string.Equals(r.ResponseType, "LinkCollection", StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                if (group.Elements("Filter").Any(f => string.Equals(TypeOf(f), "TakeFirst", StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                foreach (var output in group.Elements("Output"))
+                {
+                    var renderType = TypeOf(output);
+                    var target = output.Attribute("Output")?.Value;
+
+                    if (renderType == null
+                        || !PerEntityRenderTypes.Contains(renderType, StringComparer.OrdinalIgnoreCase)
+                        || (target != null && VariableOutputRenderTypes.Contains(target, StringComparer.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    diagnostics.Add(Warn(
+                        output,
+                        "CollectionRenderInTableRow",
+                        $"This {renderType} output renders once per entity matched by the collection selector "
+                        + $"'{group.Attribute("Selector")?.Value}', so the number of rendered values varies with the data and "
+                        + "table columns will not line up. Capture the value into a variable (Output=\"Variable\") and render "
+                        + "it from a final entity-less group, or narrow this group to one entity with an <Order> plus "
+                        + "<Filter xsi:type=\"TakeFirst\" Value=\"1\" />."));
+                }
+            }
+        }
+
+        /// <summary>
+        /// A Table query's downstream consumers (CSV export, the report table view) read the row data
+        /// from a single "Rows" group of "Row" items directly under the root. Wrapping that group inside
+        /// an outer named/item-named group — a common way to express "one section per schedule/employer" —
+        /// still validates and lints clean, but nests the rows under wrapper elements
+        /// (Table > Schedules > Schedule > Rows > Row) so the flat tabular reader finds no rows and the
+        /// export comes out empty. The correct shape iterates the outer entity with an un-named group that
+        /// captures keys into variables, or folds that iteration into the Rows selector itself.
+        /// </summary>
+        private static void CheckTabularRowsPlacement(XElement root, List<ValidationDiagnostic> diagnostics)
+        {
+            if (!string.Equals(root.Element("RootNodeName")?.Value, "Table", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var groups = root.Element("Groups");
+
+            if (groups == null)
+            {
+                return;
+            }
+
+            var rowsGroups = root
+                .Descendants("Group")
+                .Where(g => string.Equals(g.Attribute("GroupName")?.Value, "Rows", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (rowsGroups.Count == 0)
+            {
+                diagnostics.Add(Warn(
+                    groups,
+                    "TabularMissingRowsGroup",
+                    "This Table query has no group named 'Rows'. The tabular report reader expects a single "
+                    + "<Group GroupName=\"Rows\" ItemName=\"Row\"> directly under the root <Groups>, following the "
+                    + "static Headers group; each data row is a 'Row' item it emits. Without it the exported table "
+                    + "has headers but no rows."));
+                return;
+            }
+
+            foreach (var rows in rowsGroups)
+            {
+                if (rows.Parent == groups)
+                {
+                    continue;
+                }
+
+                var wrapper = rows.Ancestors("Group").FirstOrDefault();
+                var wrapperName = wrapper?.Attribute("GroupName")?.Value
+                                  ?? wrapper?.Attribute("ItemName")?.Value
+                                  ?? "an outer group";
+
+                diagnostics.Add(Warn(
+                    rows,
+                    "TabularRowsNested",
+                    $"The 'Rows' group is nested inside '{wrapperName}' rather than sitting directly under the root "
+                    + "<Groups>. That wrapper emits its own container elements around every row, so the flat tabular "
+                    + "reader (CSV export and table view) finds no rows and the report comes out empty. To vary rows by "
+                    + "an outer entity, iterate it in the Rows selector itself, or wrap the iteration in an un-named "
+                    + "<Group> (no GroupName/ItemName) that captures the outer key into a variable and reference it "
+                    + "from the Rows selector — keep exactly one 'Rows'/'Row' group directly under <Groups>."));
             }
         }
 
@@ -273,8 +562,10 @@ namespace PayRunIO.RqlAssistant.Service
 
         /// <summary>
         /// A selector matches a route when segment counts are equal and each pair matches:
-        /// route parameters (<c>{...}</c>) accept anything; selector variables (<c>[Var]</c>) and
-        /// wildcards (<c>*</c>) accept any route segment; literals must match case-insensitively.
+        /// route parameters (<c>{...}</c>) accept variables, wildcards and any literal satisfying
+        /// their type constraint (e.g. <c>{effectiveDate:datetime(yyyy-MM-dd)}</c> rejects the
+        /// literal 'PayRuns'); selector variables (<c>[Var]</c>) substitute key values so they only
+        /// match route parameter slots, never literals; literals must match case-insensitively.
         /// </summary>
         private static bool SegmentsMatch(string[] routeSegments, string[] selectorSegments)
         {
@@ -290,12 +581,22 @@ namespace PayRunIO.RqlAssistant.Service
 
                 if (routeSegment.StartsWith('{'))
                 {
+                    if (!RouteParameterAccepts(routeSegment, selectorSegment))
+                    {
+                        return false;
+                    }
+
                     continue;
                 }
 
-                if (selectorSegment == "*" || selectorSegment.Contains('['))
+                if (selectorSegment == "*")
                 {
                     continue;
+                }
+
+                if (selectorSegment.Contains('['))
+                {
+                    return false;
                 }
 
                 if (!string.Equals(routeSegment, selectorSegment, StringComparison.OrdinalIgnoreCase))
@@ -307,24 +608,104 @@ namespace PayRunIO.RqlAssistant.Service
             return true;
         }
 
-        private IReadOnlyList<string[]> GetRouteSegments()
+        /// <summary>
+        /// Returns the routes the selector can reach, keeping only the most literal-specific
+        /// matches: '/Employer/[Key]/Employees' matches both the Employees route and the
+        /// '/Employer/{id}/{effectiveDate}' catch-all, but two literal segment matches beat one, so
+        /// only the Employees route survives — mirroring how API routing resolves the request.
+        /// </summary>
+        private List<RouteDefinition> MatchRoutes(string[] selectorSegments)
         {
-            if (this.routeSegments != null)
+            var matches = this.GetRoutes()
+                .Where(r => SegmentsMatch(r.Segments, selectorSegments))
+                .Select(r => (r.Route, Score: LiteralMatchCount(r.Segments, selectorSegments)))
+                .ToList();
+
+            if (matches.Count == 0)
             {
-                return this.routeSegments;
+                return new List<RouteDefinition>();
+            }
+
+            var bestScore = matches.Max(m => m.Score);
+
+            return matches.Where(m => m.Score == bestScore).Select(m => m.Route).ToList();
+        }
+
+        /// <summary>
+        /// Whether a route parameter slot can accept the selector segment. Variables and wildcards
+        /// resolve at runtime so they always pass; literals must satisfy the parameter's type
+        /// constraint when one is declared (<c>:int</c>, <c>:datetime(format)</c>).
+        /// </summary>
+        private static bool RouteParameterAccepts(string routeParameter, string selectorSegment)
+        {
+            if (selectorSegment == "*" || selectorSegment.Contains('['))
+            {
+                return true;
+            }
+
+            var inner = routeParameter.Trim('{', '}');
+            var constraintIndex = inner.IndexOf(':');
+
+            if (constraintIndex < 0)
+            {
+                return true;
+            }
+
+            var constraint = inner[(constraintIndex + 1)..];
+
+            if (constraint.StartsWith("datetime", StringComparison.OrdinalIgnoreCase))
+            {
+                var openParen = constraint.IndexOf('(');
+                var format = openParen >= 0 ? constraint[(openParen + 1)..].TrimEnd(')') : null;
+
+                return format == null
+                           ? DateTime.TryParse(selectorSegment, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _)
+                           : DateTime.TryParseExact(selectorSegment, format, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
+            }
+
+            if (constraint.Equals("int", StringComparison.OrdinalIgnoreCase))
+            {
+                return int.TryParse(selectorSegment, out _);
+            }
+
+            // Unknown constraint kinds stay permissive — a false match is better than a false alarm.
+            return true;
+        }
+
+        private static int LiteralMatchCount(string[] routeSegments, string[] selectorSegments)
+        {
+            var count = 0;
+
+            for (var i = 0; i < routeSegments.Length; i++)
+            {
+                if (!routeSegments[i].StartsWith('{')
+                    && string.Equals(routeSegments[i], selectorSegments[i], StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private IReadOnlyList<(RouteDefinition Route, string[] Segments)> GetRoutes()
+        {
+            if (this.getRoutes != null)
+            {
+                return this.getRoutes;
             }
 
             lock (this.syncLock)
             {
-                this.routeSegments ??= this.repository
+                this.getRoutes ??= this.repository
                     .GetRouteDefinitions()
                     .Where(r => string.Equals(r.Verb, "GET", StringComparison.OrdinalIgnoreCase)
                                 && !string.IsNullOrWhiteSpace(r.RouteSignature))
-                    .Select(r => r.RouteSignature!.Trim('/').Split('/'))
+                    .Select(r => (r, r.RouteSignature!.Trim('/').Split('/')))
                     .ToArray();
             }
 
-            return this.routeSegments;
+            return this.getRoutes;
         }
 
         private HashSet<string> GetAllPropertyNames()

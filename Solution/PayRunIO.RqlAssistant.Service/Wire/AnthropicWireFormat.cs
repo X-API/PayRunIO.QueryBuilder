@@ -71,14 +71,7 @@ namespace PayRunIO.RqlAssistant.Service.Wire
         }
 
         /// <inheritdoc />
-        public string BuildRequestUrl(string host)
-        {
-            var trimmedHost = host.TrimEnd('/');
-
-            return trimmedHost.EndsWith(PathSuffix, StringComparison.OrdinalIgnoreCase)
-                       ? trimmedHost
-                       : trimmedHost + PathSuffix;
-        }
+        public string BuildRequestUrl(string host) => ApiPathNormaliser.BuildUrl(host, PathSuffix);
 
         /// <inheritdoc />
         public void ApplyAuthHeaders(HttpClient httpClient, string apiKey)

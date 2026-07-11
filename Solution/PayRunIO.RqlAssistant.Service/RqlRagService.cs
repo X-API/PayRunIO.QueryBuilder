@@ -23,11 +23,11 @@ namespace PayRunIO.RqlAssistant.Service
     public sealed class RqlRagService : IRqlRagService
     {
         /// <summary>
-        /// Maximum tool-call round trips per question. A complete walk (schema ×2, route, grammar ×2,
-        /// validate, fix, validate, finalise) takes ~9; 10 gives a small buffer before we surface the
-        /// loop as an error to the caller.
+        /// Maximum tool-call round trips per question. A complete walk (examples, schema ×2, route,
+        /// grammar ×2, validate, fix, validate, finalise) takes ~10; the buffer allows for extra
+        /// validate/fix cycles now that warnings must be resolved too before finalising.
         /// </summary>
-        private const int MaxIterations = 10;
+        private const int MaxIterations = 15;
 
         private readonly IRequestBuilderService requestBuilderService;
 
@@ -140,6 +140,8 @@ namespace PayRunIO.RqlAssistant.Service
                     Text = "Use the available tools to ground your reply: 'list_schemas'/'get_schema' for entity shapes, "
                            + "'list_routes'/'get_route' for API route URLs to use in Group Selector attributes, "
                            + "'list_rql_topics'/'get_rql_syntax' for grammar details, and 'validate_query' to check XML before finalising. "
+                           + "Resolve every validate_query diagnostic, warnings included, before replying — warnings almost always "
+                           + "indicate a real mistake (unknown route, unknown property, unassigned variable, misplaced Order/Filter). "
                            + "Do not invent property names, route URLs, or RQL syntax — look them up."
                 });
 

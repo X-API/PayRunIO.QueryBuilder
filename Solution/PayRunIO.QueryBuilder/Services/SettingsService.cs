@@ -129,6 +129,15 @@ namespace PayRunIO.QueryBuilder.Services
                     openAi.Provider = "Anthropic";
                 }
             }
+            else if (trimmedEndpoint.EndsWith("/v1/responses", StringComparison.OrdinalIgnoreCase))
+            {
+                openAi.Endpoint = trimmedEndpoint.Substring(0, trimmedEndpoint.Length - "/v1/responses".Length);
+
+                if (!hasProvider)
+                {
+                    openAi.Provider = "OpenAI (Responses)";
+                }
+            }
         }
     }
 }

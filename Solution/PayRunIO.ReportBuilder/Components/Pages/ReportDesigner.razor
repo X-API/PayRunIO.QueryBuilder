@@ -1,0 +1,263 @@
+@page "/report"
+@attribute [Authorize]
+@implements IDisposable
+@inject PayRunQueryService QueryService
+@inject ReportSession Session
+@inject ReportSessionStore SessionStore
+@inject NavigationManager Navigation
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Report designer — PayRun.io Report Builder</PageTitle>
+
+<div class="designer-grid">
+    <section class="chat-pane">
+        <ChatPanel @ref="chatPanel"
+                   CurrentQueryXml="@Session.QueryXml"
+                   LastError="@Session.LastErrorMessage"
+                   OnQueryProduced="ApplyQueryFromChat" />
+    </section>
+
+    <section class="query-pane">
+        <div class="pane-header">
+            <h2>Report query</h2>
+            <div class="pane-actions">
+                <button class="button primary"
+                        @onclick="RunQueryAsync"
+                        disabled="@(isRunning || string.IsNullOrWhiteSpace(Session.QueryXml))">
+                    @(isRunning ? "Running…" : "Run report")
+                </button>
+            </div>
+        </div>
+
+        @if (Session.Variables.Count > 0)
+        {
+            <div class="variables-editor">
+                <h3>Report parameters</h3>
+                <div class="variables-grid">
+                    @foreach (var variable in Session.Variables)
+                    {
+                        <label class="variable-field">
+                            <span>@TrimBrackets(variable.Name)</span>
+                            <input value="@variable.Value"
+                                   @onchange="e => UpdateVariable(variable.Name, e.Value?.ToString() ?? string.Empty)" />
+                        </label>
+                    }
+                </div>
+            </div>
+        }
+
+        <textarea class="query-editor"
+                  spellcheck="false"
+                  placeholder="The RQL report query appears here. Ask the assistant to create one, open a common report, or paste your own."
+                  @bind="QueryXml"></textarea>
+
+        @if (Session.SessionExpired)
+        {
+            <div class="banner error">
+                <div class="banner-text">@Session.LastErrorMessage</div>
+                <button class="button" @onclick="SignInAgainAsync">Sign in again</button>
+            </div>
+        }
+        else if (Session.LastErrorMessage != null)
+        {
+            <div class="banner error">
+                <div class="banner-text">@Session.LastErrorMessage</div>
+                <button class="button" @onclick="FixWithAiAsync" disabled="@isRunning">Fix with AI</button>
+            </div>
+        }
+
+        @if (Session.Result != null && Session.Result.Success)
+        {
+            <div class="results-section">
+                <div class="pane-header">
+                    <h2>Results</h2>
+                    <div class="pane-actions">
+                        @if (Session.Result.Table != null)
+                        {
+                            <button class="button" @onclick="DownloadCsvAsync">Download CSV</button>
+                        }
+                        <button class="button" @onclick="DownloadXmlAsync">Download XML</button>
+                    </div>
+                </div>
+
+                @if (Session.Result.Table != null)
+                {
+                    <ResultsTable Table="Session.Result.Table" />
+                }
+                else
+                {
+                    <p class="results-note">
+                        The response is not in the tabular report format — showing the raw XML instead.
+                        Ask the assistant to restructure the query using the tabular output pattern to get a downloadable table.
+                    </p>
+                    <pre class="raw-xml">@Session.Result.RawXml</pre>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@code {
+    private ChatPanel? chatPanel;
+
+    private bool isRunning;
+
+    private bool restored;
+
+    [SupplyParameterFromQuery(Name = "template")]
+    public string? Template { get; set; }
+
+    [SupplyParameterFromQuery(Name = "new")]
+    public bool StartNew { get; set; }
+
+    private string QueryXml
+    {
+        get => this.Session.QueryXml;
+        set => this.Session.QueryXml = value;
+    }
+
+    protected override void OnInitialized()
+    {
+        // Re-save (debounced) whenever any part of the session changes — query edits, variable edits,
+        // chat turns and run results all flow through Session.Changed.
+        this.Session.Changed += this.OnSessionChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        // "New blank report" arrives as ?new=true: discard any in-memory session and persisted draft
+        // so the user genuinely starts fresh rather than resuming their last query.
+        if (this.StartNew)
+        {
+            this.Session.Restore(new ReportSessionSnapshot());
+            await this.SessionStore.ClearAsync();
+            this.StateHasChanged();
+            return;
+        }
+
+        // JS interop (and thus localStorage) is only available after the first interactive render, so
+        // restore here rather than in OnInitialized/OnParametersSet. Skip restore when a template is
+        // requested — an explicit "Open report" should load that template, not the saved draft.
+        if (this.Session.IsEmpty && string.IsNullOrEmpty(this.Template))
+        {
+            this.restored = await this.SessionStore.TryRestoreAsync(this.Session);
+        }
+
+        // Apply a ?template= only when there is nothing already in flight, so it never clobbers a
+        // restored draft or work carried over from another page in this circuit.
+        if (!this.restored && !string.IsNullOrEmpty(this.Template) && this.Session.IsEmpty)
+        {
+            var template = CommonReportCatalog.FindByKey(this.Template);
+
+            if (template != null)
+            {
+                this.Session.QueryXml = template.QueryXml;
+            }
+        }
+
+        if (this.restored || !this.Session.IsEmpty)
+        {
+            this.StateHasChanged();
+        }
+    }
+
+    private void OnSessionChanged()
+    {
+        this.SessionStore.ScheduleSave(this.Session);
+        this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task RunQueryAsync()
+    {
+        this.isRunning = true;
+        this.Session.SetResult(null, null, sessionExpired: false);
+
+        try
+        {
+            var result = await this.QueryService.ExecuteQueryAsync(this.Session.QueryXml);
+
+            this.Session.SetResult(result, result.Success ? null : result.ErrorMessage, sessionExpired: false);
+        }
+        catch (ApiTokenUnavailableException exception)
+        {
+            this.Session.SetResult(null, exception.Message, sessionExpired: true);
+        }
+        catch (Exception exception)
+        {
+            this.Session.SetResult(null, $"Query execution failed: {exception.Message}", sessionExpired: false);
+        }
+        finally
+        {
+            this.isRunning = false;
+        }
+    }
+
+    private void ApplyQueryFromChat(string xml)
+    {
+        this.Session.QueryXml = xml.Trim();
+    }
+
+    private void UpdateVariable(string name, string value)
+    {
+        this.Session.SetVariable(name, value);
+    }
+
+    private async Task SignInAgainAsync()
+    {
+        // The sign-in redirect is a full-page navigation that tears down this circuit, so a pending
+        // debounced save would be lost. Force the draft to disk first, then navigate, so the
+        // in-progress query survives the OIDC round-trip and is restored on return.
+        await this.SessionStore.FlushSaveAsync(this.Session);
+
+        this.Navigation.NavigateTo("auth/login?returnUrl=%2Freport", forceLoad: true);
+    }
+
+    private async Task FixWithAiAsync()
+    {
+        if (this.chatPanel != null)
+        {
+            await this.chatPanel.SendPromptAsync(
+                "The report query failed to execute. Please diagnose the error, correct the query and reply with the full corrected RQL.");
+        }
+    }
+
+    private async Task DownloadCsvAsync()
+    {
+        if (this.Session.Result?.Table == null)
+        {
+            return;
+        }
+
+        await this.JsRuntime.InvokeVoidAsync(
+            "reportBuilder.downloadFile",
+            $"report-{DateTime.Now:yyyyMMdd-HHmmss}.csv",
+            "text/csv",
+            CsvExporter.ToCsv(this.Session.Result.Table));
+    }
+
+    private async Task DownloadXmlAsync()
+    {
+        if (this.Session.Result == null)
+        {
+            return;
+        }
+
+        await this.JsRuntime.InvokeVoidAsync(
+            "reportBuilder.downloadFile",
+            $"report-{DateTime.Now:yyyyMMdd-HHmmss}.xml",
+            "application/xml",
+            this.Session.Result.RawXml);
+    }
+
+    public void Dispose()
+    {
+        this.Session.Changed -= this.OnSessionChanged;
+    }
+
+    private static string TrimBrackets(string name) => name.Trim('[', ']');
+}
