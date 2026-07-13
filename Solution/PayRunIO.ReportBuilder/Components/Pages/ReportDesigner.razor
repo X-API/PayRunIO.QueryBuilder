@@ -86,11 +86,15 @@
 
         <details class="rql-expando query-expando" open="@ModeStore.IsAdvanced">
             <summary>Report query (RQL)</summary>
-            <textarea class="query-editor"
-                      spellcheck="false"
-                      placeholder="The RQL report query appears here. Ask the assistant to create one, open a common report, or paste your own."
-                      disabled="@isAssistantBusy"
-                      @bind="QueryXml"></textarea>
+            <div class="query-editor-shell">
+                <pre class="query-editor-backdrop" aria-hidden="true"></pre>
+                <textarea class="query-editor"
+                          spellcheck="false"
+                          placeholder="The RQL report query appears here. Ask the assistant to create one, open a common report, or paste your own."
+                          disabled="@isAssistantBusy"
+                          @ref="queryEditor"
+                          @bind="QueryXml"></textarea>
+            </div>
         </details>
 
         @if (!ModeStore.IsAdvanced && string.IsNullOrWhiteSpace(Session.QueryXml))
@@ -145,7 +149,7 @@
                         The response is not in the tabular report format — showing the raw XML instead.
                         Ask the assistant to restructure the query using the tabular output pattern to get a downloadable table.
                     </p>
-                    <pre class="raw-xml">@Session.Result.RawXml</pre>
+                    <pre class="raw-xml">@((MarkupString)XmlSyntaxHighlighter.ToHtml(Session.Result.RawXml))</pre>
                 }
             </div>
         }
@@ -154,6 +158,8 @@
 
 @code {
     private ChatPanel? chatPanel;
+
+    private ElementReference queryEditor;
 
     private bool isRunning;
 
@@ -193,8 +199,13 @@
     {
         if (!firstRender)
         {
+            // The highlight backdrop only repaints itself on local keystrokes; when the server pushes
+            // a new query value (assistant reply, template open, draft restore) it must be nudged.
+            await this.JsRuntime.InvokeVoidAsync("reportBuilder.refreshQueryEditor", this.queryEditor);
             return;
         }
+
+        await this.JsRuntime.InvokeVoidAsync("reportBuilder.initQueryEditor", this.queryEditor);
 
         // Restore the persisted Standard/Advanced preference before any early return below — the
         // toggle must reflect the saved mode on every entry path into this page.

@@ -86,9 +86,9 @@
         new MarkdownPipelineBuilder().UseAdvancedExtensions().DisableHtml().Build();
 
     // Matches the rendered HTML Markdig produces for a ```xml fence — the channel the assistant uses
-    // to deliver the RQL — so it can be wrapped in a collapsible section in the transcript.
+    // to deliver the RQL — so it can be syntax highlighted and wrapped in a collapsible section.
     private static readonly Regex XmlCodeBlockRegex = new(
-        "<pre><code class=\"language-xml\">[\\s\\S]*?</code></pre>",
+        "<pre><code class=\"language-xml\">(?<code>[\\s\\S]*?)</code></pre>",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     /// <summary>Number of progress lines shown under the busy spinner; older lines age out so the
@@ -250,6 +250,14 @@
 
         return XmlCodeBlockRegex.Replace(
             html,
-            match => $"<details class=\"rql-expando\"{openAttribute}><summary>RQL query</summary>{match.Value}</details>");
+            match =>
+                {
+                    // Markdig HTML-encoded the fence body; decode back to raw XML so the highlighter
+                    // can tokenise it (it re-encodes every token on output).
+                    var xml = System.Net.WebUtility.HtmlDecode(match.Groups["code"].Value);
+
+                    return $"<details class=\"rql-expando\"{openAttribute}><summary>RQL query</summary>"
+                           + $"<pre><code class=\"language-xml\">{XmlSyntaxHighlighter.ToHtml(xml)}</code></pre></details>";
+                });
     }
 }

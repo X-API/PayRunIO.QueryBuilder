@@ -8,6 +8,11 @@
     --surface-alt: #f5f7fa;
     --error-bg: #fdecea;
     --error-ink: #a4262c;
+    --xml-delim: #0000ff;
+    --xml-tag: #800000;
+    --xml-attr: #ff0000;
+    --xml-value: #0000ff;
+    --xml-comment: #008000;
 }
 
 * {
@@ -544,6 +549,55 @@ h3 {
     flex-shrink: 0;
 }
 
+/* ---- XML syntax colouring (Visual Studio style palette) ---- */
+
+.xml-delim { color: var(--xml-delim); }
+.xml-tag { color: var(--xml-tag); }
+.xml-attr { color: var(--xml-attr); }
+.xml-value { color: var(--xml-value); }
+.xml-comment { color: var(--xml-comment); }
+
+.query-editor-shell {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+}
+
+.query-editor-shell .query-editor {
+    position: relative;
+    flex: 1;
+}
+
+.query-editor-backdrop {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--surface);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    /* Metrics below must mirror .query-editor exactly so the coloured glyphs sit under the caret. */
+    padding: 0.7rem;
+    font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    white-space: pre;
+}
+
+/* Applied by site.js once the backdrop is live: the textarea keeps the caret, selection and input
+   behaviour while the backdrop supplies the visible (coloured) text. Without JS the textarea
+   simply remains plainly readable. */
+.query-editor-shell.highlight-active .query-editor {
+    background: transparent;
+    color: transparent;
+    caret-color: var(--ink);
+}
+
+.query-editor-shell.highlight-active .query-editor::placeholder {
+    color: var(--ink-soft);
+}
+
 /* ---- RQL expando (query pane and chat transcript) ---- */
 
 .rql-expando {
@@ -574,7 +628,8 @@ h3 {
     flex-direction: column;
 }
 
-.query-expando .query-editor {
+.query-expando .query-editor,
+.query-expando .query-editor-backdrop {
     border: none;
     border-radius: 0 0 6px 6px;
 }
@@ -591,9 +646,13 @@ h3 {
     letter-spacing: 0.04em;
 }
 
+/* RQL blocks are syntax coloured on a light surface (unlike generic chat code blocks, which stay
+   on the dark panel) so the shared Visual Studio style palette reads correctly. */
 .chat-text .rql-expando pre {
     margin: 0;
     border-radius: 0 0 6px 6px;
+    background: var(--surface);
+    color: var(--ink);
 }
 
 .mode-toggle {
@@ -699,13 +758,15 @@ h3 {
 }
 
 .raw-xml {
-    background: #102a43;
-    color: #d9e2ec;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
     padding: 0.8rem;
     border-radius: 6px;
     overflow: auto;
     max-height: 32rem;
     font-size: 0.78rem;
+    font-family: Consolas, "Cascadia Mono", monospace;
 }
 
 @media (max-width: 70rem) {
