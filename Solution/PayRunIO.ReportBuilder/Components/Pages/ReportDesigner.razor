@@ -48,6 +48,13 @@
                        disabled="@isAssistantBusy"
                        @onchange="e => Session.ReportName = e.Value?.ToString() ?? string.Empty" />
             </label>
+            @if (Session.SavedReportId != null)
+            {
+                <span class="save-location" title="The API resource location of this saved report definition.">
+                    <span>Report location</span>
+                    <code>/Report/@Session.SavedReportId</code>
+                </span>
+            }
             <button class="button"
                     @onclick="SaveReportAsync"
                     disabled="@(isSaving || isRunning || isAssistantBusy || string.IsNullOrWhiteSpace(Session.QueryXml) || string.IsNullOrWhiteSpace(Session.ReportName))">

@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject ReportSessionStore SessionStore
 @inject ReportDefinitionService ReportDefinitions
+@inject NavigationManager Navigation
 
 <PageTitle>Reports — PayRun.io Report Builder</PageTitle>
 
@@ -36,7 +37,14 @@
 </div>
 
 <h2 class="saved-reports-heading">Your saved reports</h2>
-@if (savedReportsError != null)
+@if (sessionExpired)
+{
+    <div class="banner error">
+        <div class="banner-text">Your saved reports could not be loaded: your session has expired — sign in again to see them.</div>
+        <button class="button" @onclick="SignInAgain">Sign in again</button>
+    </div>
+}
+else if (savedReportsError != null)
 {
     <p class="saved-reports-status error">Your saved reports could not be loaded: @savedReportsError</p>
 }
@@ -68,6 +76,8 @@ else
 @code {
     private bool hasDraft;
 
+    private bool sessionExpired;
+
     private IReadOnlyList<SavedReportSummary>? savedReports;
 
     private string? savedReportsError;
@@ -95,7 +105,7 @@ else
         }
         catch (ApiTokenUnavailableException)
         {
-            savedReportsError = "your session has expired — sign out and back in to see them.";
+            sessionExpired = true;
         }
         catch (ReportPersistenceException exception)
         {
@@ -107,5 +117,12 @@ else
         }
 
         this.StateHasChanged();
+    }
+
+    private void SignInAgain()
+    {
+        // Full-page navigation through the OIDC challenge refreshes the API token; unlike the
+        // designer there is no pending draft edit here, so nothing needs flushing first.
+        this.Navigation.NavigateTo("auth/login?returnUrl=%2F", forceLoad: true);
     }
 }
