@@ -78,7 +78,7 @@ namespace PayRunIO.ReportBuilder.Services
                 };
         }
 
-        private static string ExtractErrorMessage(string body)
+        internal static string ExtractErrorMessage(string body)
         {
             try
             {

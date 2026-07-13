@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @implements IDisposable
 @inject PayRunQueryService QueryService
+@inject ReportDefinitionService ReportDefinitions
 @inject ReportSession Session
 @inject ReportSessionStore SessionStore
 @inject DesignerModeStore ModeStore
@@ -37,6 +38,25 @@
                     @(isRunning ? "Running…" : "Run report")
                 </button>
             </div>
+        </div>
+
+        <div class="save-bar">
+            <label class="save-name">
+                <span>Report name</span>
+                <input value="@Session.ReportName"
+                       placeholder="e.g. Monthly gross to net"
+                       disabled="@isAssistantBusy"
+                       @onchange="e => Session.ReportName = e.Value?.ToString() ?? string.Empty" />
+            </label>
+            <button class="button"
+                    @onclick="SaveReportAsync"
+                    disabled="@(isSaving || isRunning || isAssistantBusy || string.IsNullOrWhiteSpace(Session.QueryXml) || string.IsNullOrWhiteSpace(Session.ReportName))">
+                @(isSaving ? "Saving…" : Session.SavedReportId == null ? "Save report" : "Save changes")
+            </button>
+            @if (saveStatus != null)
+            {
+                <span class="save-status @(saveStatusIsError ? "error" : "ok")">@saveStatus</span>
+            }
         </div>
 
         @if (Session.Variables.Count > 0)
@@ -130,12 +150,21 @@
 
     private bool isRunning;
 
+    private bool isSaving;
+
     private bool isAssistantBusy;
 
     private bool restored;
 
+    private string? saveStatus;
+
+    private bool saveStatusIsError;
+
     [SupplyParameterFromQuery(Name = "template")]
     public string? Template { get; set; }
+
+    [SupplyParameterFromQuery(Name = "saved")]
+    public string? SavedReportId { get; set; }
 
     [SupplyParameterFromQuery(Name = "new")]
     public bool StartNew { get; set; }
@@ -174,24 +203,27 @@
             return;
         }
 
-        // JS interop (and thus localStorage) is only available after the first interactive render, so
-        // restore here rather than in OnInitialized/OnParametersSet. Skip restore when a template is
-        // requested — an explicit "Open report" should load that template, not the saved draft.
-        if (this.Session.IsEmpty && string.IsNullOrEmpty(this.Template))
+        // An explicit "Open report" (?template= or ?saved=) always wins: the user picked a report on
+        // the Reports page, so it replaces both the in-memory session and the persisted draft (the
+        // session reset raises no Changed event; the query assignment that follows schedules the
+        // draft save that overwrites the old one).
+        if (!string.IsNullOrEmpty(this.Template) && CommonReportCatalog.FindByKey(this.Template) is { } template)
         {
-            this.restored = await this.SessionStore.TryRestoreAsync(this.Session);
+            this.Session.Restore(new ReportSessionSnapshot());
+            this.Session.QueryXml = template.QueryXml;
         }
-
-        // Apply a ?template= only when there is nothing already in flight, so it never clobbers a
-        // restored draft or work carried over from another page in this circuit.
-        if (!this.restored && !string.IsNullOrEmpty(this.Template) && this.Session.IsEmpty)
+        else if (!string.IsNullOrEmpty(this.SavedReportId))
         {
-            var template = CommonReportCatalog.FindByKey(this.Template);
-
-            if (template != null)
-            {
-                this.Session.QueryXml = template.QueryXml;
-            }
+            // Loads the report definition from the API with the user's own credentials, so
+            // permissions apply and the designer edits the wrapped query directly.
+            this.Session.Restore(new ReportSessionSnapshot());
+            await this.LoadSavedReportAsync(this.SavedReportId);
+        }
+        else if (this.Session.IsEmpty)
+        {
+            // JS interop (and thus localStorage) is only available after the first interactive
+            // render, so the draft restore runs here rather than in OnInitialized/OnParametersSet.
+            this.restored = await this.SessionStore.TryRestoreAsync(this.Session);
         }
 
         if (modeRestored || this.restored || !this.Session.IsEmpty)
@@ -235,6 +267,76 @@
         finally
         {
             this.isRunning = false;
+        }
+    }
+
+    private async Task LoadSavedReportAsync(string reportId)
+    {
+        try
+        {
+            var report = await this.ReportDefinitions.LoadReportAsync(reportId);
+
+            this.Session.QueryXml = report.QueryXml;
+            this.Session.SavedReportId = report.Id;
+            this.Session.ReportName = report.Name;
+        }
+        catch (ApiTokenUnavailableException exception)
+        {
+            this.Session.SetResult(null, exception.Message, sessionExpired: true);
+        }
+        catch (ReportPersistenceException exception)
+        {
+            this.Session.SetResult(null, $"The saved report could not be loaded: {exception.Message}", sessionExpired: false);
+        }
+        catch (HttpRequestException exception)
+        {
+            this.Session.SetResult(null, $"The saved report could not be loaded: {exception.Message}", sessionExpired: false);
+        }
+    }
+
+    private async Task SaveReportAsync()
+    {
+        var name = this.Session.ReportName.Trim();
+
+        if (name.Length == 0 || string.IsNullOrWhiteSpace(this.Session.QueryXml))
+        {
+            return;
+        }
+
+        this.isSaving = true;
+        this.saveStatus = null;
+
+        try
+        {
+            if (this.Session.SavedReportId == null)
+            {
+                this.Session.SavedReportId = await this.ReportDefinitions.CreateReportAsync(name, this.Session.QueryXml);
+            }
+            else
+            {
+                await this.ReportDefinitions.UpdateReportAsync(this.Session.SavedReportId, name, this.Session.QueryXml);
+            }
+
+            this.saveStatus = $"Saved to your PayRun.io account at {DateTime.Now:HH:mm}.";
+            this.saveStatusIsError = false;
+        }
+        catch (ApiTokenUnavailableException exception)
+        {
+            this.Session.SetResult(null, exception.Message, sessionExpired: true);
+        }
+        catch (ReportPersistenceException exception)
+        {
+            this.saveStatus = exception.Message;
+            this.saveStatusIsError = true;
+        }
+        catch (HttpRequestException exception)
+        {
+            this.saveStatus = exception.Message;
+            this.saveStatusIsError = true;
+        }
+        finally
+        {
+            this.isSaving = false;
         }
     }
 

@@ -38,6 +38,7 @@ namespace PayRunIO.ReportBuilder
             builder.Services.AddSingleton<IUserTokenStore, InMemoryUserTokenStore>();
             builder.Services.AddScoped<ApiTokenAccessor>();
             builder.Services.AddScoped<PayRunQueryService>();
+            builder.Services.AddScoped<ReportDefinitionService>();
             builder.Services.AddScoped<ReportSession>();
             builder.Services.AddScoped<ReportSessionStore>();
             builder.Services.AddScoped<DesignerModeStore>();

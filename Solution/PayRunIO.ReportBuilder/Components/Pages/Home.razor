@@ -1,6 +1,7 @@
 @page "/"
 @attribute [Authorize]
 @inject ReportSessionStore SessionStore
+@inject ReportDefinitionService ReportDefinitions
 
 <PageTitle>Reports — PayRun.io Report Builder</PageTitle>
 
@@ -34,8 +35,42 @@
     }
 </div>
 
+<h2 class="saved-reports-heading">Your saved reports</h2>
+@if (savedReportsError != null)
+{
+    <p class="saved-reports-status error">Your saved reports could not be loaded: @savedReportsError</p>
+}
+else if (savedReports == null)
+{
+    <p class="saved-reports-status">Loading your saved reports…</p>
+}
+else if (savedReports.Count == 0)
+{
+    <p class="saved-reports-status">
+        No saved reports yet — open the designer, build a report and press "Save report" to store it
+        in your PayRun.io account.
+    </p>
+}
+else
+{
+    <div class="report-cards">
+        @foreach (var report in savedReports)
+        {
+            <div class="report-card saved-report">
+                <h2>@report.Name</h2>
+                <p>A report saved in your PayRun.io account. Open it to run, refine or save changes.</p>
+                <a class="button" href="report?saved=@Uri.EscapeDataString(report.Id)">Open report</a>
+            </div>
+        }
+    </div>
+}
+
 @code {
     private bool hasDraft;
+
+    private IReadOnlyList<SavedReportSummary>? savedReports;
+
+    private string? savedReportsError;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -51,5 +86,26 @@
         {
             this.StateHasChanged();
         }
+
+        // Resolve the managed ("ReportBuilder-" prefixed) report definitions with the user's own API
+        // credentials, so the list reflects what this user is permitted to see.
+        try
+        {
+            savedReports = await this.ReportDefinitions.ListManagedReportsAsync();
+        }
+        catch (ApiTokenUnavailableException)
+        {
+            savedReportsError = "your session has expired — sign out and back in to see them.";
+        }
+        catch (ReportPersistenceException exception)
+        {
+            savedReportsError = exception.Message;
+        }
+        catch (HttpRequestException exception)
+        {
+            savedReportsError = exception.Message;
+        }
+
+        this.StateHasChanged();
     }
 }

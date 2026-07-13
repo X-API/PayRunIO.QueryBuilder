@@ -16,6 +16,10 @@ namespace PayRunIO.ReportBuilder.Services
 
         private string queryXml = string.Empty;
 
+        private string? savedReportId;
+
+        private string reportName = string.Empty;
+
         /// <summary>Raised after any mutation so the UI can re-render and persistence can re-save.</summary>
         public event Action? Changed;
 
@@ -31,6 +35,30 @@ namespace PayRunIO.ReportBuilder.Services
         }
 
         public IReadOnlyList<QueryVariable> Variables { get; private set; } = Array.Empty<QueryVariable>();
+
+        /// <summary>API identifier of the report definition this query was loaded from or saved to;
+        /// null while the report has never been saved. Saving a null-id session creates a new
+        /// definition, otherwise the existing one is updated.</summary>
+        public string? SavedReportId
+        {
+            get => this.savedReportId;
+            set
+            {
+                this.savedReportId = string.IsNullOrWhiteSpace(value) ? null : value;
+                this.NotifyChanged();
+            }
+        }
+
+        /// <summary>User-visible report name, without the managed "ReportBuilder-" title prefix.</summary>
+        public string ReportName
+        {
+            get => this.reportName;
+            set
+            {
+                this.reportName = value ?? string.Empty;
+                this.NotifyChanged();
+            }
+        }
 
         public QueryExecutionResult? Result { get; private set; }
 
@@ -70,6 +98,8 @@ namespace PayRunIO.ReportBuilder.Services
             new()
                 {
                     QueryXml = this.queryXml,
+                    SavedReportId = this.savedReportId,
+                    ReportName = this.reportName,
                     History = this.history
                         .Select(m => new PersistedMessage { Role = m.Role, Text = m.Text })
                         .ToList()
@@ -81,6 +111,8 @@ namespace PayRunIO.ReportBuilder.Services
         {
             this.queryXml = snapshot.QueryXml ?? string.Empty;
             this.Variables = QueryVariables.Parse(this.queryXml);
+            this.savedReportId = string.IsNullOrWhiteSpace(snapshot.SavedReportId) ? null : snapshot.SavedReportId;
+            this.reportName = snapshot.ReportName ?? string.Empty;
 
             this.history.Clear();
 
@@ -108,6 +140,10 @@ namespace PayRunIO.ReportBuilder.Services
     public sealed class ReportSessionSnapshot
     {
         public string? QueryXml { get; set; }
+
+        public string? SavedReportId { get; set; }
+
+        public string? ReportName { get; set; }
 
         public List<PersistedMessage>? History { get; set; }
     }
