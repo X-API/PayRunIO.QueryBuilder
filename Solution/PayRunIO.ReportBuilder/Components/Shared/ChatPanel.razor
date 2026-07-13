@@ -38,7 +38,21 @@
         {
             <div class="chat-message assistant busy">
                 <div class="chat-role">Assistant</div>
-                <div class="chat-text">Working on it — looking up schemas, routes and validating the query…</div>
+                <div class="chat-text">
+                    <div class="busy-status">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span>@(cancelRequested ? "Cancelling…" : "Working on your report…")</span>
+                    </div>
+                    @if (activityLog.Count > 0)
+                    {
+                        <ul class="busy-activity">
+                            @foreach (var (activity, isCurrent) in RecentActivity())
+                            {
+                                <li class="@(isCurrent ? "current" : "done")">@activity</li>
+                            }
+                        </ul>
+                    }
+                </div>
             </div>
         }
     </div>
@@ -48,11 +62,22 @@
                   @bind="draft"
                   @bind:event="oninput"
                   disabled="@isBusy"></textarea>
-        <button class="button primary"
-                @onclick="SendDraftAsync"
-                disabled="@(isBusy || string.IsNullOrWhiteSpace(draft))">
-            Send
-        </button>
+        @if (isBusy)
+        {
+            <button class="button danger"
+                    @onclick="CancelRequest"
+                    disabled="@cancelRequested">
+                @(cancelRequested ? "Cancelling…" : "Cancel")
+            </button>
+        }
+        else
+        {
+            <button class="button primary"
+                    @onclick="SendDraftAsync"
+                    disabled="@(string.IsNullOrWhiteSpace(draft))">
+                Send
+            </button>
+        }
     </div>
 </div>
 
@@ -66,11 +91,21 @@
         "<pre><code class=\"language-xml\">[\\s\\S]*?</code></pre>",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    /// <summary>Number of progress lines shown under the busy spinner; older lines age out so the
+    /// bubble stays compact while still conveying continuous movement.</summary>
+    private const int MaxVisibleActivities = 5;
+
     private ElementReference messagesElement;
 
     private string draft = string.Empty;
 
     private bool isBusy;
+
+    private bool cancelRequested;
+
+    private CancellationTokenSource? askCancellation;
+
+    private readonly List<string> activityLog = new();
 
     [Parameter]
     public string? CurrentQueryXml { get; set; }
@@ -87,6 +122,11 @@
     [Parameter]
     public EventCallback<string> OnQueryProduced { get; set; }
 
+    /// <summary>Raised when the assistant starts (true) or finishes (false) a request, so the
+    /// host page can deactivate the report editing surface while the agent is working.</summary>
+    [Parameter]
+    public EventCallback<bool> BusyChanged { get; set; }
+
     public async Task SendPromptAsync(string prompt)
     {
         if (this.isBusy || string.IsNullOrWhiteSpace(prompt))
@@ -95,11 +135,20 @@
         }
 
         this.isBusy = true;
+        this.cancelRequested = false;
+        this.activityLog.Clear();
+        this.askCancellation = new CancellationTokenSource();
         this.StateHasChanged();
+        await this.BusyChanged.InvokeAsync(true);
 
         try
         {
-            var turn = await this.ChatService.AskAsync(prompt, this.CurrentQueryXml, this.LastError);
+            var turn = await this.ChatService.AskAsync(
+                           prompt,
+                           this.CurrentQueryXml,
+                           this.LastError,
+                           this.ReportActivity,
+                           this.askCancellation.Token);
 
             if (turn.UpdatedQueryXml != null)
             {
@@ -108,7 +157,42 @@
         }
         finally
         {
+            this.askCancellation.Dispose();
+            this.askCancellation = null;
             this.isBusy = false;
+            this.cancelRequested = false;
+            await this.BusyChanged.InvokeAsync(false);
+            this.StateHasChanged();
+        }
+    }
+
+    private void CancelRequest()
+    {
+        // Flag first so the UI flips to "Cancelling…" even if the token takes a moment to unwind
+        // the in-flight HTTP call.
+        this.cancelRequested = true;
+        this.askCancellation?.Cancel();
+    }
+
+    /// <summary>Progress sink passed to the chat service. The agent loop runs on thread-pool
+    /// threads (ConfigureAwait(false)), so marshal onto the renderer's sync context.</summary>
+    private void ReportActivity(string activity) =>
+        _ = this.InvokeAsync(() =>
+            {
+                this.activityLog.Add(activity);
+                this.StateHasChanged();
+            });
+
+    /// <summary>The tail of the activity log: earlier lines render as completed, the last as current.</summary>
+    private IEnumerable<(string Activity, bool IsCurrent)> RecentActivity()
+    {
+        var visible = this.activityLog.Count > MaxVisibleActivities
+                          ? this.activityLog.GetRange(this.activityLog.Count - MaxVisibleActivities, MaxVisibleActivities)
+                          : this.activityLog;
+
+        for (var i = 0; i < visible.Count; i++)
+        {
+            yield return (visible[i], i == visible.Count - 1);
         }
     }
 

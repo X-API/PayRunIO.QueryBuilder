@@ -14,10 +14,18 @@ namespace PayRunIO.RqlAssistant.Service
     /// </summary>
     public interface IRqlRagService
     {
+        /// <param name="userQuestion">The user prompt to answer.</param>
+        /// <param name="chatHistory">Prior turns to replay as conversation context.</param>
+        /// <param name="format">The reply style directive.</param>
+        /// <param name="onActivity">Optional progress sink: receives a short human-readable line for
+        /// each model round trip and tool invocation. May be invoked from a thread-pool thread.</param>
+        /// <param name="cancellationToken">Cancels the in-flight model request and the tool loop.</param>
         Task<string> AskQuestion(
             string userQuestion,
             IEnumerable<ChatMessage>? chatHistory = null,
-            ResponseType format = ResponseType.Conversation);
+            ResponseType format = ResponseType.Conversation,
+            Action<string>? onActivity = null,
+            CancellationToken cancellationToken = default);
     }
 
     public sealed class RqlRagService : IRqlRagService
@@ -58,7 +66,9 @@ namespace PayRunIO.RqlAssistant.Service
         public async Task<string> AskQuestion(
             string userQuestion,
             IEnumerable<ChatMessage>? chatHistory = null,
-            ResponseType format = ResponseType.Conversation)
+            ResponseType format = ResponseType.Conversation,
+            Action<string>? onActivity = null,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(userQuestion))
             {
@@ -71,11 +81,15 @@ namespace PayRunIO.RqlAssistant.Service
 
             for (var iteration = 0; iteration < MaxIterations; iteration++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var requestJson = this.requestBuilderService.CreateAiRequestJson(
                     conversation.ToArray(),
                     this.toolDispatcher.Descriptors);
 
-                var response = await this.remoteAiService.GetChatResponseAsync(requestJson).ConfigureAwait(false);
+                onActivity?.Invoke(iteration == 0 ? "Consulting the AI model" : "Waiting for the AI model's next step");
+
+                var response = await this.remoteAiService.GetChatResponseAsync(requestJson, cancellationToken).ConfigureAwait(false);
 
                 if (!response.HasToolCalls)
                 {
@@ -93,6 +107,10 @@ namespace PayRunIO.RqlAssistant.Service
 
                 foreach (var call in response.ToolCalls)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    onActivity?.Invoke(DescribeToolCall(call));
+
                     conversation.Add(new ChatMessage
                         {
                             Role = ParticipantType.Tool,
@@ -104,6 +122,68 @@ namespace PayRunIO.RqlAssistant.Service
 
             throw new OpenAiException(
                 $"RQL assistant exceeded the maximum of {MaxIterations} tool-call iterations without producing a final reply.");
+        }
+
+        /// <summary>
+        /// Renders a tool call as a short human-readable progress line, e.g.
+        /// "Reading the 'Employee' schema" — shown in the UI while the agent loop runs.
+        /// </summary>
+        private static string DescribeToolCall(OpenAiToolCall call)
+        {
+            var subject = ExtractToolCallSubject(call.ArgumentsJson);
+
+            return call.FunctionName switch
+                {
+                    "list_schemas" => "Browsing the entity schemas",
+                    "get_schema" => subject == null ? "Reading an entity schema" : $"Reading the '{subject}' schema",
+                    "list_routes" => "Browsing the API routes",
+                    "get_route" => subject == null ? "Reading an API route" : $"Reading the '{subject}' route",
+                    "validate_query" => "Validating the generated query",
+                    "list_rql_topics" => "Browsing the RQL syntax topics",
+                    "get_rql_syntax" => subject == null ? "Reading RQL syntax guidance" : $"Reading RQL syntax: '{subject}'",
+                    "list_examples" => "Browsing the example queries",
+                    "get_example" => subject == null ? "Reading an example query" : $"Reading example query '{subject}'",
+                    _ => $"Running tool '{call.FunctionName}'",
+                };
+        }
+
+        /// <summary>
+        /// Pulls the most identifying string argument out of a tool call's JSON arguments, trying
+        /// the known key-argument names used across the tool surface.
+        /// </summary>
+        private static string? ExtractToolCallSubject(string? argumentsJson)
+        {
+            if (string.IsNullOrWhiteSpace(argumentsJson))
+            {
+                return null;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(argumentsJson);
+
+                if (doc.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    return null;
+                }
+
+                foreach (var key in new[] { "typeName", "className", "topic", "slug", "filter" })
+                {
+                    if (doc.RootElement.TryGetProperty(key, out var value)
+                        && value.ValueKind == JsonValueKind.String
+                        && !string.IsNullOrWhiteSpace(value.GetString()))
+                    {
+                        return value.GetString();
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                // Malformed arguments are reported to the model by DispatchToolCall; the progress
+                // line just falls back to the generic description.
+            }
+
+            return null;
         }
 
         private string DispatchToolCall(OpenAiToolCall call)

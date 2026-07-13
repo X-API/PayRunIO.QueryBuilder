@@ -43,7 +43,12 @@ namespace PayRunIO.ReportBuilder.Services
 
         public IReadOnlyList<ChatMessage> History => this.session.History;
 
-        public async Task<ChatTurnResult> AskAsync(string prompt, string? currentQueryXml, string? lastError)
+        public async Task<ChatTurnResult> AskAsync(
+            string prompt,
+            string? currentQueryXml,
+            string? lastError,
+            Action<string>? onActivity = null,
+            CancellationToken cancellationToken = default)
         {
             // Snapshot the history before adding the new question: AskQuestion appends the prompt
             // as the final user turn itself, so including it would show the model the question twice.
@@ -60,7 +65,17 @@ namespace PayRunIO.ReportBuilder.Services
                 response = await this.rqlRagService.AskQuestion(
                                effectivePrompt,
                                chatHistory: modelHistory,
-                               format: ResponseType.TabularQuery);
+                               format: ResponseType.TabularQuery,
+                               onActivity: onActivity,
+                               cancellationToken: cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                const string Cancelled = "The assistant request was cancelled — no changes were made to the report.";
+
+                this.session.AddMessage(new ChatMessage { Role = ParticipantType.System, Text = Cancelled });
+
+                return new ChatTurnResult(null, Cancelled);
             }
             catch (Exception exception)
             {
@@ -78,6 +93,8 @@ namespace PayRunIO.ReportBuilder.Services
             // history; only the final reply and a summary note are shown.
             for (var attempt = 0; xml != null && attempt < MaxCorrectionAttempts; attempt++)
             {
+                onActivity?.Invoke("Checking the query against the schema and route rules");
+
                 var diagnostics = this.queryReviewer.Review(xml);
 
                 if (diagnostics.Count == 0)
@@ -90,17 +107,22 @@ namespace PayRunIO.ReportBuilder.Services
 
                 effectivePrompt = BuildCorrectionPrompt(diagnostics);
 
+                onActivity?.Invoke(
+                    $"Fixing {diagnostics.Count} validation issue(s) — attempt {attempt + 1} of {MaxCorrectionAttempts}");
+
                 try
                 {
                     response = await this.rqlRagService.AskQuestion(
                                    effectivePrompt,
                                    chatHistory: modelHistory,
-                                   format: ResponseType.TabularQuery);
+                                   format: ResponseType.TabularQuery,
+                                   onActivity: onActivity,
+                                   cancellationToken: cancellationToken);
                 }
                 catch (Exception)
                 {
-                    // Correction is best-effort: fall back to the last reply and let the remaining
-                    // diagnostics be reported to the user below.
+                    // Correction is best-effort (including when the user cancels mid-fix): fall back
+                    // to the last reply and let the remaining diagnostics be reported to the user below.
                     response = modelHistory[^1].Text;
                     break;
                 }
