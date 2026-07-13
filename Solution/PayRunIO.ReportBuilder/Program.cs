@@ -76,14 +76,24 @@ namespace PayRunIO.ReportBuilder
                 (HttpContext httpContext, IUserTokenStore tokenStore) =>
                     {
                         var subject = FindSubject(httpContext.User);
+                        var properties = new AuthenticationProperties { RedirectUri = "/" };
 
                         if (subject != null)
                         {
+                            // KeyCloak requires an id_token_hint alongside the post logout redirect.
+                            // The identity token lives in the token store (SaveTokens is off), so carry
+                            // it into the sign out properties before the store entry is removed.
+                            if (tokenStore.TryGet(subject, out var tokens) && tokens.IdToken != null)
+                            {
+                                properties.StoreTokens(
+                                    new[] { new AuthenticationToken { Name = OpenIdConnectParameterNames.IdToken, Value = tokens.IdToken } });
+                            }
+
                             tokenStore.Remove(subject);
                         }
 
                         return Results.SignOut(
-                            new AuthenticationProperties { RedirectUri = "/" },
+                            properties,
                             new[] { CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme });
                     });
 
@@ -146,7 +156,19 @@ namespace PayRunIO.ReportBuilder
                                                 UserTokens.FromTokenResponse(
                                                     tokenResponse.AccessToken,
                                                     tokenResponse.RefreshToken,
-                                                    tokenResponse.ExpiresIn));
+                                                    tokenResponse.ExpiresIn,
+                                                    tokenResponse.IdToken));
+                                        }
+
+                                        return Task.CompletedTask;
+                                    },
+                                OnRedirectToIdentityProviderForSignOut = context =>
+                                    {
+                                        var idToken = context.Properties?.GetTokenValue(OpenIdConnectParameterNames.IdToken);
+
+                                        if (!string.IsNullOrEmpty(idToken))
+                                        {
+                                            context.ProtocolMessage.IdTokenHint = idToken;
                                         }
 
                                         return Task.CompletedTask;

@@ -60,14 +60,14 @@ namespace PayRunIO.ReportBuilder.Auth
                     "Your API access token has expired and cannot be refreshed. Please sign in again.");
             }
 
-            var refreshed = await this.RefreshAsync(tokens.RefreshToken, cancellationToken);
+            var refreshed = await this.RefreshAsync(tokens.RefreshToken, tokens.IdToken, cancellationToken);
 
             this.tokenStore.Save(subject, refreshed);
 
             return refreshed.AccessToken;
         }
 
-        private async Task<UserTokens> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
+        private async Task<UserTokens> RefreshAsync(string refreshToken, string? currentIdToken, CancellationToken cancellationToken)
         {
             var authority = this.configuration["KeyCloak:Authority"]?.TrimEnd('/')
                             ?? throw new InvalidOperationException("Missing configuration value 'KeyCloak:Authority'.");
@@ -109,7 +109,11 @@ namespace PayRunIO.ReportBuilder.Auth
                                 ? expiresProperty.GetInt32()
                                 : 300;
 
-            return new UserTokens(accessToken, newRefreshToken, DateTimeOffset.UtcNow.AddSeconds(expiresIn));
+            var idToken = root.TryGetProperty("id_token", out var idTokenProperty)
+                              ? idTokenProperty.GetString() ?? currentIdToken
+                              : currentIdToken;
+
+            return new UserTokens(accessToken, newRefreshToken, DateTimeOffset.UtcNow.AddSeconds(expiresIn), idToken);
         }
     }
 }
