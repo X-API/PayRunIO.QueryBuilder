@@ -392,6 +392,89 @@ h3 {
     flex-shrink: 0;
 }
 
+/* ---- RQL expando (query pane and chat transcript) ---- */
+
+.rql-expando {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.rql-expando > summary {
+    cursor: pointer;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    user-select: none;
+    list-style: revert;
+}
+
+.rql-expando > summary:hover {
+    color: var(--brand);
+}
+
+.rql-expando[open] > summary {
+    border-bottom: 1px solid var(--line);
+}
+
+.query-expando {
+    display: flex;
+    flex-direction: column;
+}
+
+.query-expando .query-editor {
+    border: none;
+    border-radius: 0 0 6px 6px;
+}
+
+.chat-text .rql-expando {
+    margin: 0.5rem 0;
+    background: var(--surface);
+}
+
+.chat-text .rql-expando > summary {
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.chat-text .rql-expando pre {
+    margin: 0;
+    border-radius: 0 0 6px 6px;
+}
+
+.mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.mode-toggle input {
+    accent-color: var(--brand);
+    cursor: pointer;
+}
+
+.standard-placeholder {
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 1.5rem 1rem;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.standard-placeholder.ready {
+    border-style: solid;
+    border-color: var(--brand);
+}
+
 .banner {
     display: flex;
     align-items: center;

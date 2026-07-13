@@ -40,6 +40,7 @@ namespace PayRunIO.ReportBuilder
             builder.Services.AddScoped<PayRunQueryService>();
             builder.Services.AddScoped<ReportSession>();
             builder.Services.AddScoped<ReportSessionStore>();
+            builder.Services.AddScoped<DesignerModeStore>();
             builder.Services.AddScoped<ReportChatService>();
 
             // One RAG service per circuit: creation loads the schema/grammar resources, and per-circuit

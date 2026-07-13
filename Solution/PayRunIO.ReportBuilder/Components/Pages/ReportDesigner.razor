@@ -4,6 +4,7 @@
 @inject PayRunQueryService QueryService
 @inject ReportSession Session
 @inject ReportSessionStore SessionStore
+@inject DesignerModeStore ModeStore
 @inject NavigationManager Navigation
 @inject IJSRuntime JsRuntime
 
@@ -14,13 +15,20 @@
         <ChatPanel @ref="chatPanel"
                    CurrentQueryXml="@Session.QueryXml"
                    LastError="@Session.LastErrorMessage"
+                   ShowRql="@ModeStore.IsAdvanced"
                    OnQueryProduced="ApplyQueryFromChat" />
     </section>
 
     <section class="query-pane">
         <div class="pane-header">
-            <h2>Report query</h2>
+            <h2>Report</h2>
             <div class="pane-actions">
+                <label class="mode-toggle" title="Advanced mode expands the underlying RQL query by default and lets you edit it directly.">
+                    <input type="checkbox"
+                           checked="@ModeStore.IsAdvanced"
+                           @onchange="ToggleModeAsync" />
+                    <span>Advanced mode</span>
+                </label>
                 <button class="button primary"
                         @onclick="RunQueryAsync"
                         disabled="@(isRunning || string.IsNullOrWhiteSpace(Session.QueryXml))">
@@ -46,10 +54,26 @@
             </div>
         }
 
-        <textarea class="query-editor"
-                  spellcheck="false"
-                  placeholder="The RQL report query appears here. Ask the assistant to create one, open a common report, or paste your own."
-                  @bind="QueryXml"></textarea>
+        <details class="rql-expando query-expando" open="@ModeStore.IsAdvanced">
+            <summary>Report query (RQL)</summary>
+            <textarea class="query-editor"
+                      spellcheck="false"
+                      placeholder="The RQL report query appears here. Ask the assistant to create one, open a common report, or paste your own."
+                      @bind="QueryXml"></textarea>
+        </details>
+
+        @if (!ModeStore.IsAdvanced && string.IsNullOrWhiteSpace(Session.QueryXml))
+        {
+            <div class="standard-placeholder">
+                No report yet — describe the report you need in the assistant panel and it will be built for you.
+            </div>
+        }
+        else if (!ModeStore.IsAdvanced && Session.Result == null)
+        {
+            <div class="standard-placeholder ready">
+                Your report is ready — set any parameters above, then press "Run report".
+            </div>
+        }
 
         @if (Session.SessionExpired)
         {
@@ -130,6 +154,10 @@
             return;
         }
 
+        // Restore the persisted Standard/Advanced preference before any early return below — the
+        // toggle must reflect the saved mode on every entry path into this page.
+        var modeRestored = await this.ModeStore.TryRestoreAsync();
+
         // "New blank report" arrives as ?new=true: discard any in-memory session and persisted draft
         // so the user genuinely starts fresh rather than resuming their last query.
         if (this.StartNew)
@@ -160,10 +188,17 @@
             }
         }
 
-        if (this.restored || !this.Session.IsEmpty)
+        if (modeRestored || this.restored || !this.Session.IsEmpty)
         {
             this.StateHasChanged();
         }
+    }
+
+    private async Task ToggleModeAsync(ChangeEventArgs e)
+    {
+        var advanced = e.Value is bool isChecked && isChecked;
+
+        await this.ModeStore.SetModeAsync(advanced ? DesignerMode.Advanced : DesignerMode.Standard);
     }
 
     private void OnSessionChanged()

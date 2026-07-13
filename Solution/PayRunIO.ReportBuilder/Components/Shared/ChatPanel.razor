@@ -1,3 +1,4 @@
+@using System.Text.RegularExpressions
 @using Markdig
 @using PayRunIO.RqlAssistant.Service.Models
 @inject ReportChatService ChatService
@@ -15,7 +16,7 @@
         @if (ChatService.History.Count == 0 && !isBusy)
         {
             <div class="chat-empty">
-                <p>Describe the report you need and the assistant will build the RQL query for you. For example:</p>
+                <p>Describe the report you need and the assistant will build @(ShowRql ? "the RQL query" : "it") for you. For example:</p>
                 <ul>
                     <li>"A report of all employees with their tax code and NI letter."</li>
                     <li>"Gross to net for employer ER005, May 2025 payment dates."</li>
@@ -29,7 +30,7 @@
         {
             <div class="chat-message @RoleClass(message.Role)">
                 <div class="chat-role">@RoleLabel(message.Role)</div>
-                <div class="chat-text">@((MarkupString)RenderMarkdown(message.Text))</div>
+                <div class="chat-text">@((MarkupString)this.RenderMessage(message.Text))</div>
             </div>
         }
 
@@ -59,6 +60,12 @@
     private static readonly MarkdownPipeline MarkdownPipeline =
         new MarkdownPipelineBuilder().UseAdvancedExtensions().DisableHtml().Build();
 
+    // Matches the rendered HTML Markdig produces for a ```xml fence — the channel the assistant uses
+    // to deliver the RQL — so it can be wrapped in a collapsible section in the transcript.
+    private static readonly Regex XmlCodeBlockRegex = new(
+        "<pre><code class=\"language-xml\">[\\s\\S]*?</code></pre>",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private ElementReference messagesElement;
 
     private string draft = string.Empty;
@@ -70,6 +77,12 @@
 
     [Parameter]
     public string? LastError { get; set; }
+
+    /// <summary>When false (standard mode), fenced xml blocks in the transcript are wrapped in a
+    /// collapsed, expandable section rather than shown open — the RQL stays reachable, just tucked
+    /// away by default.</summary>
+    [Parameter]
+    public bool ShowRql { get; set; } = true;
 
     [Parameter]
     public EventCallback<string> OnQueryProduced { get; set; }
@@ -139,6 +152,20 @@
                 _ => "System",
             };
 
-    private static string RenderMarkdown(string? text) =>
-        Markdown.ToHtml(text ?? string.Empty, MarkdownPipeline);
+    private string RenderMessage(string? text)
+    {
+        var effective = text ?? string.Empty;
+
+        // The markdown pipeline has DisableHtml(), so raw <details> markup can't be spliced into the
+        // markdown source — it would be escaped, not passed through. Instead, render the whole
+        // message first (fences become ordinary <pre><code class="language-xml"> blocks), then wrap
+        // just those code blocks in a collapsible <details> after the fact.
+        var html = Markdown.ToHtml(effective, MarkdownPipeline);
+
+        var openAttribute = this.ShowRql ? " open" : string.Empty;
+
+        return XmlCodeBlockRegex.Replace(
+            html,
+            match => $"<details class=\"rql-expando\"{openAttribute}><summary>RQL query</summary>{match.Value}</details>");
+    }
 }

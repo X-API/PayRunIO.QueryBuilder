@@ -15,6 +15,12 @@ credentials, and download the results.
   and validates queries before replying. The last ```xml block in each reply becomes the current
   report query. Each turn also passes the current query and last execution error as context, so
   "fix it" style prompts work.
+* **Standard / advanced mode** — the designer runs in two modes, toggled from the report pane
+  header. Standard mode (the default) keeps the RQL behind the scenes: the assistant still builds
+  and amends the query, but the user only sees the conversation, parameters and results (fenced
+  xml blocks in assistant replies are replaced with a short note). Advanced mode shows the raw RQL
+  in an editable query pane. The last selection is persisted per browser (localStorage,
+  `payrun.reportbuilder.mode.v1`) and restored on the next visit.
 * **Common reports** — `CommonReportCatalog` seeds the report list; add templates there to grow it.
 * **Execute & download** — queries are POSTed to `/Query` on the configured API endpoint with the
   user's token. Responses following the tabular output pattern (`Table`/`Headers`/`Rows`) render
