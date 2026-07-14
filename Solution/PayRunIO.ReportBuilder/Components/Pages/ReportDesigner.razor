@@ -114,7 +114,8 @@
         {
             <div class="banner error">
                 <div class="banner-text">@Session.LastErrorMessage</div>
-                <button class="button" @onclick="SignInAgainAsync">Sign in again</button>
+                <button class="button" @onclick="() => SignInAgainAsync(federated: false)">Sign in again</button>
+                <button class="button" @onclick="() => SignInAgainAsync(federated: true)">Sign in with Microsoft</button>
             </div>
         }
         else if (Session.LastErrorMessage != null)
@@ -373,14 +374,16 @@
         this.Session.SetVariable(name, value);
     }
 
-    private async Task SignInAgainAsync()
+    private async Task SignInAgainAsync(bool federated)
     {
         // The sign-in redirect is a full-page navigation that tears down this circuit, so a pending
         // debounced save would be lost. Force the draft to disk first, then navigate, so the
         // in-progress query survives the OIDC round-trip and is restored on return.
         await this.SessionStore.FlushSaveAsync(this.Session);
 
-        this.Navigation.NavigateTo("auth/login?returnUrl=%2Freport", forceLoad: true);
+        var federatedQuery = federated ? "&federated=true" : string.Empty;
+
+        this.Navigation.NavigateTo($"auth/login?returnUrl=%2Freport{federatedQuery}", forceLoad: true);
     }
 
     private async Task FixWithAiAsync()

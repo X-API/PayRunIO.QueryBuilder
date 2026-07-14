@@ -1,0 +1,13 @@
+@page "/signin"
+@attribute [AllowAnonymous]
+
+<PageTitle>Sign in — PayRun.io Report Builder</PageTitle>
+
+@* Unauthenticated requests to [Authorize] pages land here via the cookie scheme's LoginPath,
+   which supplies the original destination in the ReturnUrl query parameter. *@
+<SignInChooser ReturnUrl="@ReturnUrl" />
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+}

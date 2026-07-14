@@ -14,6 +14,12 @@ namespace PayRunIO.ReportBuilder
 
     public class Program
     {
+        /// <summary>
+        /// KeyCloak identity provider hint parameter. When present on the authorization request,
+        /// KeyCloak skips its own login form and forwards straight to the named federated provider.
+        /// </summary>
+        private const string IdpHintParameter = "kc_idp_hint";
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -67,8 +73,22 @@ namespace PayRunIO.ReportBuilder
 
             app.MapGet(
                     "/auth/login",
-                    (string? returnUrl) => Results.Challenge(
-                        new AuthenticationProperties { RedirectUri = string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl }))
+                    (string? returnUrl, bool? federated, IConfiguration configuration) =>
+                        {
+                            var properties = new AuthenticationProperties { RedirectUri = string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl };
+
+                            if (federated == true)
+                            {
+                                var idpHint = configuration["KeyCloak:FederatedIdpHint"];
+
+                                if (!string.IsNullOrEmpty(idpHint))
+                                {
+                                    properties.Items[IdpHintParameter] = idpHint;
+                                }
+                            }
+
+                            return Results.Challenge(properties, new[] { OpenIdConnectDefaults.AuthenticationScheme });
+                        })
                 .AllowAnonymous();
 
             app.MapGet(
@@ -110,12 +130,19 @@ namespace PayRunIO.ReportBuilder
                 .AddAuthentication(options =>
                     {
                         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+
+                        // The cookie scheme owns the default challenge: [Authorize] pages are enforced
+                        // at the endpoint level on the initial request, and the cookie challenge sends
+                        // the user to the local sign in chooser rather than straight to KeyCloak. The
+                        // /auth/login endpoint challenges the OIDC scheme explicitly once the user has
+                        // picked direct or federated sign in.
+                        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                     })
                 .AddCookie(options =>
                     {
                         options.ExpireTimeSpan = TimeSpan.FromHours(12);
                         options.SlidingExpiration = true;
+                        options.LoginPath = "/signin";
                     })
                 .AddOpenIdConnect(options =>
                     {
@@ -142,6 +169,19 @@ namespace PayRunIO.ReportBuilder
 
                         options.Events = new OpenIdConnectEvents
                             {
+                                OnRedirectToIdentityProvider = context =>
+                                    {
+                                        // The login endpoint stashes the federated provider hint in the
+                                        // challenge properties; forward it to KeyCloak so the user lands
+                                        // directly on the Azure AD sign in instead of the KeyCloak form.
+                                        if (context.Properties.Items.TryGetValue(IdpHintParameter, out var idpHint)
+                                            && !string.IsNullOrEmpty(idpHint))
+                                        {
+                                            context.ProtocolMessage.SetParameter(IdpHintParameter, idpHint);
+                                        }
+
+                                        return Task.CompletedTask;
+                                    },
                                 OnTokenValidated = context =>
                                     {
                                         var subject = FindSubject(context.Principal);

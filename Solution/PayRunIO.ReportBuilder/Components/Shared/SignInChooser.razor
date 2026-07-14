@@ -1,0 +1,23 @@
+@inject NavigationManager Navigation
+
+<div class="signin-chooser">
+    <h1>Sign in</h1>
+    <p class="lede">Choose how you would like to sign in to the report builder.</p>
+    <div class="signin-options">
+        <button class="button primary" @onclick="() => SignIn(federated: false)">External customer sign in</button>
+        <button class="button" @onclick="() => SignIn(federated: true)">PayEscape employee sign in</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+
+    private void SignIn(bool federated)
+    {
+        var returnUrl = Uri.EscapeDataString(string.IsNullOrEmpty(this.ReturnUrl) ? "/" : this.ReturnUrl);
+        var federatedQuery = federated ? "&federated=true" : string.Empty;
+
+        this.Navigation.NavigateTo($"auth/login?returnUrl={returnUrl}{federatedQuery}", forceLoad: true);
+    }
+}

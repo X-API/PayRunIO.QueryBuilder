@@ -41,7 +41,8 @@
 {
     <div class="banner error">
         <div class="banner-text">Your saved reports could not be loaded: your session has expired — sign in again to see them.</div>
-        <button class="button" @onclick="SignInAgain">Sign in again</button>
+        <button class="button" @onclick="() => SignInAgain(federated: false)">Sign in again</button>
+        <button class="button" @onclick="() => SignInAgain(federated: true)">Sign in with Microsoft</button>
     </div>
 }
 else if (savedReportsError != null)
@@ -119,10 +120,12 @@ else
         this.StateHasChanged();
     }
 
-    private void SignInAgain()
+    private void SignInAgain(bool federated)
     {
         // Full-page navigation through the OIDC challenge refreshes the API token; unlike the
         // designer there is no pending draft edit here, so nothing needs flushing first.
-        this.Navigation.NavigateTo("auth/login?returnUrl=%2F", forceLoad: true);
+        var federatedQuery = federated ? "&federated=true" : string.Empty;
+
+        this.Navigation.NavigateTo($"auth/login?returnUrl=%2F{federatedQuery}", forceLoad: true);
     }
 }
