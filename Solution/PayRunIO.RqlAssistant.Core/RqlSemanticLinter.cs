@@ -28,6 +28,13 @@ namespace PayRunIO.RqlAssistant.Service
         private static readonly Regex VariableToken = new Regex(@"\[[A-Za-z0-9_]+\]", RegexOptions.Compiled);
 
         /// <summary>
+        /// Matches OFTYPE equality comparisons in a group's Predicate attribute, e.g.
+        /// <c>OFTYPE = 'PayLineHoliday'</c>. Like an OfType filter, these pin the entity type(s)
+        /// the group's property references should be checked against.
+        /// </summary>
+        private static readonly Regex PredicateOfType = new Regex(@"OFTYPE\s*=\s*'(?<type>[^']+)'", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <summary>
         /// Attributes whose values undergo variable substitution and should be scanned for uses.
         /// Name-like attributes (Name, DisplayName, GroupName, UniqueKeyVariable) are targets, not uses.
         /// </summary>
@@ -148,12 +155,17 @@ namespace PayRunIO.RqlAssistant.Service
         {
             foreach (var group in root.Descendants("Group"))
             {
-                // OfType filters pin the entity type(s) in scope; property checks become exact.
+                // OfType filters and OFTYPE predicate comparisons pin the entity type(s) in
+                // scope; property checks become exact.
                 var ofTypeSchemas = group.Elements("Filter")
                     .Where(f => string.Equals(TypeOf(f), "OfType", StringComparison.OrdinalIgnoreCase))
                     .Select(f => f.Attribute("Value")?.Value)
+                    .Concat(PredicateOfType
+                        .Matches(group.Attribute("Predicate")?.Value ?? string.Empty)
+                        .Select(m => m.Groups["type"].Value))
                     .Where(v => !string.IsNullOrWhiteSpace(v))
                     .Cast<string>()
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
 
                 var scopedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -169,7 +181,7 @@ namespace PayRunIO.RqlAssistant.Service
                         diagnostics.Add(Warn(
                             group,
                             "UnknownEntityType",
-                            $"OfType filter names '{typeName}' which matches no known entity schema. Use list_schemas to find the correct type name."));
+                            $"The OfType filter or OFTYPE predicate names '{typeName}' which matches no known entity schema. Use list_schemas to find the correct type name."));
                         scopeKnown = false;
                         continue;
                     }
@@ -514,10 +526,15 @@ namespace PayRunIO.RqlAssistant.Service
                 if (renderTarget != null
                     && VariableOutputRenderTypes.Contains(renderTarget, StringComparer.OrdinalIgnoreCase))
                 {
-                    var name = output.Attribute("Name")?.Value;
-                    if (!string.IsNullOrWhiteSpace(name))
+                    // Most render types name their target in 'Name'; date renders such as
+                    // RenderTaxPeriodDate use 'DisplayName' instead.
+                    foreach (var targetAttribute in new[] { "Name", "DisplayName" })
                     {
-                        assigned.Add(name);
+                        var name = output.Attribute(targetAttribute)?.Value;
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            assigned.Add(name);
+                        }
                     }
 
                     // RenderLink variable output writes to the reserved [Link] variable.

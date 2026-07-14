@@ -758,3 +758,108 @@ repeat the previous employee's total. The employee group uses `Optimise="true"` 
 name fields are needed from the employee entity itself; the nested `PayLines` group is
 unaffected by that setting. Swap the `EqualTo` filter for `WithinArray` to sum several pay
 codes at once, e.g. `Value="BONUS,COMMISSION"`.
+
+## Holiday scheme accrual per employee
+
+- **Request:** A table of holiday accrual for all employees in a tax year: scheme name,
+  employee, annual entitlement, units accrued, units reclaimed and remaining balance.
+- **Tags:** tabular, holiday-scheme, holiday-accrual, pay-instructions, link-selector, active-within, take-first, sum, expression-calculator, render-tax-period-date
+
+Holiday data spans three related entities, and no single endpoint joins them:
+
+1. An employee is linked to a scheme by a `HolidaySchemePayInstruction` in their
+   `PayInstructions` collection. Per-employee overrides (`AnnualEntitlementDays`,
+   `AccrualType`, join/exit dates) live here, as does `HolidayScheme` — a `Link` to the
+   scheme entity.
+2. The `HolidayScheme` entity carries the scheme-level settings (`SchemeName`,
+   `AnnualEntitlementWeeks`, carry-over rules).
+3. Accrual and usage are recorded as `PayLineHoliday` pay lines: `UnitsAccrued` and
+   `UnitsDepleted` per pay run. The balance is derived, not stored — sum both and subtract.
+
+The query walks that chain per employee: find the active holiday scheme pay instruction,
+follow its link to the scheme, sum the holiday pay lines, then render the row.
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>Table</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[TaxYear]" Value="2025" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Headers">
+      <Output xsi:type="RenderValue" Name="col" Value="HolidayScheme" />
+      <Output xsi:type="RenderValue" Name="col" Value="EmployeeCode" />
+      <Output xsi:type="RenderValue" Name="col" Value="FirstName" />
+      <Output xsi:type="RenderValue" Name="col" Value="LastName" />
+      <Output xsi:type="RenderValue" Name="col" Value="AnnualEntitlement" />
+      <Output xsi:type="RenderValue" Name="col" Value="UnitOfMeasure" />
+      <Output xsi:type="RenderValue" Name="col" Value="Accrued" />
+      <Output xsi:type="RenderValue" Name="col" Value="Reclaimed" />
+      <Output xsi:type="RenderValue" Name="col" Value="Balance" />
+      <Output xsi:type="RenderTaxPeriodDate" Output="Variable" DisplayName="[TaxYearStart]" TaxYear="[TaxYear]" TaxPeriod="1" PayFrequency="Monthly" Format="yyyy-MM-dd" />
+      <Output xsi:type="RenderTaxPeriodDate" Output="Variable" DisplayName="[TaxYearEnd]" TaxYear="[TaxYear]" TaxPeriod="12" PayFrequency="Monthly" Format="yyyy-MM-dd" EndDate="true" />
+    </Group>
+    <Group GroupName="Rows" ItemName="Row" Selector="/Employer/[EmployerKey]/Employees" Optimise="true" UniqueKeyVariable="[EmployeeKey]">
+      <Output xsi:type="RenderValue" Output="Variable" Name="[HolidayScheme]" Value="" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[EmployeeCode]" Property="Code" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[FirstName]" Property="FirstName" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[LastName]" Property="LastName" />
+      <Output xsi:type="RenderValue" Output="Variable" Name="[AnnualEntitlement]" Value="" />
+      <Output xsi:type="RenderValue" Output="Variable" Name="[UnitOfMeasure]" Value="" />
+      <Output xsi:type="RenderValue" Output="Variable" Name="[Accrued]" Value="0.00" />
+      <Output xsi:type="RenderValue" Output="Variable" Name="[Reclaimed]" Value="0.00" />
+      <Output xsi:type="RenderValue" Output="Variable" Name="[HolidaySchemeLink]" Value="" />
+      <Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayInstructions" Predicate="OFTYPE = 'HolidaySchemePayInstruction'">
+        <Filter xsi:type="ActiveWithin" Value="[TaxYearStart],[TaxYearEnd]" />
+        <Filter xsi:type="TakeFirst" Value="1" />
+        <Output xsi:type="RenderProperty" Output="Variable" Name="[HolidaySchemeLink]" Property="HolidayScheme.Href" />
+        <Output xsi:type="RenderProperty" Output="Variable" Name="[UnitOfMeasure]" Property="AccrualType" />
+        <Order xsi:type="Descending" Property="StartDate" />
+      </Group>
+      <Group Selector="[HolidaySchemeLink]">
+        <Condition xsi:type="WhenNot" ValueA="[HolidaySchemeLink]" ValueB="" />
+        <Output xsi:type="RenderProperty" Output="Variable" Name="[HolidayScheme]" Property="SchemeName" />
+        <Output xsi:type="RenderProperty" Output="Variable" Name="[AnnualEntitlement]" Property="AnnualEntitlementWeeks" />
+      </Group>
+      <Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines" Predicate="OFTYPE = 'PayLineHoliday' AND PaymentDate &gt;= '[TaxYearStart]' AND PaymentDate &lt;= '[TaxYearEnd]'">
+        <Output xsi:type="Sum" Output="Variable" Name="[Accrued]" Property="UnitsAccrued" />
+        <Output xsi:type="Sum" Output="Variable" Name="[Reclaimed]" Property="UnitsDepleted" />
+      </Group>
+      <Group>
+        <Output xsi:type="RenderValue" Name="col" Value="[HolidayScheme]" />
+        <Output xsi:type="RenderValue" Name="col" Value="[EmployeeCode]" />
+        <Output xsi:type="RenderValue" Name="col" Value="[FirstName]" />
+        <Output xsi:type="RenderValue" Name="col" Value="[LastName]" />
+        <Output xsi:type="RenderValue" Name="col" Value="[AnnualEntitlement]" Format="0.00" />
+        <Output xsi:type="RenderValue" Name="col" Value="[UnitOfMeasure]" />
+        <Output xsi:type="RenderValue" Name="col" Value="[Accrued]" />
+        <Output xsi:type="RenderValue" Name="col" Value="[Reclaimed]" />
+      </Group>
+      <Group>
+        <Output xsi:type="ExpressionCalculator" Name="col" Format="0.00" Expression="[Accrued] - [Reclaimed]" />
+      </Group>
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** Several techniques combine here:
+
+- **Tax year boundaries as variables:** the two `RenderTaxPeriodDate` outputs in the
+  `Headers` group use `Output="Variable"` to derive the tax year start/end dates from
+  `[TaxYear]`. Variable outputs render nothing, so they add no columns; for date renders the
+  target variable is named in `DisplayName`, not `Name`.
+- **Current instruction selection:** `ActiveWithin` keeps only pay instructions active in
+  the date range, then `Order Descending` on `StartDate` plus `TakeFirst 1` picks the most
+  recent — the standard "current instruction" idiom (also required to keep table columns
+  stable, since `PayInstructions` is a collection).
+- **Link following:** `HolidayScheme.Href` (a dotted path into the instruction's `Link`
+  property) is captured into `[HolidaySchemeLink]`, and the next group uses that variable
+  *as its selector* to load the scheme entity itself. The `WhenNot` condition skips the
+  lookup for employees with no holiday scheme, whose scheme columns render blank.
+- **Predicate OFTYPE:** both nested fetch groups narrow by entity type in the `Predicate`
+  (`OFTYPE = '...'`) so the type filter and date range are applied at the database rather
+  than after fetch.
+- Accrual variables are reset per row, and the final `ExpressionCalculator` group derives
+  the `Balance` column as `[Accrued] - [Reclaimed]`.

@@ -127,6 +127,73 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         [Test]
+        public void Lint_PropertyValidForPredicateOfType_NoDiagnostics()
+        {
+            // An OFTYPE comparison in the Predicate narrows the entity type the same way an
+            // OfType filter does: UnitsAccrued exists on PayLineHoliday, not on the PayLine base.
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\" Predicate=\"OFTYPE = 'PayLineHoliday'\">"
+                + "<Output xsi:type=\"Sum\" Name=\"Accrued\" Property=\"UnitsAccrued\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_PropertyInvalidForPredicateOfType_WarnsUnknownProperty()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\" Predicate=\"OFTYPE = 'PayLineTax'\">"
+                + "<Output xsi:type=\"Sum\" Name=\"ErNi\" Property=\"EmployerNI\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownProperty"));
+        }
+
+        [Test]
+        public void Lint_UnknownPredicateOfTypeValue_WarnsUnknownEntityType()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/*/PayLines\" Predicate=\"OFTYPE = 'PayLineFrobnicator'\">"
+                + "<Output xsi:type=\"Sum\" Name=\"Total\" Property=\"Value\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownEntityType"));
+        }
+
+        [Test]
+        public void Lint_RenderTaxPeriodDateVariableOutput_AssignsDisplayNameVariable()
+        {
+            // RenderTaxPeriodDate names its target in DisplayName rather than Name; with
+            // Output="Variable" that variable counts as assigned.
+            var xml = Query(
+                "<Variables><Variable Name=\"[TaxYear]\" Value=\"2025\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Setup\">"
+                + "<Output xsi:type=\"RenderTaxPeriodDate\" Output=\"Variable\" DisplayName=\"[TaxYearStart]\" TaxYear=\"[TaxYear]\" TaxPeriod=\"1\" PayFrequency=\"Monthly\" Format=\"yyyy-MM-dd\" />"
+                + "</Group>"
+                + "<Group GroupName=\"Render\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"Start\" Value=\"[TaxYearStart]\" />"
+                + "</Group>"
+                + "</Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
         public void Lint_VariableUsedButNeverAssigned_WarnsUnassignedVariable()
         {
             var xml = Query(
