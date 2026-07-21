@@ -5,6 +5,7 @@ namespace PayRunIO.ReportBuilder
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+    using Microsoft.AspNetCore.HttpOverrides;
     using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
     using PayRunIO.ReportBuilder.Auth;
@@ -22,10 +23,39 @@ namespace PayRunIO.ReportBuilder
 
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var builder = WebApplication.CreateBuilder(
+                new WebApplicationOptions
+                    {
+                        Args = args,
+
+                        // sc.exe-launched services start with C:\Windows\System32 as the current
+                        // directory, which breaks appsettings.json and Razor component discovery
+                        // unless the content root is pinned to the published app's own folder.
+                        ContentRootPath = AppContext.BaseDirectory,
+                    });
+
+            // No-op outside a Windows Service (e.g. under IIS or `dotnet run`); when launched by
+            // the Service Control Manager it swaps in the Windows Service lifetime/logging so
+            // SCM start/stop requests are honoured and console logging doesn't fail with no console.
+            builder.Host.UseWindowsService(options => options.ServiceName = "PayRunIO Report Builder");
 
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
             builder.Services.AddCascadingAuthenticationState();
+
+            // The app is only ever reached via the load balancer, which terminates HTTPS and
+            // forwards to this instance over plain HTTP. Without this, every absolute URL the
+            // app builds (including the KeyCloak OIDC redirect_uri) is stamped http://, which
+            // KeyCloak then redirects back to instead of the load balancer's https:// origin.
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+                {
+                    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+                    // The load balancer is not on a fixed, known address, so trust the proxy
+                    // hop unconditionally. Safe here because the app is not directly internet
+                    // reachable - the load balancer is the only path in.
+                    options.KnownNetworks.Clear();
+                    options.KnownProxies.Clear();
+                });
 
             ConfigureAuthentication(builder);
 
@@ -59,13 +89,20 @@ namespace PayRunIO.ReportBuilder
 
             var app = builder.Build();
 
+            // Must run first: everything after this (HSTS, auth challenge URL generation, etc.)
+            // needs HttpContext.Request.Scheme/Host to already reflect the load balancer's
+            // original https:// request rather than the internal http:// hop.
+            app.UseForwardedHeaders();
+
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/error", createScopeForErrors: true);
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            // No UseHttpsRedirection(): the load balancer terminates TLS and this instance only
+            // ever receives HTTP. Redirecting here would target the internal http host instead
+            // of enforcing HTTPS at the public edge, which the load balancer already does.
             app.UseStaticFiles();
             app.UseAuthentication();
             app.UseAuthorization();

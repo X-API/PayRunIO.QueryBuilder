@@ -214,10 +214,17 @@
             IsHitTestVisible="True" 
             HorizontalAlignment="Stretch" 
             VerticalAlignment="Stretch">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Orientation="Vertical" MinWidth="260">
                 <TextBlock FontSize="52" Text="🤔" TextAlignment="Center"/>
-                <ProgressBar Width="150" Height="20" IsIndeterminate="True"/>
-                <TextBlock Text="Thinking..." FontWeight="Bold" HorizontalAlignment="Center"/>
+                <ProgressBar Width="150" Height="20" IsIndeterminate="True" HorizontalAlignment="Center"/>
+                <TextBlock Text="Thinking..." FontWeight="Bold" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                <ItemsControl ItemsSource="{Binding ElementName=AiAssistantWindow1, Path=ActivityLog}" Margin="0,8,0,0" HorizontalAlignment="Center">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="11" Foreground="DimGray" HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </Grid>
 

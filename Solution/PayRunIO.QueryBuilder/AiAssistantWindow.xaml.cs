@@ -1,6 +1,7 @@
 ﻿namespace PayRunIO.QueryBuilder
 {
     using System;
+    using System.Collections.ObjectModel;
     using System.ComponentModel;
     using System.Linq;
     using System.Runtime.CompilerServices;
@@ -89,6 +90,10 @@
                 this.OnPropertyChanged();
             }
         }
+
+        /// <summary>Progress lines reported by the agent loop for the in-flight request (tool
+        /// calls, model round trips) — cleared at the start of each question.</summary>
+        public ObservableCollection<string> ActivityLog { get; } = new ObservableCollection<string>();
 
         private AiSettingsWindow settingsWindow;
 
@@ -185,6 +190,7 @@
             var queryAsXml = this.Query?.ToXml() ?? string.Empty;
 
             this.IsBusy = true;
+            this.ActivityLog.Clear();
 
             // Snapshot the history before adding the new question: AskQuestion appends the prompt
             // as the final user turn itself, so including it in the history would show the model
@@ -208,7 +214,8 @@
                             await this.rqlRagService.AskQuestion(
                                 prompt,
                                 chatHistory: modelHistory,
-                                format: this.TabularQuery ? ResponseType.TabularQuery : ResponseType.Conversation);
+                                format: this.TabularQuery ? ResponseType.TabularQuery : ResponseType.Conversation,
+                                onActivity: this.ReportActivity);
                     }
                     catch (OpenAiException exception)
                     {
@@ -241,6 +248,11 @@
                 this.IsBusy = false;
             }
         }
+
+        /// <summary>Progress sink passed to the agent loop. AskQuestion runs on thread-pool threads
+        /// (ConfigureAwait(false)), so marshal onto the UI thread before touching ActivityLog.</summary>
+        private void ReportActivity(string activity) =>
+            this.Dispatcher.InvokeAsync(() => this.ActivityLog.Add(activity));
 
         /// <summary>
         /// Extracts the first <c>&lt;Query&gt;</c> XML fenced block, validates it against the RQL XSD, and on
