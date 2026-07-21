@@ -15,6 +15,11 @@ namespace PayRunIO.ReportBuilder.Services
                 AppendRow(builder, row);
             }
 
+            if (table.Footer != null)
+            {
+                AppendRow(builder, table.Footer);
+            }
+
             return builder.ToString();
         }
 

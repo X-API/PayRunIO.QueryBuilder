@@ -22,6 +22,17 @@
                     </tr>
                 }
             </tbody>
+            @if (Table.Footer != null)
+            {
+                <tfoot>
+                    <tr class="results-footer">
+                        @for (var i = 0; i < Table.Columns.Count; i++)
+                        {
+                            <td>@(i < Table.Footer.Count ? Table.Footer[i] : string.Empty)</td>
+                        }
+                    </tr>
+                </tfoot>
+            }
         </table>
     </div>
 }

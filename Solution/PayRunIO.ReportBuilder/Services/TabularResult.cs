@@ -4,13 +4,20 @@ namespace PayRunIO.ReportBuilder.Services
 
     /// <summary>
     /// Parsed representation of a tabular RQL response: root node "Table" containing a "Headers"
-    /// group of column names followed by a "Rows" group of "Row" items.
+    /// group of column names, a "Rows" group of "Row" items, and an optional trailing "Footer"
+    /// row (typically column totals) rendered emphasised beneath the data rows.
     /// </summary>
     public sealed class TabularResult
     {
         public IReadOnlyList<string> Columns { get; init; } = Array.Empty<string>();
 
         public IReadOnlyList<IReadOnlyList<string>> Rows { get; init; } = Array.Empty<IReadOnlyList<string>>();
+
+        /// <summary>
+        /// The optional footer row, or null when the query renders no footer. When present it holds
+        /// one value per column in the same order as <see cref="Columns"/>.
+        /// </summary>
+        public IReadOnlyList<string>? Footer { get; init; }
 
         /// <summary>
         /// Returns null when the document does not follow the tabular output pattern; callers then
@@ -51,7 +58,14 @@ namespace PayRunIO.ReportBuilder.Services
                 rows.Add(row.Elements().Select(e => e.Value).ToList());
             }
 
-            return new TabularResult { Columns = columns, Rows = rows };
+            // An optional "Footer" group (typically column totals) renders as a single element
+            // directly under the root, holding one 'col' per column. It carries no "Row" items, so
+            // the row scan above never picks it up; capture it separately for emphasised rendering.
+            var footerElement = root.Elements().FirstOrDefault(e => e.Name.LocalName == "Footer");
+
+            var footer = footerElement?.Elements().Select(e => e.Value).ToList();
+
+            return new TabularResult { Columns = columns, Rows = rows, Footer = footer };
         }
     }
 }

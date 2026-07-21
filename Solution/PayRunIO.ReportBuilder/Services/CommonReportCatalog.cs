@@ -59,6 +59,13 @@ namespace PayRunIO.ReportBuilder.Services
                           <Output xsi:type="RenderValue" Name="col" Value="EmployeePension" />
                           <Output xsi:type="RenderValue" Name="col" Value="Net" />
                         </Group>
+                        <Group>
+                          <Output xsi:type="RenderValue" Output="Variable" Name="[TotalGross]" Value="0" />
+                          <Output xsi:type="RenderValue" Output="Variable" Name="[TotalTax]" Value="0" />
+                          <Output xsi:type="RenderValue" Output="Variable" Name="[TotalEeNi]" Value="0" />
+                          <Output xsi:type="RenderValue" Output="Variable" Name="[TotalEePension]" Value="0" />
+                          <Output xsi:type="RenderValue" Output="Variable" Name="[TotalNet]" Value="0" />
+                        </Group>
                         <Group GroupName="Rows" ItemName="Row" Selector="/Employer/[EmployerKey]/Employees" UniqueKeyVariable="[EmployeeKey]" Optimise="true">
                           <Output xsi:type="RenderValue" Output="Variable" Name="[Net]" Value="0" />
                           <Output xsi:type="RenderValue" Output="Variable" Name="[Tax]" Value="0" />
@@ -86,6 +93,11 @@ namespace PayRunIO.ReportBuilder.Services
                             <Output xsi:type="ExpressionCalculator" Output="Variable" Name="[Gross]" Expression="[Net] + [Tax] + [EeNi] + [EePension]" Format="0.00" />
                           </Group>
                           <Group>
+                            <Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalGross]" Value="[Gross]" />
+                            <Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalTax]" Value="[Tax]" />
+                            <Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalEeNi]" Value="[EeNi]" />
+                            <Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalEePension]" Value="[EePension]" />
+                            <Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalNet]" Value="[Net]" />
                             <Output xsi:type="RenderValue" Name="col" Value="[Code]" />
                             <Output xsi:type="RenderValue" Name="col" Value="[FirstName] [LastName]" />
                             <Output xsi:type="RenderValue" Name="col" Value="[Gross]" Format="0.00" />
@@ -94,6 +106,15 @@ namespace PayRunIO.ReportBuilder.Services
                             <Output xsi:type="RenderValue" Name="col" Value="[EePension]" Format="0.00" />
                             <Output xsi:type="RenderValue" Name="col" Value="[Net]" Format="0.00" />
                           </Group>
+                        </Group>
+                        <Group GroupName="Footer" ItemName="Row">
+                          <Output xsi:type="RenderValue" Name="col" Value="" />
+                          <Output xsi:type="RenderValue" Name="col" Value="Total" />
+                          <Output xsi:type="RenderValue" Name="col" Value="[TotalGross]" Format="0.00" />
+                          <Output xsi:type="RenderValue" Name="col" Value="[TotalTax]" Format="0.00" />
+                          <Output xsi:type="RenderValue" Name="col" Value="[TotalEeNi]" Format="0.00" />
+                          <Output xsi:type="RenderValue" Name="col" Value="[TotalEePension]" Format="0.00" />
+                          <Output xsi:type="RenderValue" Name="col" Value="[TotalNet]" Format="0.00" />
                         </Group>
                       </Groups>
                     </Query>

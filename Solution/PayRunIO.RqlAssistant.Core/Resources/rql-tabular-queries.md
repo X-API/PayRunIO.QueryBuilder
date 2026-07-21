@@ -6,6 +6,7 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 * Top-level filter variables controlling the data scope.
 * Static header row defining column names.
 * Data rows, each representing an entity instance with values aggregated and formatted.
+* An optional footer row, typically holding column totals, rendered after the data rows.
 * Nested subgroups used to gather and compute complex aggregated data per row.
 * Variables used extensively to hold intermediate results and control output order.
  
@@ -51,12 +52,22 @@ This pattern produces a tabular report as an XML or JSON response, structured in
  * Outputs the final values (both variables and static fields) in the desired column order.
  * Uses consistent output names and formatting (e.g., decimal precision).
  * May negate values for display purposes (e.g., tax and deductions).
+- Footer Group (optional)
+ * A static group named "Footer" with an item name of "Row", placed **after** the Rows group and directly under the root `<Groups>`.
+ * Renders a single trailing row of `col` values — commonly report column totals — in the same column order and count as the Headers and data rows.
+ * Totals are accumulated across the data rows using running-total variables:
+   - Initialise each total variable to `0` in an entity-less group *before* the Rows group (so accumulation starts clean).
+   - In the row's final rendering group, add the row's value to each running total with `<Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalX]" Value="[X]" />`.
+   - Render the accumulated `[TotalX]` variables as the footer's `col` values.
+ * Non-numeric footer cells (e.g. a leading blank and a "Total" label) are rendered as literal `col` values so the footer still matches the column count.
+ * The footer is entirely optional — omit the Footer group and the total variables when no summary row is wanted.
  
 
 ## Execution Flow Summary
 - Initialize filter variables to define query scope.
 - Output header row statically.
 - Load contextual entities and extract metadata into variables.
+- (Optional) Initialise running-total variables to zero before iterating.
 - Iterate over main data collection (rows):
  * Reset aggregation variables.
  * Capture entity properties.
@@ -64,6 +75,8 @@ This pattern produces a tabular report as an XML or JSON response, structured in
  * Aggregate values into variables.
  * Calculate derived metrics.
  * Render all values in order as a single tabular row.
+ * (Optional) Accumulate each rendered value into its running total with VariableSum.
+- (Optional) Output the Footer group, rendering the running totals as a single trailing row.
  
 
 ## Benefits of this Pattern
@@ -97,6 +110,11 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 			<Output xsi:type="RenderProperty" Output="Variable" Name="[ContextVar1]" Property="Property1"/>
 			<!-- ... -->
 		</Group>
+		<!-- Optional: initialise running totals before iterating rows -->
+		<Group>
+			<Output xsi:type="RenderValue" Output="Variable" Name="[TotalAgg1]" Value="0"/>
+			<!-- ... -->
+		</Group>
 		<!-- Rows -->
 		<Group GroupName="Rows" ItemName="Row" Selector="/MainCollection/[Filter1]/[Filter2]" UniqueKeyVariable="[RowKey]" Optimise="true">
 			<!-- Initialize aggregation variables -->
@@ -117,12 +135,21 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 			</Group>
 			<!-- Final row rendering -->
 			<Group>
+				<!-- Optional: accumulate running totals for the footer -->
+				<Output xsi:type="RenderValue" Output="VariableSum" Name="[TotalAgg1]" Value="[AggVar1]"/>
 				<Output xsi:type="RenderValue" Name="col" Value="[ContextVar1]"/>
 				<Output xsi:type="RenderValue" Name="col" Value="[PropVar1]"/>
 				<Output xsi:type="RenderValue" Name="col" Value="[AggVar1]" Format="0.00"/>
 				<Output xsi:type="RenderValue" Name="col" Value="[DerivedVar]" Format="0.00"/>
 				<!-- ... -->
 			</Group>
+		</Group>
+		<!-- Optional: footer row of totals, after the Rows group -->
+		<Group GroupName="Footer" ItemName="Row">
+			<Output xsi:type="RenderValue" Name="col" Value=""/>
+			<Output xsi:type="RenderValue" Name="col" Value="Total"/>
+			<Output xsi:type="RenderValue" Name="col" Value="[TotalAgg1]" Format="0.00"/>
+			<!-- ... one col per header, in the same order -->
 		</Group>
 	</Groups>
 </Query>
@@ -150,6 +177,8 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 - **Header/row column mismatch.**
   Every `col` output in the Headers group must correspond to exactly one `col` value rendered per row,
   in the same sequence. Whenever you add, remove or reorder a column, update both groups together.
+  If a Footer group is present it must render the same number of `col` values, in the same order —
+  use a literal blank or label for columns that carry no total.
 - **Inventing nested routes.**
   Selectors must match a real GET API route. Child data is reached through its own route
   (e.g. employee pay lines are at `/Employer/{employerId}/Employee/{employeeId}/PayLines`), not by

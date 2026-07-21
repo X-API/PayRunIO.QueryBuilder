@@ -777,6 +777,14 @@ h3 {
     background: #f0f7ff;
 }
 
+.results-table tfoot td {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface-alt);
+    font-weight: 600;
+    border-top: 2px solid var(--line);
+}
+
 .raw-xml {
     background: var(--surface);
     color: var(--ink);

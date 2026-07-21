@@ -89,13 +89,16 @@ namespace PayRunIO.ReportBuilder
 
             var app = builder.Build();
 
-            // Must run first: everything after this (HSTS, auth challenge URL generation, etc.)
-            // needs HttpContext.Request.Scheme/Host to already reflect the load balancer's
-            // original https:// request rather than the internal http:// hop.
-            app.UseForwardedHeaders();
-
             if (!app.Environment.IsDevelopment())
             {
+                // Must run first: everything after this (HSTS, auth challenge URL generation, etc.)
+                // needs HttpContext.Request.Scheme/Host to already reflect the load balancer's
+                // original https:// request rather than the internal http:// hop. Only applied when
+                // deployed behind the load balancer - locally there is no proxy, and honouring an
+                // X-Forwarded-Proto: https header would rewrite the scheme to https, breaking the
+                // OIDC redirect_uri and preventing the app from running under plain http.
+                app.UseForwardedHeaders();
+
                 app.UseExceptionHandler("/error", createScopeForErrors: true);
                 app.UseHsts();
             }
