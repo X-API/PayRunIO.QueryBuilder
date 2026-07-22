@@ -1330,6 +1330,48 @@ The **Sum** aggregate output renders the summed value of properties within the m
 
 --/CodeTabs--
 
+##### Sum Default Value
+
+The **Sum** output accepts an optional *DefaultValue* attribute. When the output matches **no**
+entities, the default value is written instead of the sum.
+
+:::success
+**The declarative fix for variable leakage**  
+The *Variables* section describes how a group that matches nothing never executes its outputs, so a
+variable silently retains the previous iteration's value. Setting *DefaultValue* makes the **Sum**
+always produce a value, removing the need for a separate zero assignment output before the group.
+:::
+
+:::warning
+**Sum only**  
+*DefaultValue* is defined on the **Sum** output. Other aggregates - **Avg**, **Min**, **Max**,
+**Count** - do not accept it. For those, initialise the target variable before the group instead.
+:::
+
+--CodeTabs--
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <RootNodeName>OutputExample</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[TaxYear]" Value="2025" />
+  </Variables>
+  <Groups>
+    <Group Selector="/Employer/[EmployerKey]/ReportLines">
+      <Filter xsi:type="OfType" Value="ReportLinePension" />
+      <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+      <!-- Renders 0.00 when the employer has no matching pension report lines -->
+      <Output xsi:type="Sum" Name="EmployerCont" Property="EmployerContribution" Format="N2" DefaultValue="0.00" />
+      <!-- Variable outputs take the default too, so downstream arithmetic stays safe -->
+      <Output xsi:type="Sum" Output="Variable" Name="$EmployeeCont" Property="EmployeeContribution" DefaultValue="0.00" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+--/CodeTabs--
+
 ### Output Scoped Filters
 
 An **Output** may contain its own **Filter** elements. These narrow the matched entity set for that
@@ -1654,6 +1696,14 @@ Below is a revised query fragment illustrating this initialisation step:
 
 By enforcing this pattern—**always initialise any variable you intend to aggregate via `Sum`/`VariableSum` before its first use in each loop**—you prevent old data from leaking into subsequent rows. This approach applies equally to any numeric or string variable that only sometimes receives an assignment in a subgroup: if you want a fresh start each iteration, reset it first.
 
+:::success
+**Alternative: the Sum DefaultValue attribute**  
+When the aggregate in question is a **Sum**, you can set its *DefaultValue* attribute instead of
+adding a separate zero assignment output. The default is written whenever the output matches no
+entities, so the variable is always assigned. See *Sum Default Value* in the **Outputs** section.
+Note this applies to **Sum** only - other aggregates still require explicit initialisation.
+:::
+
 #### Reserved Variable Names
 
 While RQL does not enforce reserved keywords, certain variable names are commonly used across standard templates and built-in logic. Using these helps improve clarity and consistency:
@@ -1940,12 +1990,18 @@ There are many types of filter as briefly described in the following table:
 | HasFlag            | Match properties having a bitwise match to the specified value                  | (PayRunIO Flags Enumerations)  |
 | IsNotNull          | Match any non-null property value                                               | String, Numeric, Date, Boolean |
 | IsNull             | Match any null property value                                                   | String, Numeric, Date, Boolean |
+| IsNullOrGreaterThan | Match null property values, or values greater than the specified value         | Numeric, Date                  |
+| IsNullOrGreaterThanEqualTo | Match null property values, or values equal to or greater than the specified value | Numeric, Date          |
+| IsNullOrLessThan   | Match null property values, or values less than the specified value             | Numeric, Date                  |
+| IsNullOrLessThanEqualTo | Match null property values, or values equal to or less than the specified value | Numeric, Date              |
 | LessThan           | Match property values less than the specified value                             | Numeric, Date                  |
 | LessThanEqualTo    | Match property values equal to or less than the specified value                 | Numeric, Date                  |
 | NotContain         | Match properties that do not contain the specified substring.                   | String                         |
 | NotEqualTo         | Match properties not equal to the specified value                               | String, Numeric, Date, Boolean |
+| NotOfDerivedType   | Only match entities not of the specified type and not of any type derived from it | N/A                          |
 | NotOfType          | Only match entities not of the specified data types                             | N/A                            |
 | NotWithinArray     | Match properties not present within the specified value array                   | String, Numeric, Date          |
+| OfDerivedType      | Match entities of the specified type and any type derived from it               | N/A                            |
 | OfType             | Only match entities of the specified data types                                 | N/A                            |
 | StartsWith         | Match properties that begin with the specified substring                        | String                         |
 | TakeFirst          | Filter to the number of first matched entities as indicated                     | N/A                            |
@@ -2177,6 +2233,35 @@ Matches all entities having a null property value.
 
 --/CodeTabs--
 
+#### IsNullOrGreaterThan / IsNullOrGreaterThanEqualTo / IsNullOrLessThan / IsNullOrLessThanEqualTo
+
+This family of null tolerant comparison filters matches an entity when the property value satisfies
+the comparison **or** when the property is null. They work with numeric and date properties.
+
+:::success
+**Use for open ended date ranges**  
+Records such as pay instructions use a null *EndDate* to mean "still open". A plain
+**LessThanEqualTo** on *EndDate* discards those records, because null does not compare. The null
+tolerant form keeps them, so one filter expresses "ended on or before this date, or has not ended".
+:::
+
+The following example matches pay instructions that started on or before the period end, and have
+either not yet ended or ended on or after the period start.
+
+--CodeTabs--
+```xml
+<Filter xsi:type="LessThanEqualTo" Property="StartDate" Value="[PeriodEnd]" />
+<Filter xsi:type="IsNullOrGreaterThanEqualTo" Property="EndDate" Value="[PeriodStart]" />
+```
+
+--/CodeTabs--
+
+:::info
+**Preferred over conditional branching**  
+Without these filters the open ended case must be handled by a separate condition group testing the
+end date against an empty value. A single null tolerant filter replaces that branch.
+:::
+
 #### LessThan
 
 Matches all entities having a property value below the specified filter value. This filter works with numeric and date properties.  
@@ -2232,6 +2317,18 @@ Matches all entities having a bitwise flags property that do not match to the sp
 
 --/CodeTabs--
 
+#### NotOfDerivedType  
+  
+Matches all entities that are neither the specified type nor any type derived from it. The inverse of
+**OfDerivedType**.  
+
+--CodeTabs--
+```xml
+<Filter xsi:type="NotOfDerivedType" Value="PayLineAoe" />
+```
+
+--/CodeTabs--
+
 #### NotOfType  
   
 Filters all entities within the matched entity group which do not match the specified entity type. This filter can be used on entity match groups that contain many entity types, for example: Employee Pay Instructions.  
@@ -2250,6 +2347,27 @@ Considers all values in comma-separated filter value, and identifies all propert
 --CodeTabs--
 ```xml
 <Filter xsi:type="NotWithinArray" Property="Description" Value="ValueA,ValueB,ValueC" />
+```
+
+--/CodeTabs--
+
+#### OfDerivedType  
+  
+Matches all entities of the specified type **and any type derived from it**. Where **OfType** tests for
+an exact type name match, **OfDerivedType** tests assignability, so a filter naming a base type also
+matches every subtype.  
+
+:::success
+**Choosing between OfType and OfDerivedType**  
+Use **OfType** to isolate one concrete type. Use **OfDerivedType** to capture a whole branch of the
+type hierarchy - for example every kind of attachment of earnings pay line - without listing each
+subtype as a separate *IsOr* filter.
+:::
+
+--CodeTabs--
+```xml
+<!-- Matches PayLineAoe and every pay line type derived from it -->
+<Filter xsi:type="OfDerivedType" Value="PayLineAoe" />
 ```
 
 --/CodeTabs--
@@ -3473,3 +3591,399 @@ Both the employees and employers pension contribution values are found on the **
 
 --/CodeTabs--
 
+
+### Recurring Report Techniques
+
+The following techniques appear consistently across production payroll reports. Each solves a problem
+that has no single built-in construct, so the same shape is reproduced by hand each time. Prefer these
+established shapes over inventing an alternative.
+
+#### Negate deductions for presentation
+
+Deduction pay lines are stored as negative values. Reports almost always render them as positive
+figures using *Negate*, so a payslip shows "Tax 250.00" rather than "Tax -250.00".
+
+Apply *Negate* to tax, employee and employer NI, employee and employer pension, student and
+postgraduate loan, and attachment of earnings totals. Do **not** negate gross pay, net pay or
+statutory payments such as SMP and SSP, which are already positive.
+
+--CodeTabs--
+```xml
+<Output xsi:type="Sum" Name="Tax" Property="Value" Negate="true" Format="0.00" DefaultValue="0.00">
+  <Filter xsi:type="OfType" Value="PayLineTax" />
+</Output>
+```
+
+--/CodeTabs--
+
+#### Period value versus year to date
+
+A period figure and its year to date counterpart differ only in the tax period comparison. Use
+**EqualTo** for the period, and **LessThanEqualTo** for the cumulative value. Both are always
+constrained by tax year first.
+
+--CodeTabs--
+```xml
+<!-- This period only -->
+<Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines">
+  <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+  <Filter xsi:type="EqualTo" Property="TaxPeriod" Value="[TaxPeriod]" />
+  <Filter xsi:type="OfType" Value="PayLineTax" />
+  <Output xsi:type="Sum" Name="TaxThisPeriod" Property="Value" Negate="true" DefaultValue="0.00" />
+</Group>
+<!-- Year to date: same selector, cumulative period comparison -->
+<Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines">
+  <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+  <Filter xsi:type="LessThanEqualTo" Property="TaxPeriod" Value="[TaxPeriod]" />
+  <Filter xsi:type="OfType" Value="PayLineTax" />
+  <Output xsi:type="Sum" Name="TaxYtd" Property="Value" Negate="true" DefaultValue="0.00" />
+</Group>
+```
+
+--/CodeTabs--
+
+#### Matching several pay line types at once
+
+The *Value* of an **OfType** or **NotOfType** filter is a comma separated list. An entity matches when
+its type appears anywhere in the list. This is the idiomatic way to total a family of related pay
+lines, and is shorter than several *IsOr* filters.
+
+--CodeTabs--
+```xml
+<!-- All statutory parental and sick pay in one aggregate -->
+<Filter xsi:type="OfType" Value="PayLineSmp,PayLineSpp,PayLineSap,PayLineShpp,PayLineSsp" />
+```
+
+--/CodeTabs--
+
+:::info
+**OfType list versus OfDerivedType**  
+Use a comma separated **OfType** list when the types are siblings with no useful common base. Use
+**OfDerivedType** when they share a base type and you want every subtype, including ones added later.
+:::
+
+#### Building an employee full name
+
+There is no full name property. Names are assembled by appending into a scratch variable. Always
+initialise the variable first, otherwise the previous employee's name leaks into the current row.
+
+--CodeTabs--
+```xml
+<Output xsi:type="RenderValue" Output="Variable" Name="$FullName" Value="" />
+<Output xsi:type="RenderProperty" Output="VariableAppend" Name="$FullName" Property="FirstName" />
+<Output xsi:type="RenderValue" Output="VariableAppend" Name="$FullName" Value=" " />
+<Output xsi:type="RenderProperty" Output="VariableAppend" Name="$FullName" Property="LastName" />
+<Output xsi:type="RenderValue" Name="FullName" Value="$FullName" />
+```
+
+--/CodeTabs--
+
+#### Counting employees on a pay schedule
+
+Employees reference their pay schedule by link, and there is no employees by schedule endpoint. Count
+them by selecting all employees and filtering on the link, guarding against employees with no schedule.
+
+--CodeTabs--
+```xml
+<Group Selector="/Employer/[EmployerKey]/Employees">
+  <Filter xsi:type="IsNotNull" Property="PaySchedule" />
+  <Filter xsi:type="EndsWith" Property="PaySchedule.Href" Value="[PayScheduleKey]" />
+  <Output xsi:type="Count" Name="EmployeeCount" />
+</Group>
+```
+
+--/CodeTabs--
+
+#### Extracting a key from a link
+
+Entity references are returned as hyperlinks. Two techniques recover the key: **RenderUniqueKeyFromLink**
+for the trailing key, or a **RenderValue** *Regex* for a key in the middle of the path.
+
+--CodeTabs--
+```xml
+<!-- Trailing key: /Employer/ER001/Pension/PEN001 -> PEN001 -->
+<Output xsi:type="RenderProperty" Output="Variable" Name="[PensionLink]" Property="AutoEnrolment.Pension.Href" />
+<Output xsi:type="RenderUniqueKeyFromLink" Name="PensionKey" Href="[PensionLink]" />
+
+<!-- Mid-path key: /Employer/ER001/PaySchedule/SCH001 -> SCH001 -->
+<Output xsi:type="RenderProperty" Output="Variable" Name="[ScheduleLink]" Property="PayScheduleLink.Href" />
+<Output xsi:type="RenderValue" Name="PayScheduleKey" Value="[ScheduleLink]" Regex="(?&lt;=/PaySchedule/)[^/]+" />
+```
+
+--/CodeTabs--
+
+#### The UK tax year start date
+
+The tax year start is the 6th of April in the tax year. Build it by appending to the tax year value
+rather than hard coding a date.
+
+--CodeTabs--
+```xml
+<Output xsi:type="RenderValue" Output="Variable" Name="$TaxYearStart" Value="[TaxYear]" />
+<Output xsi:type="RenderValue" Output="VariableAppend" Name="$TaxYearStart" Value="-04-06" />
+```
+
+--/CodeTabs--
+
+#### Resolving instructions in force for a period
+
+Pay instructions carry a start and end date, with a null end date meaning "still open". Use
+**ActiveOn** for a single date, or the null tolerant comparison filters for a period window.
+
+--CodeTabs--
+```xml
+<!-- In force on a single date -->
+<Filter xsi:type="ActiveOn" Value="[PaymentDate]" />
+
+<!-- Overlapping a period, including instructions that have not ended -->
+<Filter xsi:type="LessThanEqualTo" Property="StartDate" Value="[PeriodEnd]" />
+<Filter xsi:type="IsNullOrGreaterThanEqualTo" Property="EndDate" Value="[PeriodStart]" />
+```
+
+--/CodeTabs--
+
+#### Preferring pre-summed report lines
+
+Employer level *ReportLines* hold values already aggregated by the pay run. Reading these avoids
+walking every employee and pay line, and is substantially faster for employer totals.
+
+--CodeTabs--
+```xml
+<Group Selector="/Employer/[EmployerKey]/ReportLines">
+  <Filter xsi:type="OfType" Value="ReportLinePension" />
+  <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+  <Filter xsi:type="EqualTo" Property="TaxMonth" Value="[TaxMonth]" />
+  <Output xsi:type="Sum" Name="EmployerContribution" Property="EmployerContribution" Format="N2" DefaultValue="0.00" />
+</Group>
+```
+
+--/CodeTabs--
+
+:::success
+**Report line types worth knowing**  
+*ReportLineTaxSummary* for gross pay, tax and NI totals; *ReportLinePension* for contributions;
+*ReportLineHmrcPayment* and *ReportLineApprenticeshipLevy* for P32 style liabilities;
+*ReportLineStatutoryRecovery* for reclaimed statutory payments.
+:::
+
+#### Date effective entity selectors
+
+Revisable entities - employees, pay codes, pensions - can be selected **as at a date** by appending a
+date to the entity URL. This returns the revision in force on that date rather than the latest one.
+
+Use this whenever a report must reflect how a record looked at the time of a pay run, not how it looks
+today. Reporting an employee's address or bank details for a historic payslip requires it.
+
+--CodeTabs--
+```xml
+<!-- The employee revision in force on the payment date -->
+<Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/[PaymentDate]">
+  <Output xsi:type="RenderProperty" Name="LastName" Property="LastName" />
+  <Output xsi:type="RenderProperty" Name="Address" Property="Address.Line1" />
+</Group>
+
+<!-- Also available for pay codes and pensions -->
+<Group Selector="/Employer/[EmployerKey]/Pension/[PensionKey]/[PaymentDate]">
+  <Output xsi:type="RenderProperty" Name="ProviderName" Property="ProviderName" />
+</Group>
+```
+
+--/CodeTabs--
+
+:::info
+**Date format**  
+The date segment must be formatted *yyyy-MM-dd*. Supply it from a variable that has been formatted
+accordingly, for example with *Format="yyyy-MM-dd"* when the value is captured.
+:::
+
+#### Employer HMRC liability (P32)
+
+The P32 liability figure is assembled from employer level report lines plus CIS deductions. The
+calculation is consistent across production reports and is reproduced below in full, because the sign
+of each component matters.
+
+Statutory payments are split into *Value* (the amount recovered) and *Compensation* (the NI
+compensation on top), distinguished by *AbsenceReportCode*: SMP, SPP, SAP, SHPP, SPBP, SNCP, SPBPNI.
+
+--CodeTabs--
+```xml
+<Group Selector="/Employer/[EmployerKey]/ReportLines">
+  <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+  <Filter xsi:type="EqualTo" Property="TaxMonth" Value="[TaxMonth]" />
+
+  <!-- PAYE components, all from the tax summary report line -->
+  <Output xsi:type="Sum" Output="Variable" Name="[Tax]" Property="GrossTax" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineTaxSummary" />
+  </Output>
+  <Output xsi:type="Sum" Output="Variable" Name="[StudentLoan]" Property="StudentLoan" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineTaxSummary" />
+  </Output>
+  <Output xsi:type="Sum" Output="Variable" Name="[EmployerNi]" Property="GrossEmployerNI" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineTaxSummary" />
+  </Output>
+  <Output xsi:type="Sum" Output="Variable" Name="[EmployeeNi]" Property="GrossEmployeeNI" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineTaxSummary" />
+  </Output>
+
+  <!-- Statutory recovery: one pair of aggregates per absence code -->
+  <Output xsi:type="Sum" Output="Variable" Name="[SmpRecovered]" Property="Value" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineStatutoryRecovery" />
+    <Filter xsi:type="EqualTo" Property="AbsenceReportCode" Value="SMP" />
+  </Output>
+  <Output xsi:type="Sum" Output="Variable" Name="[SmpCompensation]" Property="Compensation" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineStatutoryRecovery" />
+    <Filter xsi:type="EqualTo" Property="AbsenceReportCode" Value="SMP" />
+  </Output>
+
+  <!-- Offsets against the liability -->
+  <Output xsi:type="Sum" Output="Variable" Name="[CisSuffered]" Property="Value" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineCisSuffered" />
+  </Output>
+  <Output xsi:type="Sum" Output="Variable" Name="[EmploymentAllowance]" Property="Value" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineEmploymentAllowance" />
+  </Output>
+  <Output xsi:type="Sum" Output="Variable" Name="[ApprenticeshipLevy]" Property="Value" DefaultValue="0.00">
+    <Filter xsi:type="OfType" Value="ReportLineApprenticeshipLevy" />
+  </Output>
+
+  <!-- Roll up. Recovery and compensation reduce NICs; levy increases them. -->
+  <Output xsi:type="ExpressionCalculator" Output="Variable" Name="[NetTax]" Expression="[Tax] + [StudentLoan]" />
+  <Output xsi:type="ExpressionCalculator" Output="Variable" Name="[GrossNics]" Expression="[EmployerNi] + [EmployeeNi]" />
+  <Output xsi:type="ExpressionCalculator" Output="Variable" Name="[NetNics]" Expression="[GrossNics] - [SmpRecovered] - [SmpCompensation] + [ApprenticeshipLevy]" />
+  <Output xsi:type="ExpressionCalculator" Name="AmountDue" Format="F2" Expression="[NetTax] + [NetNics] + [CisDeducted] - [EmploymentAllowance] - [CisSuffered]" />
+</Group>
+```
+
+--/CodeTabs--
+
+:::warning
+**This is the whole shape**  
+A partial P32 is usually a wrong P32. Omitting employment allowance, CIS suffered or the
+apprenticeship levy silently overstates or understates the amount due.
+:::
+
+#### CIS deductions and subcontractors
+
+CIS deductions are not pay lines. They live on *CisLines* beneath each subcontractor, so totalling
+them means iterating subcontractors and accumulating with *VariableSum*. Initialise the accumulator
+before the loop.
+
+Note the distinction: **CisDeduction** on CIS lines is what the employer withheld from subcontractors
+and owes HMRC. **ReportLineCisSuffered** is CIS withheld from the employer by its own contractors, and
+is offset against the liability.
+
+--CodeTabs--
+```xml
+<Output xsi:type="RenderValue" Output="Variable" Name="[CisDeducted]" Value="0" />
+<Group Selector="/Employer/[EmployerKey]/SubContractors" UniqueKeyVariable="[SubContractorKey]">
+  <Group Selector="/Employer/[EmployerKey]/SubContractor/[SubContractorKey]/CisLines">
+    <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+    <Filter xsi:type="EqualTo" Property="TaxMonth" Value="[TaxMonth]" />
+    <Output xsi:type="Sum" Output="VariableSum" Name="[CisDeducted]" Property="CisDeduction" />
+  </Group>
+</Group>
+```
+
+--/CodeTabs--
+
+#### Auto enrolment assessments
+
+Assessment history lives under the employee at *AeAssessments*, one record per assessment event.
+Reports normally want the latest assessment for a tax year, obtained by ordering descending on
+*AssessmentDate* and taking the first.
+
+Employer level auto enrolment configuration - staging date and the nominated pension - hangs off the
+employer's *AutoEnrolment* property.
+
+--CodeTabs--
+```xml
+<!-- Employer AE configuration -->
+<Group Selector="/Employer/[EmployerKey]">
+  <Output xsi:type="RenderProperty" Name="StagingDate" Property="AutoEnrolment.StagingDate" Format="yyyy-MM-dd" />
+  <Output xsi:type="RenderProperty" Output="Variable" Name="[PensionLink]" Property="AutoEnrolment.Pension.Href" />
+  <Output xsi:type="RenderUniqueKeyFromLink" Name="AePensionKey" Href="[PensionLink]" />
+</Group>
+
+<!-- Latest assessment for the employee in the tax year -->
+<Group Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/AeAssessments">
+  <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+  <Filter xsi:type="TakeFirst" Value="1" />
+  <Output xsi:type="RenderProperty" Name="AssessmentEvent" Property="AssessmentEvent" />
+  <Output xsi:type="RenderProperty" Name="AssessmentCode" Property="AssessmentCode" />
+  <Order xsi:type="Descending" Property="AssessmentDate" />
+</Group>
+```
+
+--/CodeTabs--
+
+:::info
+**Exclusions and overrides sit on the employee**  
+*AEExclusionReasonCode*, *AEAssessmentOverride*, *AEAssessmentOverrideDate* and *AEPostponementDate*
+are employee properties, not assessment properties. Read them from the employee record - and from the
+date effective revision when reporting historically.
+:::
+
+#### Journal lines and polymorphic subjects
+
+Journal lines are pre-built double entry records at *JournalLines*, filtered by pay frequency, tax
+year, tax period and ledger target. A line's subject may be an employee **or** a subcontractor, so
+both links are captured and each is dereferenced in a conditional group. Only the matching one runs.
+
+--CodeTabs--
+```xml
+<Group ItemName="Line" Selector="/Employer/[EmployerKey]/JournalLines">
+  <Filter xsi:type="EqualTo" Property="TaxYear" Value="[TaxYear]" />
+  <Filter xsi:type="EqualTo" Property="TaxPeriod" Value="[TaxPeriod]" />
+  <Filter xsi:type="EqualTo" Property="LedgerTarget" Value="[LedgerTarget]" />
+  <Output xsi:type="RenderProperty" Name="NomCode" Property="NomCode" />
+  <Output xsi:type="RenderProperty" Name="Credit" Property="Credit" Format="F2" />
+  <Output xsi:type="RenderProperty" Name="Debit" Property="Debit" Format="F2" />
+  <Output xsi:type="RenderProperty" Output="Variable" Name="[EmployeeUrl]" Property="Employee.Href" />
+  <Output xsi:type="RenderProperty" Output="Variable" Name="[SubContractorUrl]" Property="SubContractor.Href" />
+  <Order xsi:type="Ascending" Property="Grouping" />
+  <Order xsi:type="Ascending" Property="NomCode" />
+
+  <!-- Employee backed line -->
+  <Group Selector="[EmployeeUrl]">
+    <Condition xsi:type="WhenNot" ValueA="[EmployeeUrl]" ValueB="" />
+    <Output xsi:type="RenderProperty" Output="Variable" Name="[PersonName]" Property="FirstName" />
+    <Output xsi:type="RenderValue" Output="VariableAppend" Name="[PersonName]" Value=" " />
+    <Output xsi:type="RenderProperty" Output="VariableAppend" Name="[PersonName]" Property="LastName" />
+  </Group>
+
+  <!-- Subcontractor backed line -->
+  <Group Selector="[SubContractorUrl]">
+    <Condition xsi:type="WhenNot" ValueA="[SubContractorUrl]" ValueB="" />
+    <Output xsi:type="RenderProperty" Output="Variable" Name="[PersonName]" Property="FirstName" />
+    <Output xsi:type="RenderValue" Output="VariableAppend" Name="[PersonName]" Value=" " />
+    <Output xsi:type="RenderProperty" Output="VariableAppend" Name="[PersonName]" Property="LastName" />
+  </Group>
+
+  <Group>
+    <Output xsi:type="RenderValue" Name="Person" Value="[PersonName]" />
+  </Group>
+</Group>
+```
+
+--/CodeTabs--
+
+:::warning
+**Reset the shared variable**  
+Because both branches write *[PersonName]*, a line with neither link retains the previous line's
+name. Reset it to an empty value at the top of each line before the conditional groups run.
+:::
+
+#### Where some frequently needed values actually live
+
+| Value | Location |
+|-------|----------|
+| NI letter | *PayLineNi.NiLetter* on the pay line, not on the employee |
+| Tax code and basis | *PayLineTax.TaxCode* / *TaxBasis*, or *EmployeeSummary* |
+| Taxable pay | *PayLineTax.TaxablePay*, requires an OfType scope |
+| Employer NI, gross pay, gross tax | *ReportLineTaxSummary* at employer or pay run level |
+| Pension contributions | *ReportLinePension*, or *PayLinePension* per employee |
+| Statutory recovery and compensation | *ReportLineStatutoryRecovery*, split by *AbsenceReportCode* |
+| CIS withheld from subcontractors | *CisLines.CisDeduction* beneath each subcontractor |
+| CIS suffered by the employer | *ReportLineCisSuffered* |
+| AE staging date and nominated pension | Employer *AutoEnrolment* property |
+| AE exclusions, overrides, postponement | Employee record properties |

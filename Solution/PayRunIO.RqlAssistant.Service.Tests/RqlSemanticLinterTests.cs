@@ -113,6 +113,126 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         [Test]
+        public void Lint_OutputScopedOfType_OverridesResolvedGroupScope()
+        {
+            // ReportLines resolves to the ReportLine base type, so the group scope is "known".
+            // The output-scoped OfType must still win, or GrossTax (a ReportLineTaxSummary
+            // property) is wrongly reported as unknown.
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/ReportLines\">"
+                + "<Output xsi:type=\"Sum\" Output=\"Variable\" Name=\"[Tax]\" Property=\"GrossTax\" DefaultValue=\"0.00\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"ReportLineTaxSummary\" />"
+                + "</Output>"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_CommaSeparatedOfTypeValue_NoUnknownEntityTypeWarning()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"PayLineSmp,PayLineSsp\" />"
+                + "<Output xsi:type=\"Sum\" Name=\"Statutory\" Property=\"Value\" DefaultValue=\"0.00\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.No.Member("UnknownEntityType"));
+        }
+
+        [Test]
+        public void Lint_CommaSeparatedOfType_UnknownMemberStillWarns()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"PayLineSmp,NotARealEntityType\" />"
+                + "<Output xsi:type=\"Sum\" Name=\"Statutory\" Property=\"Value\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownEntityType"));
+        }
+
+        [Test]
+        public void Lint_PropertyOnAnyCommaSeparatedOfTypeMember_NoDiagnostics()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"PayLineTax,PayLineNi\" />"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"TaxCode\" Property=\"TaxCode\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_PropertyValidForOfDerivedTypeSchema_NoDiagnostics()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Filter xsi:type=\"OfDerivedType\" Value=\"PayLineAoe\" />"
+                + "<Output xsi:type=\"Sum\" Name=\"Arrears\" Property=\"Arrears\" DefaultValue=\"0.00\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_PropertyInvalidForOfDerivedTypeSchema_WarnsUnknownProperty()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Filter xsi:type=\"OfDerivedType\" Value=\"PayLineAoe\" />"
+                + "<Output xsi:type=\"Sum\" Name=\"Bad\" Property=\"NotARealPropertyName\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownProperty"));
+        }
+
+        [Test]
+        public void Lint_PropertyValidForOutputScopedOfDerivedType_NoDiagnostics()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Output xsi:type=\"Sum\" Name=\"Arrears\" Property=\"Arrears\">"
+                + "<Filter xsi:type=\"OfDerivedType\" Value=\"PayLineAoe\" />"
+                + "</Output>"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
         public void Lint_PropertyValidForOutputScopedOfType_NoDiagnostics()
         {
             var xml = Query(

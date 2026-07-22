@@ -35,6 +35,30 @@ namespace PayRunIO.RqlAssistant.Service
         private static readonly Regex PredicateOfType = new Regex(@"OFTYPE\s*=\s*'(?<type>[^']+)'", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
+        /// Filter types that pin the entity type(s) a group's property references resolve against.
+        /// OfDerivedType matches the named type and its subtypes; for property checking both are
+        /// treated the same, since the named type's own properties are the ones guaranteed present.
+        /// </summary>
+        private static readonly string[] TypePinningFilters = { "OfType", "OfDerivedType" };
+
+        /// <summary>
+        /// Determines whether a Filter element pins the entity type in scope.
+        /// </summary>
+        private static bool IsTypePinningFilter(XElement filter) =>
+            TypePinningFilters.Contains(TypeOf(filter), StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Splits a type filter's Value into individual type names. The engine treats the value as a
+        /// comma separated list and matches an entity whose type appears anywhere in it, so
+        /// <c>Value="PayLineSmp,PayLineSsp"</c> pins two types rather than naming one.
+        /// </summary>
+        private static IEnumerable<string> SplitTypeNames(string? value) =>
+            (value ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => t.Length > 0);
+
+        /// <summary>
         /// Attributes whose values undergo variable substitution and should be scanned for uses.
         /// Name-like attributes (Name, DisplayName, GroupName, UniqueKeyVariable) are targets, not uses.
         /// </summary>
@@ -155,16 +179,14 @@ namespace PayRunIO.RqlAssistant.Service
         {
             foreach (var group in root.Descendants("Group"))
             {
-                // OfType filters and OFTYPE predicate comparisons pin the entity type(s) in
-                // scope; property checks become exact.
+                // OfType/OfDerivedType filters and OFTYPE predicate comparisons pin the entity
+                // type(s) in scope; property checks become exact.
                 var ofTypeSchemas = group.Elements("Filter")
-                    .Where(f => string.Equals(TypeOf(f), "OfType", StringComparison.OrdinalIgnoreCase))
-                    .Select(f => f.Attribute("Value")?.Value)
+                    .Where(IsTypePinningFilter)
+                    .SelectMany(f => SplitTypeNames(f.Attribute("Value")?.Value))
                     .Concat(PredicateOfType
                         .Matches(group.Attribute("Predicate")?.Value ?? string.Empty)
-                        .Select(m => m.Groups["type"].Value))
-                    .Where(v => !string.IsNullOrWhiteSpace(v))
-                    .Cast<string>()
+                        .SelectMany(m => SplitTypeNames(m.Groups["type"].Value)))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
 
@@ -267,10 +289,8 @@ namespace PayRunIO.RqlAssistant.Service
         private PropertyScope? ResolveOutputOfTypeScope(XElement element, List<ValidationDiagnostic> diagnostics)
         {
             var typeNames = element.Elements("Filter")
-                .Where(f => string.Equals(TypeOf(f), "OfType", StringComparison.OrdinalIgnoreCase))
-                .Select(f => f.Attribute("Value")?.Value)
-                .Where(v => !string.IsNullOrWhiteSpace(v))
-                .Cast<string>()
+                .Where(IsTypePinningFilter)
+                .SelectMany(f => SplitTypeNames(f.Attribute("Value")?.Value))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
