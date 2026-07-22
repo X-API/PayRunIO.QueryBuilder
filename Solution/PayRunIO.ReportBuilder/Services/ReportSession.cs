@@ -18,6 +18,8 @@ namespace PayRunIO.ReportBuilder.Services
 
         private string? savedReportId;
 
+        private string? localReportId;
+
         private string reportName = string.Empty;
 
         /// <summary>Raised after any mutation so the UI can re-render and persistence can re-save.</summary>
@@ -36,15 +38,29 @@ namespace PayRunIO.ReportBuilder.Services
 
         public IReadOnlyList<QueryVariable> Variables { get; private set; } = Array.Empty<QueryVariable>();
 
-        /// <summary>API identifier of the report definition this query was loaded from or saved to;
-        /// null while the report has never been saved. Saving a null-id session creates a new
-        /// definition, otherwise the existing one is updated.</summary>
+        /// <summary>API identifier of the report definition this query was published to, or loaded
+        /// from; null while the report has never been published. Publishing a null-id session creates
+        /// a new definition, otherwise the existing one is updated.</summary>
         public string? SavedReportId
         {
             get => this.savedReportId;
             set
             {
                 this.savedReportId = string.IsNullOrWhiteSpace(value) ? null : value;
+                this.NotifyChanged();
+            }
+        }
+
+        /// <summary>Identifier of this report within the user's private browser-local collection; null
+        /// until the report has been saved. Distinct from <see cref="SavedReportId"/>: a report can be
+        /// saved locally without ever being published, published without being kept locally, or both —
+        /// in which case the two ids point at the two copies of the same report.</summary>
+        public string? LocalReportId
+        {
+            get => this.localReportId;
+            set
+            {
+                this.localReportId = string.IsNullOrWhiteSpace(value) ? null : value;
                 this.NotifyChanged();
             }
         }
@@ -99,6 +115,7 @@ namespace PayRunIO.ReportBuilder.Services
                 {
                     QueryXml = this.queryXml,
                     SavedReportId = this.savedReportId,
+                    LocalReportId = this.localReportId,
                     ReportName = this.reportName,
                     History = this.history
                         .Select(m => new PersistedMessage { Role = m.Role, Text = m.Text })
@@ -112,6 +129,7 @@ namespace PayRunIO.ReportBuilder.Services
             this.queryXml = snapshot.QueryXml ?? string.Empty;
             this.Variables = QueryVariables.Parse(this.queryXml);
             this.savedReportId = string.IsNullOrWhiteSpace(snapshot.SavedReportId) ? null : snapshot.SavedReportId;
+            this.localReportId = string.IsNullOrWhiteSpace(snapshot.LocalReportId) ? null : snapshot.LocalReportId;
             this.reportName = snapshot.ReportName ?? string.Empty;
 
             this.history.Clear();
@@ -142,6 +160,8 @@ namespace PayRunIO.ReportBuilder.Services
         public string? QueryXml { get; set; }
 
         public string? SavedReportId { get; set; }
+
+        public string? LocalReportId { get; set; }
 
         public string? ReportName { get; set; }
 

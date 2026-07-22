@@ -1,6 +1,7 @@
 @page "/"
 @attribute [Authorize]
 @inject ReportSessionStore SessionStore
+@inject LocalReportStore LocalReports
 @inject ReportDefinitionService ReportDefinitions
 @inject NavigationManager Navigation
 
@@ -37,6 +38,60 @@
 </div>
 
 <h2 class="saved-reports-heading">Your saved reports</h2>
+<p class="saved-reports-status">
+    Saved privately in this browser — only you can see them. Clearing your browser storage removes them.
+</p>
+@if (localReports == null)
+{
+    <p class="saved-reports-status">Loading your saved reports…</p>
+}
+else if (localReports.Count == 0)
+{
+    <p class="saved-reports-status">
+        No saved reports yet — open the designer, build a report and press "Save report" to keep it here.
+    </p>
+}
+else
+{
+    <div class="report-cards">
+        @foreach (var report in localReports)
+        {
+            <div class="report-card saved-report">
+                <h2>@report.Name</h2>
+                <p>
+                    Saved @report.UpdatedUtc.ToLocalTime().ToString("d MMM yyyy HH:mm").
+                    @if (report.PublishedReportId != null)
+                    {
+                        <span class="published-flag" title="This report has also been published to your PayRun.io account, where everyone can see it.">Also published</span>
+                    }
+                </p>
+                @if (pendingDeleteId == report.Id)
+                {
+                    <div class="delete-confirm">
+                        <span>Delete "@report.Name" permanently? This cannot be undone.</span>
+                        <div class="card-actions">
+                            <button class="button danger" @onclick="() => ConfirmDeleteAsync(report.Id)">Delete report</button>
+                            <button class="button subtle" @onclick="CancelDelete">Cancel</button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card-actions">
+                        <a class="button" href="report?local=@Uri.EscapeDataString(report.Id)">Open report</a>
+                        <button class="button subtle" @onclick="() => RequestDelete(report.Id)">Delete</button>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<h2 class="saved-reports-heading">Published reports</h2>
+<p class="saved-reports-status">
+    Report definitions stored in your PayRun.io account. These are <strong>visible to everyone</strong>
+    — publish from the designer in advanced mode.
+</p>
 @if (sessionExpired)
 {
     <div class="banner error">
@@ -51,13 +106,13 @@ else if (savedReportsError != null)
 }
 else if (savedReports == null)
 {
-    <p class="saved-reports-status">Loading your saved reports…</p>
+    <p class="saved-reports-status">Loading published reports…</p>
 }
 else if (savedReports.Count == 0)
 {
     <p class="saved-reports-status">
-        No saved reports yet — open the designer, build a report and press "Save report" to store it
-        in your PayRun.io account.
+        No published reports yet — build a report, switch the designer to advanced mode and press
+        "Publish report" to share it through your PayRun.io account.
     </p>
 }
 else
@@ -65,9 +120,9 @@ else
     <div class="report-cards">
         @foreach (var report in savedReports)
         {
-            <div class="report-card saved-report">
+            <div class="report-card saved-report published-report">
                 <h2>@report.Name</h2>
-                <p>A report saved in your PayRun.io account. Open it to run, refine or save changes.</p>
+                <p>Published in your PayRun.io account and visible to everyone.</p>
                 <a class="button" href="report?saved=@Uri.EscapeDataString(report.Id)">Open report</a>
             </div>
         }
@@ -81,6 +136,12 @@ else
 
     private IReadOnlyList<SavedReportSummary>? savedReports;
 
+    private IReadOnlyList<LocalReport>? localReports;
+
+    /// <summary>Id of the report whose delete confirmation is currently showing; null when none is
+    /// armed. Only one at a time — arming a second replaces the first.</summary>
+    private string? pendingDeleteId;
+
     private string? savedReportsError;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -92,11 +153,9 @@ else
 
         // localStorage is only reachable after the first interactive render.
         hasDraft = await this.SessionStore.HasDraftAsync();
+        localReports = await this.LocalReports.ListAsync();
 
-        if (hasDraft)
-        {
-            this.StateHasChanged();
-        }
+        this.StateHasChanged();
 
         // Resolve the managed ("ReportBuilder-" prefixed) report definitions with the user's own API
         // credentials, so the list reflects what this user is permitted to see.
@@ -118,6 +177,28 @@ else
         }
 
         this.StateHasChanged();
+    }
+
+    /// <summary>Arms the inline confirmation for a report. Deleting a locally saved report destroys the
+    /// only copy — unlike a published report there is no server-side original to re-open — so the
+    /// delete button only ever arms this step and never removes anything itself.</summary>
+    private void RequestDelete(string id)
+    {
+        pendingDeleteId = id;
+    }
+
+    private void CancelDelete()
+    {
+        pendingDeleteId = null;
+    }
+
+    private async Task ConfirmDeleteAsync(string id)
+    {
+        pendingDeleteId = null;
+
+        await this.LocalReports.DeleteAsync(id);
+
+        localReports = await this.LocalReports.ListAsync();
     }
 
     private void SignInAgain(bool federated)

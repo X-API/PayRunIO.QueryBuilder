@@ -77,6 +77,7 @@ namespace PayRunIO.ReportBuilder
             builder.Services.AddScoped<ReportDefinitionService>();
             builder.Services.AddScoped<ReportSession>();
             builder.Services.AddScoped<ReportSessionStore>();
+            builder.Services.AddScoped<LocalReportStore>();
             builder.Services.AddScoped<DesignerModeStore>();
             builder.Services.AddScoped<ReportChatService>();
 

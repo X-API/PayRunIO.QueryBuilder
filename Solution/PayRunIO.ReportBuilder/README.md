@@ -21,6 +21,15 @@ credentials, and download the results.
   xml blocks in assistant replies are replaced with a short note). Advanced mode shows the raw RQL
   in an editable query pane. The last selection is persisted per browser (localStorage,
   `payrun.reportbuilder.mode.v1`) and restored on the next visit.
+* **Save (private) vs publish (public)** — saving a report writes it to the user's own browser
+  storage (`LocalReportStore`, localStorage key `payrun.reportbuilder.reports.v1`), giving each user
+  a private collection that no one else can see. Publishing is the separate, explicit step that
+  stores the report in the PayRun.io account as a `ReportDefinition` via `ReportDefinitionService`
+  (`ReportBuilder-` title prefix) — those definitions are **visible to everyone**, so the action is
+  only offered in advanced mode and carries a note saying so.
+  Publishing also saves locally and records the published id on the local copy, so re-publishing
+  updates the same definition rather than creating a duplicate. The Reports page lists the two
+  collections separately; local reports can be deleted from there.
 * **Common reports** — `CommonReportCatalog` seeds the report list; add templates there to grow it.
 * **Execute & download** — queries are POSTed to `/Query` on the configured API endpoint with the
   user's token. Responses following the tabular output pattern (`Table`/`Headers`/`Rows`) render
@@ -59,3 +68,7 @@ dedicated confidential client for the report builder.
   implementation if you scale out or need restart resilience.
 * Excel export is not yet implemented — CSV and raw XML downloads are available; CSV opens
   directly in Excel.
+* Saved reports live in browser localStorage, so a user's private collection does not follow them
+  to another browser, device or profile, and clearing site data deletes it. Publishing is the only
+  way to move a report off the machine today; a per-user server-side store would be the next step
+  if reports need to roam.

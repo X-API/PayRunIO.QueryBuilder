@@ -255,6 +255,38 @@ h3 {
     color: var(--danger, #b3261e);
 }
 
+.report-card.published-report {
+    border-left: 3px solid var(--brand);
+}
+
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem 0.7rem;
+    border-radius: 6px;
+    background: var(--error-bg);
+    color: var(--error-ink);
+    font-size: 0.85rem;
+}
+
+.published-flag {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--brand);
+    border-radius: 999px;
+    color: var(--brand);
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
 /* ---- designer layout ---- */
 
 .designer-grid {
@@ -352,6 +384,23 @@ h3 {
 
 .save-status.error {
     color: var(--danger, #b3261e);
+}
+
+.publish-note {
+    margin: 0;
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--brand);
+    border-radius: 6px;
+    background: var(--surface-alt);
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.publish-note .save-location {
+    display: inline-flex;
+    margin-left: 0.35rem;
 }
 
 /* ---- chat panel ---- */

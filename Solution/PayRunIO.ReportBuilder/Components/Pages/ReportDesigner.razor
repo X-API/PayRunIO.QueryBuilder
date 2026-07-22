@@ -3,6 +3,7 @@
 @implements IDisposable
 @inject PayRunQueryService QueryService
 @inject ReportDefinitionService ReportDefinitions
+@inject LocalReportStore LocalReports
 @inject ReportSession Session
 @inject ReportSessionStore SessionStore
 @inject DesignerModeStore ModeStore
@@ -48,23 +49,41 @@
                        disabled="@isAssistantBusy"
                        @onchange="e => Session.ReportName = e.Value?.ToString() ?? string.Empty" />
             </label>
-            @if (Session.SavedReportId != null)
-            {
-                <span class="save-location" title="The API resource location of this saved report definition.">
-                    <span>Report location</span>
-                    <code>/Report/@Session.SavedReportId</code>
-                </span>
-            }
-            <button class="button"
+            <button class="button primary"
+                    title="Saves this report privately in this browser. Only you can see it."
                     @onclick="SaveReportAsync"
-                    disabled="@(isSaving || isRunning || isAssistantBusy || string.IsNullOrWhiteSpace(Session.QueryXml) || string.IsNullOrWhiteSpace(Session.ReportName))">
-                @(isSaving ? "Saving…" : Session.SavedReportId == null ? "Save report" : "Save changes")
+                    disabled="@(isSaving || isPublishing || isRunning || isAssistantBusy || string.IsNullOrWhiteSpace(Session.QueryXml) || string.IsNullOrWhiteSpace(Session.ReportName))">
+                @(isSaving ? "Saving…" : Session.LocalReportId == null ? "Save report" : "Save changes")
             </button>
+            @if (ModeStore.IsAdvanced)
+            {
+                <button class="button"
+                        title="Publishes this report to your PayRun.io account, where everyone can see it."
+                        @onclick="PublishReportAsync"
+                        disabled="@(isSaving || isPublishing || isRunning || isAssistantBusy || string.IsNullOrWhiteSpace(Session.QueryXml) || string.IsNullOrWhiteSpace(Session.ReportName))">
+                    @(isPublishing ? "Publishing…" : Session.SavedReportId == null ? "Publish report" : "Update published report")
+                </button>
+            }
             @if (saveStatus != null)
             {
                 <span class="save-status @(saveStatusIsError ? "error" : "ok")">@saveStatus</span>
             }
         </div>
+
+        @if (ModeStore.IsAdvanced)
+        {
+            <p class="publish-note">
+                <strong>Save report</strong> keeps this report private to this browser. <strong>Publish report</strong>
+                stores it in your PayRun.io account as a report definition, where it is
+                <strong>visible to everyone</strong> — publish only reports you intend to share.
+                @if (Session.SavedReportId != null)
+                {
+                    <span class="save-location" title="The API resource location of the published report definition.">
+                        Published at <code>/Report/@Session.SavedReportId</code>
+                    </span>
+                }
+            </p>
+        }
 
         @if (Session.Variables.Count > 0)
         {
@@ -166,6 +185,8 @@
 
     private bool isSaving;
 
+    private bool isPublishing;
+
     private bool isAssistantBusy;
 
     private bool restored;
@@ -179,6 +200,9 @@
 
     [SupplyParameterFromQuery(Name = "saved")]
     public string? SavedReportId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "local")]
+    public string? LocalReportId { get; set; }
 
     [SupplyParameterFromQuery(Name = "new")]
     public bool StartNew { get; set; }
@@ -222,14 +246,19 @@
             return;
         }
 
-        // An explicit "Open report" (?template= or ?saved=) always wins: the user picked a report on
-        // the Reports page, so it replaces both the in-memory session and the persisted draft (the
-        // session reset raises no Changed event; the query assignment that follows schedules the
-        // draft save that overwrites the old one).
+        // An explicit "Open report" (?template=, ?local= or ?saved=) always wins: the user picked a
+        // report on the Reports page, so it replaces both the in-memory session and the persisted
+        // draft (the session reset raises no Changed event; the query assignment that follows
+        // schedules the draft save that overwrites the old one).
         if (!string.IsNullOrEmpty(this.Template) && CommonReportCatalog.FindByKey(this.Template) is { } template)
         {
             this.Session.Restore(new ReportSessionSnapshot());
             this.Session.QueryXml = template.QueryXml;
+        }
+        else if (!string.IsNullOrEmpty(this.LocalReportId))
+        {
+            this.Session.Restore(new ReportSessionSnapshot());
+            await this.LoadLocalReportAsync(this.LocalReportId);
         }
         else if (!string.IsNullOrEmpty(this.SavedReportId))
         {
@@ -313,6 +342,8 @@
         }
     }
 
+    /// <summary>Saves to the user's private browser-local collection — the default, and the only save
+    /// that happens without an explicit publish.</summary>
     private async Task SaveReportAsync()
     {
         var name = this.Session.ReportName.Trim();
@@ -327,6 +358,36 @@
 
         try
         {
+            var saved = await this.LocalReports.SaveAsync(this.Session.LocalReportId, name, this.Session.QueryXml);
+
+            this.Session.LocalReportId = saved.Id;
+
+            this.saveStatus = $"Saved privately in this browser at {DateTime.Now:HH:mm}.";
+            this.saveStatusIsError = false;
+        }
+        finally
+        {
+            this.isSaving = false;
+        }
+    }
+
+    /// <summary>Pushes the report to the PayRun.io account as a report definition, where it is visible
+    /// to everyone. Advanced mode only — the note beside the button spells out that this is the
+    /// public surface.</summary>
+    private async Task PublishReportAsync()
+    {
+        var name = this.Session.ReportName.Trim();
+
+        if (name.Length == 0 || string.IsNullOrWhiteSpace(this.Session.QueryXml))
+        {
+            return;
+        }
+
+        this.isPublishing = true;
+        this.saveStatus = null;
+
+        try
+        {
             if (this.Session.SavedReportId == null)
             {
                 this.Session.SavedReportId = await this.ReportDefinitions.CreateReportAsync(name, this.Session.QueryXml);
@@ -336,7 +397,17 @@
                 await this.ReportDefinitions.UpdateReportAsync(this.Session.SavedReportId, name, this.Session.QueryXml);
             }
 
-            this.saveStatus = $"Saved to your PayRun.io account at {DateTime.Now:HH:mm}.";
+            // Publishing also captures the report locally, so the user's own collection keeps a copy
+            // and the published link survives — a later local save then updates the same definition.
+            var saved = await this.LocalReports.SaveAsync(
+                this.Session.LocalReportId,
+                name,
+                this.Session.QueryXml,
+                this.Session.SavedReportId);
+
+            this.Session.LocalReportId = saved.Id;
+
+            this.saveStatus = $"Published to your PayRun.io account at {DateTime.Now:HH:mm} — visible to everyone.";
             this.saveStatusIsError = false;
         }
         catch (ApiTokenUnavailableException exception)
@@ -355,8 +426,24 @@
         }
         finally
         {
-            this.isSaving = false;
+            this.isPublishing = false;
         }
+    }
+
+    private async Task LoadLocalReportAsync(string localId)
+    {
+        var report = await this.LocalReports.LoadAsync(localId);
+
+        if (report == null)
+        {
+            this.Session.SetResult(null, "That saved report is no longer in this browser's storage.", sessionExpired: false);
+            return;
+        }
+
+        this.Session.QueryXml = report.QueryXml;
+        this.Session.LocalReportId = report.Id;
+        this.Session.SavedReportId = report.PublishedReportId;
+        this.Session.ReportName = report.Name;
     }
 
     private void ApplyQueryFromChat(string xml)
