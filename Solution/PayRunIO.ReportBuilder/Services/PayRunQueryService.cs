@@ -6,6 +6,7 @@ namespace PayRunIO.ReportBuilder.Services
     using System.Xml.Linq;
 
     using PayRunIO.ReportBuilder.Auth;
+    using PayRunIO.ReportBuilder.Logging;
 
     /// <summary>
     /// Executes RQL queries against the configured PayRun.io API instance using the signed in
@@ -19,13 +20,31 @@ namespace PayRunIO.ReportBuilder.Services
 
         private readonly ApiTokenAccessor apiTokenAccessor;
 
-        public PayRunQueryService(IHttpClientFactory httpClientFactory, ApiTokenAccessor apiTokenAccessor)
+        private readonly QueryFailureLog failureLog;
+
+        public PayRunQueryService(
+            IHttpClientFactory httpClientFactory,
+            ApiTokenAccessor apiTokenAccessor,
+            QueryFailureLog failureLog)
         {
             this.httpClientFactory = httpClientFactory;
             this.apiTokenAccessor = apiTokenAccessor;
+            this.failureLog = failureLog;
         }
 
-        public async Task<QueryExecutionResult> ExecuteQueryAsync(string queryXml, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Executes a report query against the PayRun.io API.
+        /// </summary>
+        /// <param name="queryXml">The RQL query to execute.</param>
+        /// <param name="origin">
+        /// Where the query came from. Recorded against any failure so assistant generated queries
+        /// can be told apart from hand written ones when reviewing the failure log.
+        /// </param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        public async Task<QueryExecutionResult> ExecuteQueryAsync(
+            string queryXml,
+            QueryOrigin origin = QueryOrigin.Unknown,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(queryXml))
             {
@@ -45,37 +64,72 @@ namespace PayRunIO.ReportBuilder.Services
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xml"));
 
-            using var response = await httpClient.SendAsync(request, cancellationToken);
-
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return new QueryExecutionResult
-                    {
-                        Success = false,
-                        ErrorMessage = $"{(int)response.StatusCode} {response.ReasonPhrase}: {ExtractErrorMessage(body)}",
-                        RawXml = TryBeautify(body),
-                    };
-            }
-
-            XDocument document;
+            HttpResponseMessage response;
 
             try
             {
-                document = XDocument.Parse(body);
+                response = await httpClient.SendAsync(request, cancellationToken);
             }
-            catch (XmlException)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                return new QueryExecutionResult { Success = true, RawXml = body };
+                // Transport level faults never reach the caller's result object, so record them
+                // here rather than relying on the page's catch all.
+                this.failureLog.QueryFaulted(queryXml, exception, origin);
+                throw;
             }
 
-            return new QueryExecutionResult
+            using (response)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    Success = true,
-                    RawXml = document.ToString(),
-                    Table = TabularResult.TryParse(document),
-                };
+                    var errorMessage = ExtractErrorMessage(body);
+
+                    this.failureLog.QueryRejected(
+                        queryXml,
+                        (int)response.StatusCode,
+                        response.ReasonPhrase,
+                        errorMessage,
+                        origin);
+
+                    return new QueryExecutionResult
+                        {
+                            Success = false,
+                            ErrorMessage = $"{(int)response.StatusCode} {response.ReasonPhrase}: {errorMessage}",
+                            RawXml = TryBeautify(body),
+                        };
+                }
+
+                XDocument document;
+
+                try
+                {
+                    document = XDocument.Parse(body);
+                }
+                catch (XmlException exception)
+                {
+                    // A 2xx response that is not XML: the report still renders, but something in the
+                    // API contract has moved, which is worth surfacing.
+                    this.failureLog.QueryFaulted(queryXml, exception, origin);
+
+                    return new QueryExecutionResult { Success = true, RawXml = body };
+                }
+
+                var table = TabularResult.TryParse(document);
+
+                if (table == null)
+                {
+                    this.failureLog.ResponseNotTabular(queryXml, origin);
+                }
+
+                return new QueryExecutionResult
+                    {
+                        Success = true,
+                        RawXml = document.ToString(),
+                        Table = table,
+                    };
+            }
         }
 
         internal static string ExtractErrorMessage(string body)

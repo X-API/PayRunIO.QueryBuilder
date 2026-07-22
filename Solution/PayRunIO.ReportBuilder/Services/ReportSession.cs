@@ -1,5 +1,6 @@
 namespace PayRunIO.ReportBuilder.Services
 {
+    using PayRunIO.ReportBuilder.Logging;
     using PayRunIO.RqlAssistant.Service.Models;
 
     /// <summary>
@@ -28,13 +29,19 @@ namespace PayRunIO.ReportBuilder.Services
         public string QueryXml
         {
             get => this.queryXml;
-            set
-            {
-                this.queryXml = value ?? string.Empty;
-                this.Variables = QueryVariables.Parse(this.queryXml);
-                this.NotifyChanged();
-            }
+
+            // The plain setter is the user-edit path (the query textarea binds to it), so it marks
+            // the query as hand edited. Assistant replies and stored reports come in through
+            // SetQueryXml with their own origin.
+            set => this.SetQueryXml(value, QueryOrigin.UserEdited);
         }
+
+        /// <summary>
+        /// Where the current query text came from. Recorded against execution failures so that
+        /// queries the assistant wrote can be separated from ones the user typed when reviewing the
+        /// failure log — only the former say anything about assistant quality.
+        /// </summary>
+        public QueryOrigin QueryOrigin { get; private set; } = QueryOrigin.Unknown;
 
         public IReadOnlyList<QueryVariable> Variables { get; private set; } = Array.Empty<QueryVariable>();
 
@@ -84,8 +91,23 @@ namespace PayRunIO.ReportBuilder.Services
 
         public IReadOnlyList<ChatMessage> History => this.history;
 
+        /// <summary>
+        /// Replaces the query, recording where it came from.
+        /// </summary>
+        /// <param name="value">The query XML.</param>
+        /// <param name="origin">The source of the query.</param>
+        public void SetQueryXml(string? value, QueryOrigin origin)
+        {
+            this.queryXml = value ?? string.Empty;
+            this.QueryOrigin = origin;
+            this.Variables = QueryVariables.Parse(this.queryXml);
+            this.NotifyChanged();
+        }
+
+        // Filling in a variable value is not authoring the query, so it leaves the recorded origin
+        // alone: an assistant-written query whose date range was adjusted is still the assistant's.
         public void SetVariable(string name, string value) =>
-            this.QueryXml = QueryVariables.SetValue(this.queryXml, name, value);
+            this.SetQueryXml(QueryVariables.SetValue(this.queryXml, name, value), this.QueryOrigin);
 
         public void SetResult(QueryExecutionResult? result, string? error, bool sessionExpired)
         {

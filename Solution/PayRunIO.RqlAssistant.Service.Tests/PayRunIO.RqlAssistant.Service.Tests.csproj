@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PayRunIO.RqlAssistant.Service\PayRunIO.RqlAssistant.Service.csproj" />
+    <ProjectReference Include="..\PayRunIO.ReportBuilder\PayRunIO.ReportBuilder.csproj" />
   </ItemGroup>
 
 </Project>

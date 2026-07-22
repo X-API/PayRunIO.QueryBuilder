@@ -74,6 +74,24 @@ namespace PayRunIO.RqlAssistant.Service
             };
 
         /// <summary>
+        /// The variable every loop expression sets to the current iteration value.
+        /// </summary>
+        private const string LoopVariable = "[LoopVariable]";
+
+        /// <summary>
+        /// Loop expressions that set their own named variables per iteration instead of
+        /// <see cref="LoopVariable"/>. Keyed by expression name, matched case insensitively.
+        /// <c>AllTaxMonths</c> exposes the tax period and its date bounds; the value driven forms
+        /// (<c>CSV:</c>, <c>Range:</c>) and <c>AllPaySchedulePeriods</c> have no such variables and
+        /// fall back to <see cref="LoopVariable"/>.
+        /// </summary>
+        private static readonly Dictionary<string, string[]> LoopExpressionVariables =
+            new(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["AllTaxMonths"] = new[] { "[TaxPeriod]", "[TaxPeriodStart]", "[TaxPeriodEnd]" },
+                };
+
+        /// <summary>
         /// Output types that render once per matched entity (as opposed to aggregates such as Sum,
         /// which collapse the group to a single value). Rendering these directly from a collection
         /// selector inside a table row produces a variable number of columns.
@@ -126,6 +144,7 @@ namespace PayRunIO.RqlAssistant.Service
             this.CheckSelectors(root, diagnostics);
             this.CheckPropertyReferences(root, diagnostics);
             CheckVariableAssignments(root, diagnostics);
+            CheckLoopVariableUsage(root, diagnostics);
             CheckEntityLessGroupOperations(root, diagnostics);
             this.CheckTabularCollectionRenders(root, diagnostics);
             CheckTabularRowsPlacement(root, diagnostics);
@@ -633,9 +652,19 @@ namespace PayRunIO.RqlAssistant.Service
                 }
             }
 
-            if (root.Descendants("Group").Any(g => g.Attribute("LoopExpression") != null))
+            foreach (var group in root.Descendants("Group"))
             {
-                assigned.Add("[LoopVariable]");
+                var loopExpression = group.Attribute("LoopExpression")?.Value;
+
+                if (loopExpression == null)
+                {
+                    continue;
+                }
+
+                foreach (var name in VariablesSetByLoopExpression(loopExpression))
+                {
+                    assigned.Add(name);
+                }
             }
 
             var reported = new HashSet<string>(StringComparer.Ordinal);
@@ -663,6 +692,82 @@ namespace PayRunIO.RqlAssistant.Service
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Flags <see cref="LoopVariable"/> used inside a group whose loop expression does not set
+        /// it. <c>AllTaxMonths</c> is the case that matters: it sets named variables instead, so a
+        /// query written against the usual <c>[LoopVariable]</c> convention renders the literal
+        /// placeholder text in every row rather than failing outright. The generic unassigned
+        /// variable warning names the problem but not the fix, so this names the replacements.
+        /// </summary>
+        private static void CheckLoopVariableUsage(XElement root, List<ValidationDiagnostic> diagnostics)
+        {
+            foreach (var group in root.Descendants("Group"))
+            {
+                var loopExpression = group.Attribute("LoopExpression")?.Value;
+
+                if (loopExpression == null
+                    || VariablesSetByLoopExpression(loopExpression).Contains(LoopVariable, StringComparer.Ordinal))
+                {
+                    continue;
+                }
+
+                var name = loopExpression.Split(':')[0].Trim();
+                var replacements = string.Join(", ", VariablesSetByLoopExpression(loopExpression));
+
+                // The loop variable is in scope for the whole group, including nested groups — but
+                // a nested group with its own loop expression rebinds it, so stop at that boundary.
+                foreach (var element in group.DescendantsAndSelf())
+                {
+                    if (element != group && element.Name.LocalName == "Group"
+                                         && element.Attribute("LoopExpression") != null)
+                    {
+                        continue;
+                    }
+
+                    if (element.Ancestors("Group").TakeWhile(a => a != group).Any(a => a.Attribute("LoopExpression") != null))
+                    {
+                        continue;
+                    }
+
+                    foreach (var attribute in element.Attributes())
+                    {
+                        if (!SubstitutableAttributes.Contains(attribute.Name.LocalName, StringComparer.Ordinal)
+                            || !attribute.Value.Contains(LoopVariable, StringComparison.Ordinal))
+                        {
+                            continue;
+                        }
+
+                        diagnostics.Add(Warn(
+                            element,
+                            "LoopVariableNotSet",
+                            $"'{LoopVariable}' is used inside a '{name}' loop, which does not set it. "
+                            + $"{name} sets {replacements} instead — use those, or the placeholder text is "
+                            + "rendered literally in every iteration."));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The variables a loop expression assigns on each iteration.
+        ///
+        /// Most expressions expose the current value as <see cref="LoopVariable"/>. Some instead
+        /// set their own named variables — <c>AllTaxMonths</c> sets the tax period and its start and
+        /// end dates — and for those <see cref="LoopVariable"/> is not populated, so a query using
+        /// it would silently render the literal placeholder text.
+        /// </summary>
+        /// <param name="loopExpression">The group's LoopExpression attribute value.</param>
+        private static IEnumerable<string> VariablesSetByLoopExpression(string loopExpression)
+        {
+            // Value driven forms carry their data after a colon ("CSV:a,b,c", "Range:1-52"), so the
+            // expression name is whatever precedes it.
+            var name = loopExpression.Split(':')[0].Trim();
+
+            return LoopExpressionVariables.TryGetValue(name, out var variables)
+                       ? variables
+                       : new[] { LoopVariable };
         }
 
         /// <summary>

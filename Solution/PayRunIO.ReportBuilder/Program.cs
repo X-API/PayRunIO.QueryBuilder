@@ -10,6 +10,7 @@ namespace PayRunIO.ReportBuilder
 
     using PayRunIO.ReportBuilder.Auth;
     using PayRunIO.ReportBuilder.Components;
+    using PayRunIO.ReportBuilder.Logging;
     using PayRunIO.ReportBuilder.Services;
     using PayRunIO.RqlAssistant.Service;
 
@@ -38,6 +39,10 @@ namespace PayRunIO.ReportBuilder
             // the Service Control Manager it swaps in the Windows Service lifetime/logging so
             // SCM start/stop requests are honoured and console logging doesn't fail with no console.
             builder.Host.UseWindowsService(options => options.ServiceName = "PayRunIO Report Builder");
+
+            // Must precede the service registrations below so failures raised during start up are
+            // captured too. Follows the API host's log4net + BetterStack arrangement.
+            builder.AddApplicationLogging();
 
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
             builder.Services.AddCascadingAuthenticationState();
@@ -72,6 +77,14 @@ namespace PayRunIO.ReportBuilder
             builder.Services.AddHttpClient(ApiTokenAccessor.HttpClientName);
 
             builder.Services.AddSingleton<IUserTokenStore, InMemoryUserTokenStore>();
+
+            // Scoped: one diagnostic identity per Blazor circuit, so every log event raised by a
+            // user's session shares a correlation id.
+            builder.Services.AddScoped<DiagnosticContext>();
+            builder.Services.AddScoped<QueryFailureLog>();
+            builder.Services.AddScoped<AssistantFailureLog>();
+            builder.Services.AddScoped<AssistantConversationLog>();
+
             builder.Services.AddScoped<ApiTokenAccessor>();
             builder.Services.AddScoped<PayRunQueryService>();
             builder.Services.AddScoped<ReportDefinitionService>();
@@ -159,6 +172,10 @@ namespace PayRunIO.ReportBuilder
                     });
 
             app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+
+            // BetterStack delivery is batched and asynchronous, so the final batch is only sent if
+            // the appender is closed before the process exits.
+            app.Lifetime.ApplicationStopped.Register(LoggingSetup.ShutdownLogging);
 
             app.Run();
         }

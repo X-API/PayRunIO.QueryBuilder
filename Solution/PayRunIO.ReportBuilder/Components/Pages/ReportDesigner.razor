@@ -9,6 +9,7 @@
 @inject DesignerModeStore ModeStore
 @inject NavigationManager Navigation
 @inject IJSRuntime JsRuntime
+@inject DiagnosticContext Diagnostics
 
 <PageTitle>Report designer — PayRun.io Report Builder</PageTitle>
 
@@ -207,17 +208,29 @@
     [SupplyParameterFromQuery(Name = "new")]
     public bool StartNew { get; set; }
 
+    /// <summary>Supplied by the cascading authentication state so the diagnostic context can record
+    /// which account a failing query belongs to.</summary>
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     private string QueryXml
     {
         get => this.Session.QueryXml;
         set => this.Session.QueryXml = value;
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         // Re-save (debounced) whenever any part of the session changes — query edits, variable edits,
         // chat turns and run results all flow through Session.Changed.
         this.Session.Changed += this.OnSessionChanged;
+
+        if (this.AuthenticationState != null)
+        {
+            var state = await this.AuthenticationState;
+
+            this.Diagnostics.Capture(state.User);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -253,7 +266,7 @@
         if (!string.IsNullOrEmpty(this.Template) && CommonReportCatalog.FindByKey(this.Template) is { } template)
         {
             this.Session.Restore(new ReportSessionSnapshot());
-            this.Session.QueryXml = template.QueryXml;
+            this.Session.SetQueryXml(template.QueryXml, QueryOrigin.Stored);
         }
         else if (!string.IsNullOrEmpty(this.LocalReportId))
         {
@@ -300,7 +313,7 @@
 
         try
         {
-            var result = await this.QueryService.ExecuteQueryAsync(this.Session.QueryXml);
+            var result = await this.QueryService.ExecuteQueryAsync(this.Session.QueryXml, this.Session.QueryOrigin);
 
             this.Session.SetResult(result, result.Success ? null : result.ErrorMessage, sessionExpired: false);
         }
@@ -324,7 +337,7 @@
         {
             var report = await this.ReportDefinitions.LoadReportAsync(reportId);
 
-            this.Session.QueryXml = report.QueryXml;
+            this.Session.SetQueryXml(report.QueryXml, QueryOrigin.Stored);
             this.Session.SavedReportId = report.Id;
             this.Session.ReportName = report.Name;
         }
@@ -440,7 +453,7 @@
             return;
         }
 
-        this.Session.QueryXml = report.QueryXml;
+        this.Session.SetQueryXml(report.QueryXml, QueryOrigin.Stored);
         this.Session.LocalReportId = report.Id;
         this.Session.SavedReportId = report.PublishedReportId;
         this.Session.ReportName = report.Name;
@@ -448,7 +461,7 @@
 
     private void ApplyQueryFromChat(string xml)
     {
-        this.Session.QueryXml = xml.Trim();
+        this.Session.SetQueryXml(xml.Trim(), QueryOrigin.Assistant);
     }
 
     private void OnAssistantBusyChanged(bool busy)
