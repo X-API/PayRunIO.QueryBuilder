@@ -2628,7 +2628,7 @@ Expression: AllPaySchedulePeriods
   
 Expression: AllTaxMonths  
   
-Note: Requires that “[TaxYear]” variable has been set.  
+Note: Requires that “[TaxYear]” variable has been set. Sets multiple variables: "[TaxPeriod]", "[TaxPeriodStart]" and "[TaxPeriodEnd]"  
   
 * Comma-separated list of values  
   
@@ -2824,7 +2824,9 @@ The evaluation order within a group follows this sequence:
 
 - Groups using `LoopExpression` evaluate once **per loop value**.
 - For each iteration:
-  - The `[LoopVariable]` is updated.
+  - The loop expression's variables are updated. Most expressions (`CSV:`, `Range:`,
+    `AllPaySchedulePeriods`) set `[LoopVariable]`; `AllTaxMonths` instead sets `[TaxPeriod]`,
+    `[TaxPeriodStart]` and `[TaxPeriodEnd]`, and leaves `[LoopVariable]` unset.
   - The group is re-evaluated with outputs and filters applied anew.
 - Any output to a global variable will **overwrite or append** across iterations depending on the `Output` type.
 

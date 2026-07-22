@@ -423,6 +423,87 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         [Test]
+        public void Lint_AllTaxMonthsVariables_AreRecognised()
+        {
+            // AllTaxMonths sets [TaxPeriod], [TaxPeriodStart] and [TaxPeriodEnd] per iteration
+            // rather than [LoopVariable], so all three count as assigned.
+            var xml = Query(
+                "<Variables><Variable Name=\"[TaxYear]\" Value=\"2024\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Periods\" ItemName=\"Period\" LoopExpression=\"AllTaxMonths\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"TaxMonth\" Value=\"[TaxPeriod]\" />"
+                + "<Output xsi:type=\"RenderValue\" Name=\"StartDate\" Value=\"[TaxPeriodStart]\" Format=\"yyyy-MM-dd\" />"
+                + "<Output xsi:type=\"RenderValue\" Name=\"EndDate\" Value=\"[TaxPeriodEnd]\" Format=\"yyyy-MM-dd\" />"
+                + "</Group>"
+                + "</Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_LoopVariableInsideAllTaxMonths_IsFlagged()
+        {
+            // AllTaxMonths does not set [LoopVariable]; using it renders the literal placeholder
+            // text in every row rather than failing, so the linter has to catch it.
+            var xml = Query(
+                "<Variables><Variable Name=\"[TaxYear]\" Value=\"2024\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Periods\" LoopExpression=\"AllTaxMonths\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"TaxMonth\" Value=\"[LoopVariable]\" />"
+                + "</Group>"
+                + "</Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("LoopVariableNotSet"));
+
+            var message = diagnostics.First(d => d.Code == "LoopVariableNotSet").Message;
+
+            // The fix has to be named, otherwise the diagnostic cannot be acted on.
+            Assert.That(message, Does.Contain("[TaxPeriod]"));
+            Assert.That(message, Does.Contain("AllTaxMonths"));
+        }
+
+        [Test]
+        public void Lint_LoopVariableInsideValueLoops_IsNotFlagged()
+        {
+            // CSV:, Range: and AllPaySchedulePeriods all set [LoopVariable] as usual.
+            foreach (var expression in new[] { "CSV:a,b,c", "Range:1-52", "AllPaySchedulePeriods" })
+            {
+                var xml = Query(
+                    "<Groups>"
+                    + $"<Group GroupName=\"Loop\" LoopExpression=\"{expression}\">"
+                    + "<Output xsi:type=\"RenderValue\" Name=\"Value\" Value=\"[LoopVariable]\" />"
+                    + "</Group>"
+                    + "</Groups>");
+
+                Assert.That(
+                    this.linter.Lint(xml).Select(d => d.Code),
+                    Has.No.Member("LoopVariableNotSet"),
+                    $"'{expression}' sets [LoopVariable] and must not be flagged.");
+            }
+        }
+
+        [Test]
+        public void Lint_LoopVariableInNestedValueLoop_IsNotFlagged()
+        {
+            // A nested loop rebinds [LoopVariable], so a use inside it is legitimate even though
+            // the outer AllTaxMonths group does not set it.
+            var xml = Query(
+                "<Variables><Variable Name=\"[TaxYear]\" Value=\"2024\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Periods\" LoopExpression=\"AllTaxMonths\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"TaxMonth\" Value=\"[TaxPeriod]\" />"
+                + "<Group GroupName=\"Inner\" LoopExpression=\"Range:1-3\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"Value\" Value=\"[LoopVariable]\" />"
+                + "</Group>"
+                + "</Group>"
+                + "</Groups>");
+
+            Assert.That(this.linter.Lint(xml).Select(d => d.Code), Has.No.Member("LoopVariableNotSet"));
+        }
+
+        [Test]
         public void Lint_RequiredVariables_CountAsAssigned()
         {
             var xml = Query(

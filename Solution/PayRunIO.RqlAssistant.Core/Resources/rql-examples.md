@@ -473,16 +473,17 @@ group including nested groups. `<Condition>` elements must be the first children
   </Variables>
   <Groups>
     <Group GroupName="Periods" ItemName="Period" LoopExpression="AllTaxMonths">
-      <Output xsi:type="RenderValue" Name="TaxMonth" Value="[LoopVariable]" />
-      <Output xsi:type="RenderTaxPeriodDate" DisplayName="StartDate" TaxYear="[TaxYear]" TaxPeriod="[LoopVariable]" PayFrequency="Monthly" Format="yyyy-MM-dd" />
-      <Output xsi:type="RenderTaxPeriodDate" DisplayName="EndDate" TaxYear="[TaxYear]" TaxPeriod="[LoopVariable]" PayFrequency="Monthly" EndDate="true" Format="yyyy-MM-dd" />
+      <Output xsi:type="RenderValue" Name="TaxMonth" Value="[TaxPeriod]" />
+      <Output xsi:type="RenderValue" Name="StartDate" Value="[TaxPeriodStart]" Format="yyyy-MM-dd" />
+      <Output xsi:type="RenderValue" Name="EndDate" Value="[TaxPeriodEnd]" Format="yyyy-MM-dd" />
     </Group>
   </Groups>
 </Query>
 ```
 
-**Notes:** `AllTaxMonths` requires the `[TaxYear]` variable. Other loop forms:
-`AllPaySchedulePeriods`, `CSV:a,b,c` and `Range:1-52`. The current value is always
+**Notes:** `AllTaxMonths` requires the `[TaxYear]` variable and sets `[TaxPeriod]`,
+`[TaxPeriodStart]`, `[TaxPeriodEnd]` — it does **not** set `[LoopVariable]`. Other loop forms:
+`AllPaySchedulePeriods`, `CSV:a,b,c` and `Range:1-52`, which expose the current value as
 `[LoopVariable]`.
 
 ## Tabular gross-to-net report
