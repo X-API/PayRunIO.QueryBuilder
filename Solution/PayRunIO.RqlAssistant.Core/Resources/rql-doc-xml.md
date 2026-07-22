@@ -1330,6 +1330,60 @@ The **Sum** aggregate output renders the summed value of properties within the m
 
 --/CodeTabs--
 
+### Output Scoped Filters
+
+An **Output** may contain its own **Filter** elements. These narrow the matched entity set for that
+single output only, leaving sibling outputs in the same group unaffected.
+
+This lets one group selector feed several differently-filtered aggregates in a single traversal,
+rather than repeating the selector across several sibling groups.
+
+:::success
+**Why this matters for multi-type endpoints**  
+Endpoints such as employee *PayLines* return several entity types. An output scoped **OfType** filter
+pins the subtype for that aggregate, so you can read properties that exist only on the subtype -
+for example *TaxablePay* on **PayLineTax** - while a sibling output sums the base *Value* property
+across every pay line.
+:::
+
+#### Example: Two aggregates, one traversal
+
+The following query sums taxable pay from tax lines only, and net pay from all pay lines, using a
+single *PayLines* selector.
+
+--CodeTabs--
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <RootNodeName>PayslipValues</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[EmployeeKey]" Value="EE001" />
+    <Variable Name="[PaymentDate]" Value="2025-05-31" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Payslip" Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines">
+      <Filter xsi:type="EqualTo" Property="PaymentDate" Value="[PaymentDate]" />
+      <!-- Scoped to tax lines: TaxablePay exists on PayLineTax, not on the PayLine base type -->
+      <Output xsi:type="Sum" Name="TaxablePay" Property="TaxablePay">
+        <Filter xsi:type="OfType" Value="PayLineTax" />
+      </Output>
+      <!-- Unscoped: sums the Value property across every matched pay line -->
+      <Output xsi:type="Sum" Name="NetPay" Property="Value" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+--/CodeTabs--
+
+:::info
+**Scope precedence**  
+Group level filters apply to every output in the group. An output scoped filter applies *in addition*
+to them, and only to its own output. Scoping is not inherited by sibling outputs - each output that
+needs narrowing must declare its own filter.
+:::
+
 ## Variables  
   
 The query engine supports simple type variables. These key value pairs can be used to store strings, dates and numbers.  

@@ -113,6 +113,78 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         [Test]
+        public void Lint_PropertyValidForOutputScopedOfType_NoDiagnostics()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Output xsi:type=\"Sum\" Name=\"TaxablePay\" Property=\"TaxablePay\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"PayLineTax\" />"
+                + "</Output>"
+                + "<Output xsi:type=\"Sum\" Name=\"NetPay\" Property=\"Value\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_PropertyInvalidForOutputScopedOfType_WarnsUnknownProperty()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Output xsi:type=\"Sum\" Name=\"ErNi\" Property=\"EmployerNI\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"PayLineTax\" />"
+                + "</Output>"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownProperty"));
+        }
+
+        [Test]
+        public void Lint_OutputScopedOfType_DoesNotNarrowSiblingOutputs()
+        {
+            var xml = Query(
+                "<Variables>"
+                + "<Variable Name=\"[EmployerKey]\" Value=\"ER001\" />"
+                + "<Variable Name=\"[EmployeeKey]\" Value=\"EE001\" />"
+                + "</Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employee/[EmployeeKey]/PayLines\">"
+                + "<Output xsi:type=\"Sum\" Name=\"TaxablePay\" Property=\"TaxablePay\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"PayLineTax\" />"
+                + "</Output>"
+                + "<Output xsi:type=\"Sum\" Name=\"Bad\" Property=\"TaxablePay\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownProperty"));
+        }
+
+        [Test]
+        public void Lint_UnknownOutputScopedOfTypeValue_WarnsUnknownEntityType()
+        {
+            var xml = Query(
+                "<Groups><Group Selector=\"/Employers\">"
+                + "<Output xsi:type=\"Sum\" Name=\"X\" Property=\"Value\">"
+                + "<Filter xsi:type=\"OfType\" Value=\"NotARealEntityType\" />"
+                + "</Output>"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("UnknownEntityType"));
+        }
+
+        [Test]
         public void Lint_UnknownOfTypeValue_WarnsUnknownEntityType()
         {
             var xml = Query(

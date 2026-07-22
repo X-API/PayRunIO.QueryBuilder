@@ -225,14 +225,22 @@ namespace PayRunIO.RqlAssistant.Service
                         continue;
                     }
 
-                    if (scopeKnown)
+                    // An output may carry its own OfType filter, narrowing the matched set for that
+                    // aggregate alone. When present it overrides the group scope, so properties of
+                    // the narrowed subtype resolve rather than falsely reporting as unknown.
+                    var elementScope = this.ResolveOutputOfTypeScope(element, diagnostics);
+                    var effectiveKnown = elementScope?.Known ?? scopeKnown;
+                    var effectiveProperties = elementScope?.Properties ?? scopedProperties;
+                    var effectiveNames = elementScope?.Names ?? scopeNames;
+
+                    if (effectiveKnown)
                     {
-                        if (!scopedProperties.Contains(property))
+                        if (!effectiveProperties.Contains(property))
                         {
                             diagnostics.Add(Warn(
                                 element,
                                 "UnknownProperty",
-                                $"Property '{property}' does not exist on {string.Join("/", scopeNames)} (the entity type selected by this group). Use get_schema to confirm property names."));
+                                $"Property '{property}' does not exist on {string.Join("/", effectiveNames)} (the entity type selected by this group). Use get_schema to confirm property names."));
                         }
                     }
                     else if (!this.GetAllPropertyNames().Contains(property))
@@ -245,6 +253,66 @@ namespace PayRunIO.RqlAssistant.Service
                 }
             }
         }
+
+        /// <summary>
+        /// Resolves the property scope contributed by an output's own child OfType filters, or null
+        /// when the output carries none and the enclosing group scope should be used instead.
+        /// </summary>
+        /// <remarks>
+        /// An Output may nest its own Filter elements to narrow the matched set for that aggregate
+        /// alone, letting one selector feed several differently-filtered aggregates in a single
+        /// traversal. A nested OfType therefore pins a subtype whose properties need not exist on the
+        /// type the group selector yields, e.g. summing PayLineTax.TaxablePay over a PayLines group.
+        /// </remarks>
+        private PropertyScope? ResolveOutputOfTypeScope(XElement element, List<ValidationDiagnostic> diagnostics)
+        {
+            var typeNames = element.Elements("Filter")
+                .Where(f => string.Equals(TypeOf(f), "OfType", StringComparison.OrdinalIgnoreCase))
+                .Select(f => f.Attribute("Value")?.Value)
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Cast<string>()
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            if (typeNames.Length == 0)
+            {
+                return null;
+            }
+
+            var properties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var known = true;
+
+            foreach (var typeName in typeNames)
+            {
+                var schema = this.repository.GetSchema(typeName);
+
+                if (schema == null)
+                {
+                    diagnostics.Add(Warn(
+                        element,
+                        "UnknownEntityType",
+                        $"The OfType filter or OFTYPE predicate names '{typeName}' which matches no known entity schema. Use list_schemas to find the correct type name."));
+                    known = false;
+                    continue;
+                }
+
+                foreach (var property in schema.Properties ?? Enumerable.Empty<Models.PropertyDefinition>())
+                {
+                    if (property.Name != null)
+                    {
+                        properties.Add(property.Name);
+                    }
+                }
+            }
+
+            return new PropertyScope(known, properties, typeNames);
+        }
+
+        /// <summary>
+        /// A resolved set of property names valid for a scope, along with the entity type names that
+        /// contributed them and whether every one of those types resolved to a known schema.
+        /// </summary>
+        private sealed record PropertyScope(bool Known, HashSet<string> Properties, string[] Names);
 
         /// <summary>
         /// Resolves the entity schema a group's selector yields, or null when it cannot be pinned to
