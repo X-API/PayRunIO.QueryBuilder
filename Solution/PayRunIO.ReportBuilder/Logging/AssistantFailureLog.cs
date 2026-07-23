@@ -144,6 +144,9 @@ namespace PayRunIO.ReportBuilder.Logging
         /// Records a reply that contained no XML block at all, so no query could be extracted. Often
         /// means the model answered conversationally when a query was expected — which can only be
         /// confirmed by reading the reply, so the reply text is recorded with it.
+        ///
+        /// The reply goes in the message only. There is no query to separate out of it here, so a
+        /// matching property would just be a second copy of the same text.
         /// </summary>
         /// <param name="prompt">The prompt that was asked.</param>
         /// <param name="response">The reply that contained no query block.</param>
@@ -152,7 +155,7 @@ namespace PayRunIO.ReportBuilder.Logging
             var properties = this.BaseProperties();
 
             properties["prompt"] = prompt;
-            properties["response"] = response;
+            properties["responseLength"] = response?.Length;
 
             StructuredLog.Write(
                 Log,
@@ -174,10 +177,15 @@ namespace PayRunIO.ReportBuilder.Logging
         /// The human readable body of a validation failure message: every diagnostic in full, the
         /// query they were raised against, and the prompt that asked for it.
         ///
-        /// This duplicates what the structured properties carry, deliberately. The properties are
-        /// what aggregate queries run against; the message is what a person reads when a failure is
-        /// opened, and a failure that cannot be understood from the log line on its own tends not to
-        /// be investigated at all.
+        /// The diagnostics and the prompt duplicate what the structured properties carry,
+        /// deliberately: the properties are what aggregate queries run against, while the message is
+        /// what a person reads when a failure is opened, and a failure that cannot be understood
+        /// from the log line on its own tends not to be investigated at all.
+        ///
+        /// The query body is the exception. It is the largest part of the event by some margin and
+        /// travels verbatim in the "queryXml" property, so the message notes its presence and size
+        /// rather than repeating it. The line stays self-describing — the diagnostics name the lines
+        /// they were raised against — without paying for the query twice.
         /// </summary>
         private static string Detail(
             IReadOnlyList<ValidationDiagnostic> diagnosticList,
@@ -198,7 +206,7 @@ namespace PayRunIO.ReportBuilder.Logging
 
             if (!string.IsNullOrWhiteSpace(queryXml))
             {
-                builder.Append($"\nQuery:\n{queryXml}");
+                builder.Append($"\nQuery: [redacted — see the queryXml property, {queryXml.Length} chars]");
             }
 
             return builder.ToString();

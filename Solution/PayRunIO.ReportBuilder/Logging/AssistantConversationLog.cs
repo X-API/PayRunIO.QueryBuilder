@@ -69,9 +69,13 @@ namespace PayRunIO.ReportBuilder.Logging
         }
 
         /// <summary>
-        /// Records the model's reply verbatim, together with the query extracted from it. A reply
-        /// whose prose and XML disagree is a distinct failure mode from one that simply produced an
-        /// invalid query, and it is only visible with the full text.
+        /// Records the model's reply and the query extracted from it. A reply whose prose and XML
+        /// disagree is a distinct failure mode from one that simply produced an invalid query, and
+        /// it is only visible from the reply text.
+        ///
+        /// The reply travels in the message rather than as a property, with the query redacted out
+        /// of it. The query is carried separately by "extractedQueryXml", so between the two the
+        /// whole reply is still recoverable — but each half is stored exactly once.
         /// </summary>
         /// <param name="response">The complete reply text.</param>
         /// <param name="extractedQueryXml">The query pulled out of the reply, or null if none.</param>
@@ -87,18 +91,35 @@ namespace PayRunIO.ReportBuilder.Logging
 
             properties["eventKind"] = "AssistantResponse";
             properties["phase"] = phase;
-            properties["response"] = response;
             properties["extractedQueryXml"] = extractedQueryXml;
             properties["queryExtracted"] = extractedQueryXml != null;
+            properties["responseLength"] = response.Length;
             properties["elapsedMs"] = (long)elapsed.TotalMilliseconds;
 
             StructuredLog.Write(
                 Log,
                 Level.Debug,
                 $"Assistant response ({phase}, {response.Length} chars, {elapsed.TotalMilliseconds:F0}ms, "
-                + $"query {(extractedQueryXml == null ? "not extracted" : "extracted")}): {response}",
+                + $"query {(extractedQueryXml == null ? "not extracted" : "extracted")}): "
+                + Redact(response, extractedQueryXml),
                 properties);
         }
+
+        /// <summary>
+        /// Removes the extracted query from the message text, leaving a placeholder in its place.
+        ///
+        /// The query is already shipped in full as the "extractedQueryXml" property, and a query is
+        /// typically the bulk of a reply, so repeating it inside the rendered message would store
+        /// the largest part of every turn twice. What the message keeps is the prose around it —
+        /// the part no property carries, and the part that shows what the model thought it was
+        /// doing. Nothing is lost: the two halves rejoin on the same event.
+        /// </summary>
+        /// <param name="response">The complete reply text.</param>
+        /// <param name="extractedQueryXml">The query to redact, or null to leave the reply intact.</param>
+        private static string Redact(string response, string? extractedQueryXml) =>
+            string.IsNullOrWhiteSpace(extractedQueryXml)
+                ? response
+                : response.Replace(extractedQueryXml, "[query redacted — see the extractedQueryXml property]");
 
         /// <summary>
         /// Records the correction prompt built from a set of diagnostics. Pairing the instruction
