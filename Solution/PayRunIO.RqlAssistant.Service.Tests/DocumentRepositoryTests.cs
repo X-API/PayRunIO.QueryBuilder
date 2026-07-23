@@ -99,5 +99,27 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             Assert.That(schemas, Is.Empty);
         }
+
+        /// <summary>
+        /// The generated dtos.json carries no descriptions for the MetaData members, and its
+        /// Collection&lt;MetaDataItem&gt; shape actively suggests the invalid collection-navigation
+        /// form. The repository injects RQL usage guidance at load time so the schema tools cannot
+        /// hand an agent that misleading picture.
+        /// </summary>
+        [Test]
+        public void GetSchema_MetaData_CarriesRqlUsageGuidance()
+        {
+            var schema = this.repository.GetSchema("MetaData");
+
+            Assert.That(schema, Is.Not.Null);
+            Assert.That(schema!.Description, Does.Contain("pseudo property"));
+
+            var items = schema.Properties.Single(p => p.Name == "Items");
+            var allItemNames = schema.Properties.Single(p => p.Name == "AllItemNames");
+
+            Assert.That(items.Description, Does.Contain("NOT addressable"));
+            Assert.That(allItemNames.Description, Does.Contain("comma separated"));
+            Assert.That(allItemNames.Description, Does.Contain("NOT valid in a group Predicate"));
+        }
     }
 }

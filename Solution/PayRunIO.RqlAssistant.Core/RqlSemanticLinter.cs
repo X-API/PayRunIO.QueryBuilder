@@ -143,6 +143,7 @@ namespace PayRunIO.RqlAssistant.Service
 
             this.CheckSelectors(root, diagnostics);
             this.CheckPropertyReferences(root, diagnostics);
+            CheckMetaDataReferences(root, diagnostics);
             CheckVariableAssignments(root, diagnostics);
             CheckLoopVariableUsage(root, diagnostics);
             CheckEntityLessGroupOperations(root, diagnostics);
@@ -438,6 +439,73 @@ namespace PayRunIO.RqlAssistant.Service
             if (plural.EndsWith("s", StringComparison.OrdinalIgnoreCase))
             {
                 yield return plural[..^1];
+            }
+        }
+
+        /// <summary>
+        /// Matches an attempt to navigate the meta data item collection, e.g. <c>MetaData.Items</c>
+        /// or <c>MetaData.Item[0].Value</c>. RQL exposes items as pseudo properties
+        /// (<c>MetaData.CostCentre</c>) and cannot traverse the underlying collection, but the
+        /// generated schema advertises an <c>Items</c> member of type
+        /// <c>Collection&lt;MetaDataItem&gt;</c>, which makes this a natural mistake to write.
+        /// </summary>
+        private static readonly Regex MetaDataItemsNavigation =
+            new Regex(@"\bMetaData\s*\.\s*Items?\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Matches a reference to the <c>AllItemNames</c> meta data extension.
+        /// </summary>
+        private static readonly Regex MetaDataAllItemNames =
+            new Regex(@"\bMetaData\s*\.\s*AllItemNames\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Attributes that carry a property path or expression in which a meta data reference can appear.
+        /// </summary>
+        private static readonly string[] MetaDataBearingAttributes =
+            { "Property", "Predicate", "Expression", "Value", "Value2", "ValueA", "ValueB" };
+
+        /// <summary>
+        /// Flags the two meta data mistakes the property checker cannot see, because it skips every
+        /// dotted path: navigating the item collection (never valid), and using
+        /// <c>AllItemNames</c> in a group Predicate (not translatable to SQL, so the engine cannot
+        /// evaluate it at the database).
+        /// </summary>
+        private static void CheckMetaDataReferences(XElement root, List<ValidationDiagnostic> diagnostics)
+        {
+            foreach (var element in root.DescendantsAndSelf())
+            {
+                foreach (var attribute in element.Attributes())
+                {
+                    if (!MetaDataBearingAttributes.Contains(attribute.Name.LocalName, StringComparer.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (MetaDataItemsNavigation.IsMatch(attribute.Value))
+                    {
+                        diagnostics.Add(Warn(
+                            element,
+                            "MetaDataItemsNavigation",
+                            $"'{attribute.Name.LocalName}' navigates the meta data item collection, which RQL cannot do. "
+                            + "Meta data values are read with the item name as a pseudo property of the MetaData sub "
+                            + "element, e.g. Property=\"MetaData.CostCentre\". To work with item names dynamically use "
+                            + "\"MetaData.AllItemNames\" (a comma separated list of every item name). "
+                            + "See get_rql_syntax('meta-data')."));
+                    }
+
+                    // AllItemNames has no SQL equivalent, so it cannot be evaluated in a predicate.
+                    if (attribute.Name.LocalName == "Predicate" && MetaDataAllItemNames.IsMatch(attribute.Value))
+                    {
+                        diagnostics.Add(Warn(
+                            element,
+                            "MetaDataAllItemNamesInPredicate",
+                            "'MetaData.AllItemNames' cannot be used in a group Predicate: predicates are translated "
+                            + "into direct SQL clauses and this RQL extension has no SQL equivalent. Move the test to a "
+                            + "<Filter xsi:type=\"Contain\" Property=\"MetaData.AllItemNames\" Value=\"ItemName\" />, "
+                            + "which is evaluated in memory, or test a concrete item instead "
+                            + "(Predicate=\"MetaData.ItemName != null\")."));
+                    }
+                }
             }
         }
 

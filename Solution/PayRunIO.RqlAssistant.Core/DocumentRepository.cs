@@ -215,7 +215,75 @@ namespace PayRunIO.RqlAssistant.Service
                 }
             }
 
+            ApplyMetaDataGuidance(root);
+
             return root;
+        }
+
+        /// <summary>
+        /// Meta data is the one entity whose RQL access pattern is not inferable from its shape.
+        /// The generated DTO documentation describes the object graph — a MetaData entity holding a
+        /// Collection&lt;MetaDataItem&gt; — which invites the reasonable but invalid conclusion that
+        /// RQL should navigate that collection (<c>MetaData.Items CONTAINS 'X'</c>). In fact RQL
+        /// exposes each item as a pseudo property of the MetaData sub element
+        /// (<c>MetaData.&lt;ItemName&gt;</c>), a name that exists only in the data and can therefore
+        /// never appear in a generated schema.
+        ///
+        /// These descriptions are applied at load time rather than written into dtos.json because
+        /// that file is regenerated wholesale by the schema-refresh tool from the PayRunIO.Models
+        /// XML doc comments, which would discard them. See the "Meta Data" grammar topic for the
+        /// full behaviour and worked examples.
+        /// </summary>
+        private static void ApplyMetaDataGuidance(SchemaRoot root)
+        {
+            var metaData = root.Data
+                .FirstOrDefault(d => string.Equals(d.ClassName, "MetaData", StringComparison.OrdinalIgnoreCase));
+
+            if (metaData == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(metaData.Description))
+            {
+                metaData.Description =
+                    "Dynamic key/value pairs stored against an entity. In RQL, read an item by using its name as a "
+                    + "pseudo property of the MetaData sub element, e.g. Property=\"MetaData.CostCentre\" or "
+                    + "Predicate=\"MetaData.CostCentre != null\". Item names are data, not schema members, so they are "
+                    + "never listed here. Call get_rql_syntax('meta-data') for the full rules and examples.";
+            }
+
+            SetPropertyDescription(
+                metaData,
+                "Items",
+                "The underlying item collection. NOT addressable from RQL — expressions such as "
+                + "\"MetaData.Items CONTAINS 'Name'\" or \"MetaData.Items.Name\" are invalid. Use the pseudo property "
+                + "form \"MetaData.<ItemName>\" instead, or \"MetaData.AllItemNames\" when the names are not known "
+                + "in advance.");
+
+            SetPropertyDescription(
+                metaData,
+                "AllItemNames",
+                "RQL extension returning a comma separated list of every meta data item name on the entity, e.g. "
+                + "\"NameA,NameB,NameC\". Use it to discover items dynamically — feed it into a \"CSV:\" loop "
+                + "expression, or test for an item with a Contain filter. NOT valid in a group Predicate (no direct "
+                + "SQL translation); use it in Output, Filter and Condition positions only.");
+        }
+
+        /// <summary>
+        /// Overwrites a property's description when the property is present. Unlike the class
+        /// description this always replaces, since the generated text describes the object graph
+        /// rather than the RQL access pattern.
+        /// </summary>
+        private static void SetPropertyDescription(ClassDefinition definition, string propertyName, string description)
+        {
+            var property = definition.Properties
+                .FirstOrDefault(p => string.Equals(p.Name, propertyName, StringComparison.OrdinalIgnoreCase));
+
+            if (property != null)
+            {
+                property.Description = description;
+            }
         }
 
         // See DescriptionHygiene for the load-time / write-time sanitisation rule.

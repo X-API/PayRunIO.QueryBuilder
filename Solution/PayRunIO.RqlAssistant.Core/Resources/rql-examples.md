@@ -864,3 +864,66 @@ follow its link to the scheme, sum the holiday pay lines, then render the row.
   than after fetch.
 - Accrual variables are reset per row, and the final `ExpressionCalculator` group derives
   the `Balance` column as `[Accrued] - [Reclaimed]`.
+
+## Employees carrying a named meta data item
+
+- **Request:** List employees that have a "CostCentre" meta data item, showing its value.
+- **Tags:** meta-data, employee, contain-filter, dynamic-properties
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>EmployeesWithCostCentre</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Employees" ItemName="Employee" Selector="/Employer/[EmployerKey]/Employees" Predicate="MetaData.CostCentre != null">
+      <Output xsi:type="RenderProperty" Name="Code" Property="Code" />
+      <Output xsi:type="RenderProperty" Name="Surname" Property="LastName" />
+      <Output xsi:type="RenderProperty" Name="CostCentre" Property="MetaData.CostCentre" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** Meta data items are addressed with a **pseudo property** dot notation —
+`MetaData.CostCentre` reads the item named "CostCentre". The item name is data, not a schema
+member, so `get_schema` will never list it. Never navigate the underlying collection:
+`MetaData.Items CONTAINS 'CostCentre'` is **invalid RQL**. A missing item resolves to `null`, so
+`MetaData.CostCentre != null` is the idiomatic existence test and, being a concrete item, it is
+legal in a group `Predicate`. To test existence without knowing the name at authoring time, use a
+`Contain` filter over `MetaData.AllItemNames` instead — but only in a `Filter`, never a
+`Predicate`.
+
+## Dynamically report all meta data items per employee
+
+- **Request:** For every employee, list each meta data item name and value without knowing the names in advance.
+- **Tags:** meta-data, all-item-names, loop-expressions, csv-loop, dynamic-properties
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>EmployeeMetaData</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+    <Variable Name="[ItemNames]" Value="" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Employees" ItemName="Employee" Selector="/Employer/[EmployerKey]/Employees">
+      <Output xsi:type="RenderProperty" Name="Code" Property="Code" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[ItemNames]" Property="MetaData.AllItemNames" />
+      <Group GroupName="MetaDataItems" ItemName="Item" LoopExpression="CSV:[ItemNames]">
+        <Output xsi:type="RenderValue" Name="ItemName" Value="[LoopVariable]" />
+        <Output xsi:type="RenderProperty" Name="ItemValue" Property="MetaData.[LoopVariable]" />
+      </Group>
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Notes:** `MetaData.AllItemNames` is an RQL specific extension returning a comma separated list of
+every meta data item name on the entity (e.g. `NameA,NameB,NameC`). Captured into a variable it
+feeds a `CSV:` loop expression directly, giving one iteration per item with the name exposed as
+`[LoopVariable]`. The value is then read back with `MetaData.[LoopVariable]` — the variable is
+substituted into the pseudo property path before resolution, which is what makes name-agnostic
+meta data reporting possible. `AllItemNames` is **not valid in a group `Predicate`** because it has
+no direct SQL translation; keep it in `Output`, `Filter` and `Condition` positions.

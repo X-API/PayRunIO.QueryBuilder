@@ -138,6 +138,13 @@ position: 950
   - [Number Format Examples](#number-format-examples)
   - [Example: Formatting with RenderValue](#example-formatting-with-rendervalue)
   - [Handling Nulls and Defaults](#handling-nulls-and-defaults)
+- [Meta Data](#meta-data)
+  - [An Entity Carrying Meta Data](#an-entity-carrying-meta-data)
+  - [Reading a Meta Data Value](#reading-a-meta-data-value)
+  - [The `AllItemNames` Extension](#the-allitemnames-extension)
+  - [Example: Filtering by the Existence of a Meta Data Item](#example-filtering-by-the-existence-of-a-meta-data-item)
+  - [Example: Dynamically Iterating Every Meta Data Item](#example-dynamically-iterating-every-meta-data-item)
+  - [Quick Reference](#quick-reference)
 - [Output Evaluation Context](#output-evaluation-context)
   - [Output Lifecycle Overview](#output-lifecycle-overview)
   - [Variable Timing and Scope](#variable-timing-and-scope)
@@ -2755,6 +2762,161 @@ RQL uses standard .NET-compatible formatting strings for date types.
 ---
 
 This formatting control helps you present query outputs in a user-friendly and consistent manner across XML and JSON response types.
+
+## Meta Data
+
+Meta data lets you store dynamic key/value pairs against otherwise rigid, schema constrained API
+entities. The pairs are held as an item collection inside the decorated entity's object graph, but
+**RQL does not access them by navigating that collection**. Instead RQL provides a special dot
+notation that treats each meta data item name as a pseudo property of the `MetaData` sub element.
+
+This is the single most counter-intuitive part of working with meta data: the property name you
+write in RQL is *data*, not something declared in the entity schema. `get_schema` will never list
+it, because it only exists for entities that happen to carry an item of that name.
+
+Meta data is available on these entity types: `Employee`, `EmployeeSummary`, `Employer`,
+`EmployerSummary`, `File`, `FileBase`, `FileUpdate`, `PayCode`, `PaySchedule`, `Pension`,
+`SubContractor`, `ThirdPartyJobInstruction` and `User`.
+
+### An Entity Carrying Meta Data
+
+```xml
+<Employer>
+  <Name>Test Employer</Name>
+  ...
+  <MetaData>
+    <Item Name="NameA">Value A</Item>
+    <Item Name="NameB">Value B</Item>
+    <Item Name="NameC">Value C</Item>
+  </MetaData>
+</Employer>
+```
+
+### Reading a Meta Data Value
+
+Reference the item name directly as though it were a property of `MetaData`:
+
+```xml
+<Group Selector="/Employers" Predicate="MetaData.NameA != null">
+  <Output xsi:type="RenderProperty" Name="Example" Property="MetaData.NameB" />
+</Group>
+```
+
+:::warning
+**Never navigate the items collection.**
+Expressions such as `MetaData.Items CONTAINS 'NameA'`, `MetaData.Items.Name`, or
+`MetaData.Item[0].Value` are **not valid RQL**. Although the `MetaData` schema exposes an `Items`
+property of type `Collection<MetaDataItem>`, that member describes the underlying object graph and
+is not addressable from an RQL predicate, filter or output. Always use the
+`MetaData.<ItemName>` pseudo property form.
+:::
+
+A missing item resolves to `null` rather than raising an error, so `MetaData.SomeName != null` is
+the idiomatic way to test whether an entity carries a given meta data item.
+
+### The `AllItemNames` Extension
+
+`MetaData.AllItemNames` is a second RQL specific extension. It returns a **comma separated list of
+every meta data item name** present on the entity. For the example entity above it yields:
+
+```
+NameA,NameB,NameC
+```
+
+This exists to support *dynamic* meta data handling — cases where the item names are not known when
+the query is written. Two idioms depend on it:
+
+* Discovering which items an entity carries, then iterating them with a `CSV:` loop expression.
+* Filtering entities by whether a named item exists, using a `Contain` filter.
+
+:::warning
+**`AllItemNames` cannot be used in a group `Predicate`.**
+Predicates are translated into direct SQL clauses and this extension has no SQL equivalent. Use it
+in `Output`, `Filter` and `Condition` positions, which are evaluated in memory after the entities
+have been retrieved. To narrow entities in the predicate, test a concrete item instead
+(`MetaData.NameA != null`).
+:::
+
+### Example: Filtering by the Existence of a Meta Data Item
+
+Because `AllItemNames` is a string, a `Contain` filter selects entities carrying a named item:
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>EmployersWithMetaDataItem</RootNodeName>
+  <Groups>
+    <Group GroupName="Employers" ItemName="Employer" Selector="/Employers">
+      <Filter xsi:type="Contain" Property="MetaData.AllItemNames" Value="NameB" />
+      <Output xsi:type="RenderProperty" Name="Name" Property="Name" />
+      <Output xsi:type="RenderProperty" Name="ValueB" Property="MetaData.NameB" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+### Example: Dynamically Iterating Every Meta Data Item
+
+Capture `AllItemNames` into a variable, then feed that variable into a `CSV:` loop expression. Each
+iteration exposes one item name as `[LoopVariable]`, which is substituted into the pseudo property
+path to read the matching value:
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>EmployerMetaData</RootNodeName>
+  <Variables>
+    <Variable Name="[ItemNames]" Value="" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Employers" ItemName="Employer" Selector="/Employers">
+      <Output xsi:type="RenderProperty" Name="Name" Property="Name" />
+      <Output xsi:type="RenderProperty" Output="Variable" Name="[ItemNames]" Property="MetaData.AllItemNames" />
+      <Group GroupName="MetaDataItems" ItemName="Item" LoopExpression="CSV:[ItemNames]">
+        <Output xsi:type="RenderValue" Name="ItemName" Value="[LoopVariable]" />
+        <Output xsi:type="RenderProperty" Name="ItemValue" Property="MetaData.[LoopVariable]" />
+      </Group>
+    </Group>
+  </Groups>
+</Query>
+```
+
+**Results**
+
+```xml
+<EmployerMetaData>
+  <Employers>
+    <Employer>
+      <Name>Test Employer</Name>
+      <MetaDataItems>
+        <Item>
+          <ItemName>NameA</ItemName>
+          <ItemValue>Value A</ItemValue>
+        </Item>
+        <Item>
+          <ItemName>NameB</ItemName>
+          <ItemValue>Value B</ItemValue>
+        </Item>
+        <Item>
+          <ItemName>NameC</ItemName>
+          <ItemValue>Value C</ItemValue>
+        </Item>
+      </MetaDataItems>
+    </Employer>
+  </Employers>
+</EmployerMetaData>
+```
+
+Note that the nested group reads `MetaData.[LoopVariable]`: the variable substitutes the item name
+into the pseudo property path before it is resolved. This is what makes fully dynamic meta data
+reporting possible without knowing the item names in advance.
+
+### Quick Reference
+
+| Expression | Valid where | Meaning |
+| --- | --- | --- |
+| `MetaData.NameA` | Predicate, Filter, Order, Output | The value of the item named `NameA`, or `null` when absent. |
+| `MetaData.[LoopVariable]` | Filter, Order, Output | The value of the item whose name the variable resolves to. |
+| `MetaData.AllItemNames` | Filter, Condition, Output (**not** Predicate) | Comma separated list of all item names on the entity. |
+| `MetaData.Items ...` | **Nowhere** | Invalid. Never navigate the item collection. |
 
 ## Output Evaluation Context
 

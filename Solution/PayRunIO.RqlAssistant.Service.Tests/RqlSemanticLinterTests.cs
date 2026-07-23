@@ -832,5 +832,69 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Assert.That(diagnostics, Is.Not.Empty);
             Assert.That(diagnostics.All(d => d.Severity == Service.Models.ValidationSeverity.Warning), Is.True);
         }
+
+        [Test]
+        public void Lint_MetaDataPseudoProperty_NoDiagnostics()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\" Predicate=\"MetaData.CostCentre != null\">"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"CostCentre\" Property=\"MetaData.CostCentre\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_MetaDataItemsNavigation_WarnsMetaDataItemsNavigation()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\" Predicate=\"MetaData.Items CONTAINS 'CostCentre'\">"
+                + "<Output xsi:type=\"RenderEntity\" /></Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("MetaDataItemsNavigation"));
+        }
+
+        [Test]
+        public void Lint_MetaDataItemsNavigationInProperty_WarnsMetaDataItemsNavigation()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Output xsi:type=\"RenderProperty\" Name=\"X\" Property=\"MetaData.Items.Name\" />"
+                + "</Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("MetaDataItemsNavigation"));
+        }
+
+        [Test]
+        public void Lint_AllItemNamesInPredicate_WarnsMetaDataAllItemNamesInPredicate()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\" Predicate=\"MetaData.AllItemNames != null\">"
+                + "<Output xsi:type=\"RenderEntity\" /></Group></Groups>");
+
+            var diagnostics = this.linter.Lint(xml);
+
+            Assert.That(diagnostics.Select(d => d.Code), Has.Member("MetaDataAllItemNamesInPredicate"));
+        }
+
+        [Test]
+        public void Lint_AllItemNamesInFilter_NoDiagnostics()
+        {
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group Selector=\"/Employer/[EmployerKey]/Employees\">"
+                + "<Filter xsi:type=\"Contain\" Property=\"MetaData.AllItemNames\" Value=\"CostCentre\" />"
+                + "<Output xsi:type=\"RenderEntity\" /></Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
     }
 }
