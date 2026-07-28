@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <!--
+    Per user installation. The package installs under the local application data folder so
+    that neither the initial install nor an in application upgrade raises an elevation
+    prompt, and administrators do not need local administrator rights.
+
+    UpgradeCode identifies the product across all of its versions and must never change:
+    it is what allows a newer package to replace an installed one. ProductCode is left to
+    be generated per build, which a MajorUpgrade requires.
+  -->
+  <Package Name="PayRun.io Query Builder"
+           Manufacturer="PayRun.io Ltd"
+           Version="$(ProductVersion)"
+           UpgradeCode="5C41A2E9-0F80-4DB6-A49E-6BB156F0E7E8"
+           Scope="perUser"
+           Compressed="yes">
+
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="AppIcon" SourceFile="$(ProjectRoot)QueryBuilder.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://developer.payrun.io/docs/downloads/index.html" />
+
+    <!--
+      Every stock WiX dialog set presents a licence agreement page, and with no licence file
+      supplied it displays the WiX placeholder text. There is no licence to present for an
+      internal utility, so the Welcome page is repointed straight at the confirmation page
+      and LicenseAgreementDlg is left unreachable.
+    -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+
+    <!-- PayRun.io branded artwork replacing the stock WiX graphics. Both must be 24 bit
+         BMP at the sizes Windows Installer expects: 493x312 for the side panel shown on
+         the Welcome and Finish pages, 493x58 for the strip across the other pages. -->
+    <WixVariable Id="WixUIDialogBmp" Value="$(AssetsRoot)DialogBanner.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(AssetsRoot)TopBanner.bmp" />
+
+    <UI>
+      <!-- Overrides the stock Welcome -> LicenseAgreementDlg navigation. A higher Ordering
+           than the built in event wins, giving Welcome -> Confirm -> Install -> Finish. -->
+      <Publish Dialog="WelcomeDlg"
+               Control="Next"
+               Event="NewDialog"
+               Value="VerifyReadyDlg"
+               Order="10"
+               Condition="NOT Installed" />
+
+      <!-- Keeps Back on the confirmation page consistent with the shortened path. -->
+      <Publish Dialog="VerifyReadyDlg"
+               Control="Back"
+               Event="NewDialog"
+               Value="WelcomeDlg"
+               Order="10"
+               Condition="NOT Installed" />
+
+      <!-- Runs the launch action only when the user leaves the checkbox ticked, and only on
+           a fresh install or upgrade rather than on repair or uninstall. -->
+      <Publish Dialog="ExitDialog"
+               Control="Finish"
+               Event="DoAction"
+               Value="LaunchApplication"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+
+    <!-- Offer to start the application from the final page of the installer. -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT"
+              Value="Launch PayRun.io Query Builder" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <!-- WixShellExecTarget identifies what the launch action starts. It is resolved from the
+         installed file rather than a hard coded path so it follows INSTALLFOLDER. -->
+    <Property Id="WixShellExecTarget" Value="[#QueryBuilderExe]" />
+
+    <CustomAction Id="LaunchApplication"
+                  BinaryRef="Wix4UtilCA_X86"
+                  DllEntry="WixShellExec"
+                  Impersonate="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="PayRun.io Query Builder" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppShortcutFolder" Name="PayRun.io" />
+    </StandardDirectory>
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <!-- The application publishes as a self contained single file, so the package
+         contains one executable rather than a harvested folder of assemblies.
+
+         A component installing into the user profile must take its key path from an HKCU
+         registry value rather than from the file, and the profile directories it creates
+         must be registered for removal so that uninstall leaves nothing behind. -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <!-- Explicit GUID: a component combining a file with a registry key path cannot use
+           an automatically generated one. It must remain stable across releases. -->
+      <Component Id="MainExecutable" Guid="45CC3CE8-23DB-4836-B00F-2BB2F3FF013A">
+        <File Id="QueryBuilderExe"
+              Source="$(PublishRoot)PayRunIO.QueryBuilder.exe" />
+        <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        <RemoveFolder Id="RemoveProgramsFolder" Directory="ProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\PayRun.io\QueryBuilder"
+                       Name="version"
+                       Type="string"
+                       Value="$(ProductVersion)"
+                       KeyPath="yes" />
+      </Component>
+
+      <!--
+        Unlike the other utilities, Query Builder ships a loose appsettings.json beside the
+        executable and loads it with optional:false, so the application will not start
+        without it.
+
+        NeverOverwrite preserves administrator edits across an upgrade. Permanent is required
+        alongside it: a major upgrade removes the old product before installing the new one,
+        and without Permanent the file is deleted by that removal and then skipped by the
+        install because the component is marked never-overwrite, leaving the application
+        unable to start. Permanent keeps the file in place so the edited copy survives.
+
+        The consequence is that new default settings added in a later release do not reach
+        existing installations, so any new key must be handled as absent by the application.
+        The file is also deliberately left behind on uninstall.
+      -->
+      <Component Id="AppSettings"
+                 Guid="1877BB7B-B54A-4C0A-A0E0-40167DD85CB6"
+                 NeverOverwrite="yes"
+                 Permanent="yes">
+        <File Id="AppSettingsJson" Source="$(PublishRoot)appsettings.json" />
+        <!-- A per user component requires an HKCU registry key path. -->
+        <RegistryValue Root="HKCU"
+                       Key="Software\PayRun.io\QueryBuilder"
+                       Name="settingsInstalled"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <Component Id="StartMenuShortcut"
+               Directory="AppShortcutFolder"
+               Guid="90C8E3A3-0C1A-45BA-A0E3-E04CD2EABA64">
+      <Shortcut Id="QueryBuilderShortcut"
+                Name="PayRun.io Query Builder"
+                Target="[INSTALLFOLDER]PayRunIO.QueryBuilder.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <RemoveFolder Id="RemoveAppShortcutFolder" Directory="AppShortcutFolder" On="uninstall" />
+      <!-- A per user component requires an HKCU registry key path. -->
+      <RegistryValue Root="HKCU"
+                     Key="Software\PayRun.io\QueryBuilder"
+                     Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+</Wix>

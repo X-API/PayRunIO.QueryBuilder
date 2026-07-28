@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayRunIO.RqlAssistant.Schem
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PayRunIO.ReportBuilder", "PayRunIO.ReportBuilder\PayRunIO.ReportBuilder.csproj", "{2050AAE6-1545-4346-A3C7-83CA8DD6C94C}"
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "PayRunIO.QueryBuilder.Installer", "PayRunIO.QueryBuilder.Installer\PayRunIO.QueryBuilder.Installer.wixproj", "{42E3E04B-BA3E-417E-BA88-C738847574F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{2050AAE6-1545-4346-A3C7-83CA8DD6C94C}.Release|x64.Build.0 = Release|Any CPU
 		{2050AAE6-1545-4346-A3C7-83CA8DD6C94C}.Release|x86.ActiveCfg = Release|Any CPU
 		{2050AAE6-1545-4346-A3C7-83CA8DD6C94C}.Release|x86.Build.0 = Release|Any CPU
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Debug|Any CPU.Build.0 = Debug|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Debug|x64.ActiveCfg = Debug|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Debug|x64.Build.0 = Debug|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Debug|x86.ActiveCfg = Debug|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Debug|x86.Build.0 = Debug|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Release|Any CPU.ActiveCfg = Release|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Release|Any CPU.Build.0 = Release|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Release|x64.ActiveCfg = Release|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Release|x64.Build.0 = Release|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Release|x86.ActiveCfg = Release|x64
+		{42E3E04B-BA3E-417E-BA88-C738847574F7}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

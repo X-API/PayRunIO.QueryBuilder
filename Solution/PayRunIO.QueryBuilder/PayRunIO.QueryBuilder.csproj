@@ -4,14 +4,29 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <UseWPF>true</UseWPF>
-    <Version>1.0.0.22</Version>
-    <AssemblyVersion>1.0.0.22</AssemblyVersion>
-    <FileVersion>1.0.0.22</FileVersion>
+
+    <!-- Self contained single file, matching the other utilities. Without this the MSI
+         would install successfully and then fail at launch on any machine lacking the
+         .NET 8 Desktop Runtime, with no useful error. IncludeAllContentForSelfExtract
+         keeps appsettings.json readable by the configuration builder at startup. -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+
+    <!-- Baseline for the first MSI release. Every previously distributed 1.0.x copy is
+         strictly older, so installed copies are offered the upgrade. CI overrides the
+         patch field via -p:BuildNumber so that each build produces an upgradeable MSI. -->
+    <VersionPrefix>1.1.0</VersionPrefix>
+    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+    <Version>$(VersionPrefix).$(BuildNumber)</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
     <Company>PayRun.io Ltd</Company>
     <Authors>PayRun.io Ltd</Authors>
     <Product>PayRun.io Query Builder</Product>
     <Description />
-    <Copyright>Copyright 2020</Copyright>
+    <Copyright>Copyright © PayRun.io Ltd</Copyright>
     <ApplicationIcon>QueryBuilder.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -43,8 +58,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Kept beside the executable rather than bundled into the single file. The application
+      reads it from AppDomain.CurrentDomain.BaseDirectory, which for a bundled single file
+      resolves to the temporary extraction directory: an administrator editing the installed
+      file would see no effect. ExcludeFromSingleFile keeps it a real, editable file, which
+      is also what the installer's NeverOverwrite component expects.
+    -->
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
     <None Update="AppSettings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

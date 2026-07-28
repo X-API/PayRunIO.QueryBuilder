@@ -1,0 +1,48 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+
+    <!-- Windows Installer ignores the fourth field of ProductVersion, so a three part
+         value is used here and the patch field must move for every release. Passing
+         -p:BuildNumber=<run number> keeps that automatic in CI. -->
+    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">1.1.$(BuildNumber)</ProductVersion>
+
+    <!-- Declared after ProductVersion: MSBuild evaluates properties in order, so naming
+         the package before the version is set would produce an unversioned file name. -->
+    <OutputName>PayRunIO.QueryBuilder-$(ProductVersion)</OutputName>
+
+    <!-- Defaults to the local self contained publish output. CI passes an absolute path. -->
+    <PublishRoot Condition="'$(PublishRoot)' == ''">$(MSBuildThisFileDirectory)..\PayRunIO.QueryBuilder\bin\Release\net8.0-windows7.0\win-x64\publish\</PublishRoot>
+
+    <ProjectRoot>$(MSBuildThisFileDirectory)..\PayRunIO.QueryBuilder\</ProjectRoot>
+
+    <!-- Installer owned content such as the branded wizard artwork. -->
+    <AssetsRoot>$(MSBuildThisFileDirectory)Assets\</AssetsRoot>
+
+    <DefineConstants>PublishRoot=$(PublishRoot);ProductVersion=$(ProductVersion);ProjectRoot=$(ProjectRoot);AssetsRoot=$(AssetsRoot)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
+    <!-- Provides the WixShellExec custom action used to launch the application from the
+         final page of the installer. -->
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+  <!-- Windows Installer never applies the transparent window style to checkbox controls, so
+       the launch checkbox on the final page paints a grey block over the white area of the
+       branded dialog bitmap. This is a Windows Installer limitation, closed as won't fix
+       upstream (wixtoolset/issues#1141). The accepted workaround, applied to the linked
+       package here, shrinks the checkbox to the tick box and moves its caption into a
+       separate transparent Text control. See Fix-ExitDialogCheckBox.ps1. -->
+  <Target Name="FixExitDialogCheckBox" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <BuiltMsiPath>$(OutputPath)$(OutputName).msi</BuiltMsiPath>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Fix-ExitDialogCheckBox.ps1&quot; -MsiPath &quot;$(BuiltMsiPath)&quot;"
+          Condition="Exists('$(BuiltMsiPath)')" />
+  </Target>
+
+</Project>
