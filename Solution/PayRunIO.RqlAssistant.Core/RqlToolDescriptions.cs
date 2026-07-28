@@ -15,7 +15,7 @@ namespace PayRunIO.RqlAssistant.Service
             "Optional case-insensitive substring filter applied to schema names. Omit to list all schemas.";
 
         public const string GetSchema =
-            "Get the full definition of a single PayRunIO entity schema, including all of its properties. Use this to ground RQL queries against the real shape of entities like Employee, EmployeeSummary, PayRun, etc. Match is exact and case-insensitive; returns null if the name is unknown.";
+            "Get the full definition of a single PayRunIO entity schema, including all of its properties. Use this to ground RQL queries against the real shape of entities like Employee, EmployeeSummary, PayRun, etc. Match is exact and case-insensitive; returns null if the name is unknown. IMPORTANT: the returned list covers one class only — a property whose type is another schema name (e.g. Employee.BankAccount of type BankAccount) is a sub element whose own properties are addressable with a dotted path such as \"BankAccount.SortCode\". Before concluding a value does not exist because no property matches the name the user used, call get_schema on each sub element type the entity exposes; the user's wording will not always name the sub element ('employee sort code' never mentions a bank account). Call get_rql_syntax('sub-elements-and-property-paths') for the traversal rules.";
 
         public const string GetSchemaTypeNameParam =
             "The exact schema type name, e.g. 'Employee', 'EmployeeSummary', 'PayRun'. Case-insensitive.";

@@ -215,9 +215,119 @@ namespace PayRunIO.RqlAssistant.Service
                 }
             }
 
+            ApplySubElementGuidance(root);
             ApplyMetaDataGuidance(root);
 
             return root;
+        }
+
+        /// <summary>
+        /// A property whose type is itself a known schema is a sub element: RQL reaches through it
+        /// with a dotted path (<c>BankAccount.SortCode</c>), so its properties are addressable from
+        /// the parent entity even though <c>get_schema</c> lists them under a different class.
+        ///
+        /// The generated DTO documentation gives no signal that this is possible — a property simply
+        /// reads "BankAccount | BankAccount" — so an agent scanning the parent's property list for a
+        /// name like "SortCode" finds nothing and concludes the field does not exist. That is a real
+        /// observed failure, not a hypothetical one. Annotating the property with the traversal form
+        /// and the names it reaches turns the flat list into a navigable graph.
+        ///
+        /// Applied at load time rather than written into dtos.json because that file is regenerated
+        /// wholesale by the schema-refresh tool, which would discard hand-written text. Deriving the
+        /// annotation from the graph also keeps it correct as the model evolves. See the
+        /// "Sub Elements and Property Paths" grammar topic for the full rules.
+        /// </summary>
+        private static void ApplySubElementGuidance(SchemaRoot root)
+        {
+            var byName = new Dictionary<string, ClassDefinition>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var definition in root.Data)
+            {
+                if (!string.IsNullOrWhiteSpace(definition.ClassName))
+                {
+                    byName[definition.ClassName] = definition;
+                }
+            }
+
+            foreach (var definition in root.Data)
+            {
+                foreach (var property in definition.Properties)
+                {
+                    var elementType = UnwrapCollection(property.Type, out var isCollection);
+
+                    if (elementType == null
+                        || !byName.TryGetValue(elementType, out var target)
+                        || target.Properties.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    // MetaData is dotted into like a sub element but the name after the dot is an item
+                    // name from the data, not one of the properties listed here. Enumerating Items /
+                    // AllItemNames as though they were reachable would teach the invalid form, so this
+                    // carries its own pointer instead.
+                    if (string.Equals(elementType, "MetaData", StringComparison.OrdinalIgnoreCase))
+                    {
+                        property.Description = string.IsNullOrWhiteSpace(property.Description)
+                            ? "Dynamic key/value pairs. Dotted like a sub element, but the name after the dot is "
+                              + "the item name from the data rather than a listed property, e.g. "
+                              + "Property=\"MetaData.CostCentre\". Call get_rql_syntax('meta-data') for the rules."
+                            : property.Description;
+
+                        continue;
+                    }
+
+                    var names = string.Join(", ", target.Properties.Select(p => p.Name));
+
+                    var guidance = isCollection
+                        ? $"Sub element collection of {elementType}. Reach its properties from a group "
+                          + $"selecting {elementType} rather than by dotting through this property from "
+                          + $"{definition.ClassName}. {elementType} exposes: {names}. "
+                          + $"Call get_schema('{elementType}') for full details."
+                        : $"Sub element of type {elementType}. Its properties are addressable from "
+                          + $"{definition.ClassName} using the dotted path \"{property.Name}.<Property>\", e.g. "
+                          + $"Property=\"{property.Name}.{target.Properties[0].Name}\". {elementType} exposes: "
+                          + $"{names}. Call get_schema('{elementType}') for full details.";
+
+                    property.Description = string.IsNullOrWhiteSpace(property.Description)
+                        ? guidance
+                        : $"{property.Description.TrimEnd()} {guidance}";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reduces a verbatim type string to the element type name a schema lookup can resolve,
+        /// stripping nullability and any single-argument collection wrapper (e.g.
+        /// <c>Collection&lt;WorkingWeek&gt;</c> becomes <c>WorkingWeek</c>). Returns <c>null</c> for
+        /// types that carry no resolvable element name.
+        /// </summary>
+        private static string? UnwrapCollection(string? type, out bool isCollection)
+        {
+            isCollection = false;
+
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                return null;
+            }
+
+            var candidate = type.Trim().TrimEnd('?');
+
+            var open = candidate.IndexOf('<');
+
+            if (open > 0 && candidate.EndsWith(">", StringComparison.Ordinal))
+            {
+                isCollection = true;
+                candidate = candidate.Substring(open + 1, candidate.Length - open - 2).Trim().TrimEnd('?');
+
+                // Nested or multi-argument generics are not a sub element shape this guidance covers.
+                if (candidate.Contains('<') || candidate.Contains(','))
+                {
+                    return null;
+                }
+            }
+
+            return candidate.Length == 0 ? null : candidate;
         }
 
         /// <summary>

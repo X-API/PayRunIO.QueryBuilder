@@ -282,7 +282,7 @@ namespace PayRunIO.RqlAssistant.Service
                             diagnostics.Add(Warn(
                                 element,
                                 "UnknownProperty",
-                                $"Property '{property}' does not exist on {string.Join("/", effectiveNames)} (the entity type selected by this group). Use get_schema to confirm property names."));
+                                $"Property '{property}' does not exist on {string.Join("/", effectiveNames)} (the entity type selected by this group). Use get_schema to confirm property names, and check its sub elements — a property typed as another schema is reached with a dotted path, e.g. \"BankAccount.SortCode\"."));
                         }
                     }
                     else if (!this.GetAllPropertyNames().Contains(property))

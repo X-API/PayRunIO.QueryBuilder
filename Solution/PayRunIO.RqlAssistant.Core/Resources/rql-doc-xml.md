@@ -138,6 +138,12 @@ position: 950
   - [Number Format Examples](#number-format-examples)
   - [Example: Formatting with RenderValue](#example-formatting-with-rendervalue)
   - [Handling Nulls and Defaults](#handling-nulls-and-defaults)
+- [Sub Elements and Property Paths](#sub-elements-and-property-paths)
+  - [Worked Example: Employee Sort Code](#worked-example-employee-sort-code)
+  - [Finding a Property You Cannot See](#finding-a-property-you-cannot-see)
+  - [Where Dotted Paths Are Valid](#where-dotted-paths-are-valid)
+  - [Single Sub Elements vs Collections](#single-sub-elements-vs-collections)
+  - [Two Exceptions](#two-exceptions)
 - [Meta Data](#meta-data)
   - [An Entity Carrying Meta Data](#an-entity-carrying-meta-data)
   - [Reading a Meta Data Value](#reading-a-meta-data-value)
@@ -2762,6 +2768,124 @@ RQL uses standard .NET-compatible formatting strings for date types.
 ---
 
 This formatting control helps you present query outputs in a user-friendly and consistent manner across XML and JSON response types.
+
+## Sub Elements and Property Paths
+
+An entity's property list is not the full set of values you can read from it. Many properties are
+themselves structured objects — **sub elements** — and RQL reaches into them with a dotted path:
+
+```
+Property="<SubElement>.<Property>"
+```
+
+This matters more than it first appears, because `get_schema` returns one class at a time. Asked for
+`Employee`, it lists a property called `BankAccount` of type `BankAccount` and stops there. The
+sort code, account number and account name live one level down, in the `BankAccount` schema. **An
+entity's schema is a map of the graph, not the whole graph.**
+
+### Worked Example: Employee Sort Code
+
+A user asks for employees whose sort code contains `-`. There is no `SortCode` on `Employee`, and
+concluding "that field does not exist" would be wrong. `Employee` has:
+
+| Property | Type |
+| --- | --- |
+| `Code` | `string` |
+| `BankAccount` | `BankAccount` |
+
+`BankAccount` is a sub element, so `get_schema('BankAccount')` shows what it holds:
+
+| Property | Type |
+| --- | --- |
+| `AccountName` | `string` |
+| `BranchName` | `string` |
+| `AccountNumber` | `string` |
+| `SortCode` | `string` |
+| `Reference` | `string` |
+
+The sort code is therefore `BankAccount.SortCode`, addressed from the employee:
+
+```xml
+<Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RootNodeName>Table</RootNodeName>
+  <Variables>
+    <Variable Name="[EmployerKey]" Value="ER001" />
+  </Variables>
+  <Groups>
+    <Group GroupName="Headers">
+      <Output xsi:type="RenderValue" Name="col" Value="Code" />
+      <Output xsi:type="RenderValue" Name="col" Value="LastName" />
+      <Output xsi:type="RenderValue" Name="col" Value="SortCode" />
+    </Group>
+    <Group GroupName="Rows" ItemName="Row" Selector="/Employer/[EmployerKey]/Employees">
+      <Filter xsi:type="Contain" Property="BankAccount.SortCode" Value="-" />
+      <Output xsi:type="RenderProperty" Name="col" Property="Code" />
+      <Output xsi:type="RenderProperty" Name="col" Property="LastName" />
+      <Output xsi:type="RenderProperty" Name="col" Property="BankAccount.SortCode" />
+    </Group>
+  </Groups>
+</Query>
+```
+
+The `Filter` and the `Output` both address the sort code through the same dotted path. To run this
+across every employer, iterate employers in an **un-named** group that captures the key into
+`[EmployerKey]`, keeping the `Rows` group directly under `<Groups>` — see the "Tabular Queries"
+guidance for that pattern.
+
+Note the distinction that caused the original mistake: `Code` is the employee's payroll ID, and is
+unrelated to a sort code. A user's wording will not always name the sub element — "employee sort
+code" never mentions a bank account — so when a requested value is missing from an entity's own
+property list, **check its sub elements before reporting it as unavailable.**
+
+### Finding a Property You Cannot See
+
+When a requested value has no matching property on the entity:
+
+1. Re-read the entity's property list for any property whose type is another schema name rather
+   than `string`, `decimal`, `DateTime`, an enum, and so on. Those are the sub elements.
+2. Call `get_schema` on each candidate type and look for the value there.
+3. Sub elements nest, so repeat as needed — `AutoEnrolment.Pension.Href` is two levels deep.
+4. Only after exhausting the reachable graph should you report the value as unavailable — and say
+   which types you checked.
+
+`get_schema` output helps here: a sub element property's description names the type it leads to and
+lists the properties it exposes, so the traversal is usually visible without a second call.
+
+### Where Dotted Paths Are Valid
+
+A dotted path can be used anywhere a property name is accepted — `Output`, `Filter`, `Order` and
+`Predicate`:
+
+```xml
+<Filter xsi:type="Contain" Property="BankAccount.SortCode" Value="-" />
+<Output xsi:type="RenderProperty" Name="Postcode" Property="Address.Postcode" />
+<Order xsi:type="Ascending" Property="Address.Postcode" />
+```
+
+`Link`-typed properties are traversed the same way, most often to read the referenced resource's
+address — `PaySchedule.Href`, `SubContractor.Href`.
+
+### Single Sub Elements vs Collections
+
+The dotted path only works for a **single** sub element. When the type is a collection —
+`Collection<PayLine>`, `Collection<Link>` — there is no one value to read, and dotting into it is
+invalid:
+
+| Shape | Example type | How to read it |
+| --- | --- | --- |
+| Single sub element | `BankAccount` | Dotted path: `BankAccount.SortCode` |
+| Collection | `Collection<Link>` | A nested `Group` whose `Selector` targets the collection's route |
+
+For collections, select the child entity with a nested group and read its properties directly in
+that scope, rather than attempting `Groups.Title`.
+
+### Two Exceptions
+
+- **`MetaData`** looks like a sub element but uses a pseudo-property scheme where the item name is
+  data, not a schema member. See the "Meta Data" topic — the rules there override this one.
+- A complex type is only traversable if it is a **known schema**. A handful of types (for example
+  `WorkingWeek`) are not published in the generated schema; `get_schema` returns null for them and
+  their internals are not addressable.
 
 ## Meta Data
 
