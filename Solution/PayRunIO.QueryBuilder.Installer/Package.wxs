@@ -27,6 +27,14 @@
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://developer.payrun.io/docs/downloads/index.html" />
 
+    <!-- Records the install path against the Add/Remove Programs entry, which otherwise
+         reports no location. Set through SetProperty rather than a plain Property because
+         [INSTALLFOLDER] only resolves once directory costing has run, hence After. The
+         browse page can retarget INSTALLFOLDER, so this picks up whatever the user chose. -->
+    <SetProperty Id="ARPINSTALLLOCATION"
+                 Value="[INSTALLFOLDER]"
+                 After="CostFinalize" />
+
     <!--
       Every stock WiX dialog set presents a licence agreement page, and with no licence file
       supplied it displays the WiX placeholder text. There is no licence to present for an
@@ -82,9 +90,20 @@
                   DllEntry="WixShellExec"
                   Impersonate="yes" />
 
+    <!-- Every PayRun.io utility installs beneath a shared PayRunIO folder so the suite
+         occupies one location in the user profile rather than a folder per product. Only
+         the product folder inside it belongs to this package: the shared parent is left
+         for whichever utility happens to be uninstalled last, see RemoveFolder below.
+
+         The product folder is spelled QueryBuilder without a space, matching the settings
+         folders the application creates under %APPDATA%\PayRunIO\QueryBuilder and the
+         RqlAssistantMcp style naming used elsewhere in the suite. Unspaced names keep the
+         install path, the user data path and the registry key consistent. -->
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="ProgramsFolder" Name="Programs">
-        <Directory Id="INSTALLFOLDER" Name="PayRun.io Query Builder" />
+        <Directory Id="SuiteFolder" Name="PayRunIO">
+          <Directory Id="INSTALLFOLDER" Name="QueryBuilder" />
+        </Directory>
       </Directory>
     </StandardDirectory>
 
@@ -112,6 +131,12 @@
         <File Id="QueryBuilderExe"
               Source="$(PublishRoot)PayRunIO.QueryBuilder.exe" />
         <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+        <!-- The shared suite folder is removed only if this is the last utility to go:
+             RemoveFolder deletes a directory only when it is empty, so it is a no-op while
+             a sibling product remains installed. ProgramsFolder is likewise only removed
+             when nothing else is left in it, and ICE64 requires every profile directory the
+             package creates to be listed here regardless. -->
+        <RemoveFolder Id="RemoveSuiteFolder" Directory="SuiteFolder" On="uninstall" />
         <RemoveFolder Id="RemoveProgramsFolder" Directory="ProgramsFolder" On="uninstall" />
         <RegistryValue Root="HKCU"
                        Key="Software\PayRun.io\QueryBuilder"
@@ -135,15 +160,28 @@
         The consequence is that new default settings added in a later release do not reach
         existing installations, so any new key must be handled as absent by the application.
         The file is also deliberately left behind on uninstall.
+
+        Moving the install location requires changing both the GUID and the registry key
+        path below. NeverOverwrite is evaluated against the component's key path, and that
+        key path is this registry value rather than the file: Windows Installer records the
+        component's location as 01:\Software\PayRun.io\QueryBuilder\Locations\... and never
+        looks at the folder. Leave the key path unchanged across a move and the value
+        survives from the previous install, because Permanent exempts it from removal, so
+        the component is judged already installed, the file is skipped, and the application
+        starts with no appsettings.json to read. Changing the GUID alone does not help.
+
+        Naming the subkey after the install location ties the two together, so a folder
+        change invalidates the key path and the file installs.
       -->
       <Component Id="AppSettings"
-                 Guid="1877BB7B-B54A-4C0A-A0E0-40167DD85CB6"
+                 Guid="60311A72-E3F6-42C3-BD79-1A8C0D491D55"
                  NeverOverwrite="yes"
                  Permanent="yes">
         <File Id="AppSettingsJson" Source="$(PublishRoot)appsettings.json" />
-        <!-- A per user component requires an HKCU registry key path. -->
+        <!-- A per user component requires an HKCU registry key path. The subkey names the
+             install location so that relocating the product invalidates it, see above. -->
         <RegistryValue Root="HKCU"
-                       Key="Software\PayRun.io\QueryBuilder"
+                       Key="Software\PayRun.io\QueryBuilder\Locations\PayRunIO_QueryBuilder"
                        Name="settingsInstalled"
                        Type="integer"
                        Value="1"

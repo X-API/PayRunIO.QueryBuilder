@@ -1,6 +1,6 @@
 ﻿# PayRun.io Query Builder Installer
 
-Builds the MSI package for the Journal Manager desktop utility using WiX v5
+Builds the MSI package for the Query Builder desktop utility using WiX v5
 (`WixToolset.Sdk`), so no Visual Studio installation or global WiX toolset is required.
 
 ## Building
@@ -26,6 +26,32 @@ dotnet build PayRunIO.QueryBuilder.Installer.wixproj -c Release `
 ```
 
 > `PublishRoot` must end with a trailing backslash.
+
+### TeamCity
+
+The build configuration numbers builds `1.1.%build.counter%`, matching the three part
+package version, so the counter is passed straight through as the patch field:
+
+```powershell
+dotnet build PayRunIO.QueryBuilder.Installer.wixproj -c Release `
+    -p:BuildNumber=%build.counter% `
+    -p:PublishRoot=%teamcity.build.checkoutDir%\PayRunIO.QueryBuilder\bin\Release\net8.0-windows7.0\win-x64\publish\
+```
+
+Pass `%build.counter%`, not `%build.number%`. The counter is the bare integer that becomes
+the patch field; the full build number is the assembled three part version and would give
+`1.1.1.1.<counter>`.
+
+Do not pass a version as `ProductVersion` either. A property given on the command line is
+global and cannot be adjusted by the project, so a four part value would reach the compiler
+unchanged and produce packages differing only in the field Windows Installer ignores —
+every build would look like the same product and upgrades would silently do nothing.
+
+Add the package to the artifact rules alongside the existing zips:
+
+```
+PayRunIO.QueryBuilder.Installer\bin\Release\PayRunIO.QueryBuilder-*.msi => .
+```
 
 When rebuilding the same source at a different `BuildNumber` locally, add `-t:Rebuild`.
 Without it MSBuild considers the inputs unchanged, skips the link step and then fails to
@@ -255,14 +281,17 @@ a successful start. Check the window title instead:
 | `Unhandled Exception - FileNotFoundException` | configuration was not found |
 
 ```powershell
-$p = Start-Process "$env:LOCALAPPDATA\Programs\PayRun.io Query Builder\PayRunIO.QueryBuilder.exe" -PassThru
+$p = Start-Process "$env:LOCALAPPDATA\Programs\PayRunIO\QueryBuilder\PayRunIO.QueryBuilder.exe" -PassThru
 Start-Sleep -Seconds 10
 (Get-Process -Id $p.Id).MainWindowTitle
 ```
 
 ## Install scope
 
-The package installs **per user** into `%LocalAppData%\Programs\PayRun.io Query Builder`.
+The package installs **per user** into `%LocalAppData%\Programs\PayRunIO\QueryBuilder`.
+Every utility in the suite installs beneath the shared `PayRunIO` folder, and the product
+folder is spelled without a space so that it matches the settings folder the application
+creates at `%AppData%\PayRunIO\QueryBuilder`.
 No elevation prompt is raised, either on first install or when the application applies an
 upgrade itself, and administrators do not need local administrator rights.
 

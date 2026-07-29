@@ -1,17 +1,33 @@
-<Project Sdk="WixToolset.Sdk/5.0.2">
+﻿<Project Sdk="WixToolset.Sdk/5.0.2">
 
   <PropertyGroup>
     <OutputType>Package</OutputType>
 
-    <!-- Windows Installer ignores the fourth field of ProductVersion, so a three part
-         value is used here and the patch field must move for every release. Passing
-         -p:BuildNumber=<run number> keeps that automatic in CI. -->
+    <!--
+      Windows Installer ignores the fourth field of ProductVersion: 1.1.0.5 and 1.1.0.6 are
+      the same product for upgrade detection, and installing one over the other silently
+      does nothing. The package version is therefore three part, with the build counter as
+      the patch field so that it moves on every build.
+
+      The build server numbers builds 1.1.%build.counter% to match, and passes the counter
+      alone as -p:BuildNumber=%build.counter%.
+    -->
+    <VersionPrefix Condition="'$(VersionPrefix)' == ''">1.1</VersionPrefix>
     <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
-    <ProductVersion Condition="'$(ProductVersion)' == ''">1.1.$(BuildNumber)</ProductVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">$(VersionPrefix).$(BuildNumber)</ProductVersion>
 
     <!-- Declared after ProductVersion: MSBuild evaluates properties in order, so naming
          the package before the version is set would produce an unversioned file name. -->
     <OutputName>PayRunIO.QueryBuilder-$(ProductVersion)</OutputName>
+
+    <!-- The version is part of the output file name but not part of the compile's
+         up-to-date check: CoreCompile in wix.targets compares source timestamps against
+         the bind tracking file, whose name carries no version. Building 1.1.4 and then
+         1.1.5 without a clean therefore left the tracking file newer than every input, so
+         the compile was skipped and the copy failed with MSB3030 looking for an MSI that
+         was never produced. Giving each version its own intermediate directory gives it
+         its own tracking file, so a version change always forces a rebuild. -->
+    <IntermediateOutputPath>obj\$(Configuration)\$(ProductVersion)\</IntermediateOutputPath>
 
     <!-- Defaults to the local self contained publish output. CI passes an absolute path. -->
     <PublishRoot Condition="'$(PublishRoot)' == ''">$(MSBuildThisFileDirectory)..\PayRunIO.QueryBuilder\bin\Release\net8.0-windows7.0\win-x64\publish\</PublishRoot>

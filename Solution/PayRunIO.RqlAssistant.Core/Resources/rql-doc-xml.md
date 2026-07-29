@@ -2783,6 +2783,30 @@ This matters more than it first appears, because `get_schema` returns one class 
 sort code, account number and account name live one level down, in the `BankAccount` schema. **An
 entity's schema is a map of the graph, not the whole graph.**
 
+### Checking for null
+
+When accessing sub element properties, it is important to confirm the sub element base is not null.
+
+The report generation process will report an error simular to the following in the event a null sub element is accessed.
+
+```
+Report generation failed with error: 'ArgumentNullException' Value cannot be null. (Parameter 'source')
+```
+
+The null status can be checked using filters or predicates.
+
+**Filter Example**
+
+```
+<Filter xsi:type="IsNotNull" Property="BankAccount" />
+```
+
+**Predicate Example**
+
+```
+<Group ... Predicate="BankAccount != null" />
+```
+
 ### Worked Example: Employee Sort Code
 
 A user asks for employees whose sort code contains `-`. There is no `SortCode` on `Employee`, and
@@ -2818,6 +2842,7 @@ The sort code is therefore `BankAccount.SortCode`, addressed from the employee:
       <Output xsi:type="RenderValue" Name="col" Value="SortCode" />
     </Group>
     <Group GroupName="Rows" ItemName="Row" Selector="/Employer/[EmployerKey]/Employees">
+      <Filter xsi:type="IsNotNull" Property="BankAccount" />
       <Filter xsi:type="Contain" Property="BankAccount.SortCode" Value="-" />
       <Output xsi:type="RenderProperty" Name="col" Property="Code" />
       <Output xsi:type="RenderProperty" Name="col" Property="LastName" />
