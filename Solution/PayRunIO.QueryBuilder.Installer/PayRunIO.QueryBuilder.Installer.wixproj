@@ -4,17 +4,25 @@
     <OutputType>Package</OutputType>
 
     <!--
-      Windows Installer ignores the fourth field of ProductVersion: 1.1.0.5 and 1.1.0.6 are
-      the same product for upgrade detection, and installing one over the other silently
-      does nothing. The package version is therefore three part, with the build counter as
-      the patch field so that it moves on every build.
+      The package version comes from the build server, which owns the numbering:
 
-      The build server numbers builds 1.1.%build.counter% to match, and passes the counter
-      alone as -p:BuildNumber=%build.counter%.
+        -p:PackageVersion=%build.number%
+
+      Windows Installer compares only the first three fields of a version. 1.1.0.5 and
+      1.1.0.6 are the same product for upgrade detection, and installing one over the other
+      silently does nothing, so a four part value is truncated to three below. The build
+      server emits three part numbers, making that a safety net rather than the normal path.
+      If it is ever reconfigured to a pattern where only the fourth field moves, every build
+      would collapse to the same package version and upgrades would stop working.
+
+      PackageVersion is a separate property rather than passing ProductVersion directly: a
+      property set on the command line is global and cannot be adjusted by the project, so a
+      four part ProductVersion would reach the compiler untouched and produce exactly the
+      broken package described above without failing the build.
     -->
-    <VersionPrefix Condition="'$(VersionPrefix)' == ''">1.1</VersionPrefix>
-    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
-    <ProductVersion Condition="'$(ProductVersion)' == ''">$(VersionPrefix).$(BuildNumber)</ProductVersion>
+    <PackageVersion Condition="'$(PackageVersion)' == ''">1.1.0</PackageVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == '' and $(PackageVersion.Split('.').Length) &gt; 3">$(PackageVersion.Split('.')[0]).$(PackageVersion.Split('.')[1]).$(PackageVersion.Split('.')[2])</ProductVersion>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">$(PackageVersion)</ProductVersion>
 
     <!-- Declared after ProductVersion: MSBuild evaluates properties in order, so naming
          the package before the version is set would produce an unversioned file name. -->

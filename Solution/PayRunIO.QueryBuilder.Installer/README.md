@@ -10,42 +10,39 @@ application must be published first:
 
 ```powershell
 dotnet publish ..\PayRunIO.QueryBuilder\PayRunIO.QueryBuilder.csproj `
-    -c Release -r win-x64 --self-contained true -p:BuildNumber=0
+    -c Release -r win-x64 --self-contained true
 
-dotnet build PayRunIO.QueryBuilder.Installer.wixproj -c Release -p:BuildNumber=0
+dotnet build PayRunIO.QueryBuilder.Installer.wixproj -c Release -p:PackageVersion=1.1.0
 ```
 
-The package is written to `bin\Release\PayRunIO.QueryBuilder-<version>.msi`.
+The package is written to `bin\Release\PayRunIO.QueryBuilder-<version>.msi`. Omitting
+`PackageVersion` defaults to `1.1.0`.
 
-In CI, pass the run number so that every build produces a distinct, upgradeable package,
-and pass an absolute `PublishRoot` when publishing to a staging directory:
+In CI, pass the version so that every build produces a distinct, upgradeable package, and
+pass an absolute `PublishRoot` when publishing to a staging directory:
 
 ```powershell
 dotnet build PayRunIO.QueryBuilder.Installer.wixproj -c Release `
-    -p:BuildNumber=$env:GITHUB_RUN_NUMBER -p:PublishRoot=<absolute path>\
+    -p:PackageVersion=<version> -p:PublishRoot=<absolute path>\
 ```
 
 > `PublishRoot` must end with a trailing backslash.
 
 ### TeamCity
 
-The build configuration numbers builds `1.1.%build.counter%`, matching the three part
-package version, so the counter is passed straight through as the patch field:
+The build server owns the version numbering, so its build number is passed straight through:
 
 ```powershell
 dotnet build PayRunIO.QueryBuilder.Installer.wixproj -c Release `
-    -p:BuildNumber=%build.counter% `
+    -p:PackageVersion=%build.number% `
     -p:PublishRoot=%teamcity.build.checkoutDir%\PayRunIO.QueryBuilder\bin\Release\net8.0-windows7.0\win-x64\publish\
 ```
 
-Pass `%build.counter%`, not `%build.number%`. The counter is the bare integer that becomes
-the patch field; the full build number is the assembled three part version and would give
-`1.1.1.1.<counter>`.
-
-Do not pass a version as `ProductVersion` either. A property given on the command line is
-global and cannot be adjusted by the project, so a four part value would reach the compiler
+Do not pass a version as `ProductVersion`. A property given on the command line is global
+and cannot be adjusted by the project, so a four part value would reach the compiler
 unchanged and produce packages differing only in the field Windows Installer ignores —
 every build would look like the same product and upgrades would silently do nothing.
+`PackageVersion` exists precisely so the project can apply the truncation below.
 
 Add the package to the artifact rules alongside the existing zips:
 
@@ -53,19 +50,22 @@ Add the package to the artifact rules alongside the existing zips:
 PayRunIO.QueryBuilder.Installer\bin\Release\PayRunIO.QueryBuilder-*.msi => .
 ```
 
-When rebuilding the same source at a different `BuildNumber` locally, add `-t:Rebuild`.
-Without it MSBuild considers the inputs unchanged, skips the link step and then fails to
-find the renamed package.
-
 ## Versioning
+
+The package version is whatever the build server supplies via `PackageVersion`; any
+`<major>.<minor>.<patch>` value is accepted, so the numbering is not tied to a `1.1.x` line.
 
 **Windows Installer ignores the fourth field of `ProductVersion`.** A package built as
 `1.1.0.5` and one built as `1.1.0.6` are the same product as far as upgrade detection is
-concerned, and installing the second over the first would silently do nothing.
+concerned, and installing the second over the first would silently do nothing. A four part
+`PackageVersion` is therefore truncated to its first three fields. The build server emits
+three part numbers, so this is a safety net rather than the normal path — but it means a
+build number pattern in which **only the fourth field moves** would collapse every build to
+the same package version and stop upgrades working. Keep at least one of the first three
+fields moving between releases.
 
-The `ProductVersion` used here is therefore three part, with the CI run number as the
-**patch** field (`1.1.<BuildNumber>`). The assembly version in the application project keeps
-the familiar four part form; only the package version is truncated.
+The assembly version in the application project keeps the familiar four part form; only the
+package version is truncated.
 
 Verify an upgrade by installing consecutive builds and confirming that exactly one entry
 appears in Apps & Features.
