@@ -84,8 +84,14 @@
        application an update it has already applied, on every launch, forever.
 
        The executable is cross-checked from the publish output rather than the MSI, so the check
-       is skipped when PublishRoot holds no executable. -->
-  <Target Name="VerifyReleaseArtefacts" AfterTargets="WriteVersionManifest" DependsOnTargets="WriteVersionManifest" Condition="'$(OS)' == 'Windows_NT'">
+       is skipped when PublishRoot holds no executable.
+
+       Restricted to Release because PublishRoot points at the Release publish output whatever
+       the configuration: a Debug package carries the default 1.1.0 while that folder holds
+       whatever was last published, so the two versions disagree for reasons that say nothing
+       about either being wrong. Only Release builds produce artefacts that get published, so
+       only Release builds are held to a publishable pair. -->
+  <Target Name="VerifyReleaseArtefacts" AfterTargets="WriteVersionManifest" DependsOnTargets="WriteVersionManifest" Condition="'$(OS)' == 'Windows_NT' and '$(Configuration)' == 'Release'">
     <PropertyGroup>
       <BuiltMsiPath>$(OutputPath)$(OutputName).msi</BuiltMsiPath>
       <UpdateApplicationId Condition="'$(UpdateApplicationId)' == ''">query-builder</UpdateApplicationId>
