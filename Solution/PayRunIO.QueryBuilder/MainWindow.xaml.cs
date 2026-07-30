@@ -20,6 +20,7 @@
 
     using Microsoft.Extensions.DependencyInjection;
     using PayRunIO.ConnectionControls;
+    using PayRunIO.ConnectionControls.Updates;
     using PayRunIO.QueryBuilder.Helpers;
     using PayRunIO.QueryBuilder.ViewModels;
     using PayRunIO.QueryBuilder.Services;
@@ -63,6 +64,11 @@
         {
             this.settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             this.InitializeComponent();
+
+            // Backs the Help > Check for Updates menu item. The identifier cannot be inferred by
+            // the shared command, so each application registers its own.
+            CheckForUpdateCommand.Register(this, App.ApplicationId);
+
             this.QueryResultViewer.ConnectionPicker.SelectConnectionByName(this.settingsService.UserSettings.Connection.LastConnection);
         }
 

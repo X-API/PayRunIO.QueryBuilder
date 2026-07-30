@@ -17,6 +17,7 @@
         xmlns:viewModels="clr-namespace:PayRunIO.QueryBuilder.ViewModels"
         xmlns:converters="clr-namespace:PayRunIO.QueryBuilder.Converters"
         xmlns:helpers="clr-namespace:PayRunIO.QueryBuilder.Helpers"
+        xmlns:updates="clr-namespace:PayRunIO.ConnectionControls.Updates;assembly=PayRunIO.ConnectionControls"
         mc:Ignorable="d"
         SourceInitialized="Window_OnSourceInitialised"
         Closing="Window_OnClosing"
@@ -96,6 +97,8 @@
                 </MenuItem>
                 <MenuItem Header="_Help">
                     <MenuItem Header="_How To Use the AI Assistant..." Command="helpers:CommonAiCommands.ShowHowToCommand"></MenuItem>
+                    <Separator />
+                    <MenuItem Header="Check for _Updates..." Command="updates:CheckForUpdateCommand.Command" />
                     <Separator />
                     <MenuItem Header="_About" Click="About_OnClick"></MenuItem>
                 </MenuItem>
