@@ -1,8 +1,6 @@
 ﻿<Project Sdk="WixToolset.Sdk/5.0.2">
-
   <PropertyGroup>
     <OutputType>Package</OutputType>
-
     <!--
       The package version comes from the build server, which owns the numbering:
 
@@ -23,11 +21,9 @@
     <PackageVersion Condition="'$(PackageVersion)' == ''">1.1.0</PackageVersion>
     <ProductVersion Condition="'$(ProductVersion)' == '' and $(PackageVersion.Split('.').Length) &gt; 3">$(PackageVersion.Split('.')[0]).$(PackageVersion.Split('.')[1]).$(PackageVersion.Split('.')[2])</ProductVersion>
     <ProductVersion Condition="'$(ProductVersion)' == ''">$(PackageVersion)</ProductVersion>
-
     <!-- Declared after ProductVersion: MSBuild evaluates properties in order, so naming
          the package before the version is set would produce an unversioned file name. -->
     <OutputName>PayRunIO.QueryBuilder-$(ProductVersion)</OutputName>
-
     <!-- The version is part of the output file name but not part of the compile's
          up-to-date check: CoreCompile in wix.targets compares source timestamps against
          the bind tracking file, whose name carries no version. Building 1.1.4 and then
@@ -36,25 +32,24 @@
          was never produced. Giving each version its own intermediate directory gives it
          its own tracking file, so a version change always forces a rebuild. -->
     <IntermediateOutputPath>obj\$(Configuration)\$(ProductVersion)\</IntermediateOutputPath>
-
     <!-- Defaults to the local self contained publish output. CI passes an absolute path. -->
     <PublishRoot Condition="'$(PublishRoot)' == ''">$(MSBuildThisFileDirectory)..\PayRunIO.QueryBuilder\bin\Release\net8.0-windows7.0\win-x64\publish\</PublishRoot>
-
     <ProjectRoot>$(MSBuildThisFileDirectory)..\PayRunIO.QueryBuilder\</ProjectRoot>
-
     <!-- Installer owned content such as the branded wizard artwork. -->
     <AssetsRoot>$(MSBuildThisFileDirectory)Assets\</AssetsRoot>
-
     <DefineConstants>PublishRoot=$(PublishRoot);ProductVersion=$(ProductVersion);ProjectRoot=$(ProjectRoot);AssetsRoot=$(AssetsRoot)</DefineConstants>
   </PropertyGroup>
-
+  <ItemGroup>
+    <None Include="Fix-ExitDialogCheckBox.ps1" />
+    <None Include="New-VersionManifest.ps1" />
+    <None Include="README.md" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
     <!-- Provides the WixShellExec custom action used to launch the application from the
          final page of the installer. -->
     <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
-
   <!-- Windows Installer never applies the transparent window style to checkbox controls, so
        the launch checkbox on the final page paints a grey block over the white area of the
        branded dialog bitmap. This is a Windows Installer limitation, closed as won't fix
@@ -65,8 +60,38 @@
     <PropertyGroup>
       <BuiltMsiPath>$(OutputPath)$(OutputName).msi</BuiltMsiPath>
     </PropertyGroup>
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Fix-ExitDialogCheckBox.ps1&quot; -MsiPath &quot;$(BuiltMsiPath)&quot;"
-          Condition="Exists('$(BuiltMsiPath)')" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Fix-ExitDialogCheckBox.ps1&quot; -MsiPath &quot;$(BuiltMsiPath)&quot;" Condition="Exists('$(BuiltMsiPath)')" />
+  </Target>
+  <!-- Writes the update manifest describing the built package, so the MSI and its manifest are
+       collected together as build artefacts and can be uploaded to the bucket by hand.
+
+       This must run AFTER FixExitDialogCheckBox, which rewrites the MSI in place: hashing the
+       package before that edit would publish a hash no downloaded file can ever match, and the
+       client discards a package that fails verification. AfterTargets on both is not enough to
+       guarantee order, hence the explicit DependsOnTargets. -->
+  <Target Name="WriteVersionManifest" AfterTargets="FixExitDialogCheckBox" DependsOnTargets="FixExitDialogCheckBox" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <BuiltMsiPath>$(OutputPath)$(OutputName).msi</BuiltMsiPath>
+      <UpdateApplicationId Condition="'$(UpdateApplicationId)' == ''">query-builder</UpdateApplicationId>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)New-VersionManifest.ps1&quot; -MsiPath &quot;$(BuiltMsiPath)&quot; -ApplicationId &quot;$(UpdateApplicationId)&quot;" Condition="Exists('$(BuiltMsiPath)')" />
   </Target>
 
+  <!-- Fails the build unless the package and its manifest are a publishable pair. Every check
+       here covers a failure that would otherwise reach users silently, because the update client
+       swallows all exceptions: a wrong hash makes clients discard the download as corrupt, and an
+       advertised version that does not match the packaged executable offers the installed
+       application an update it has already applied, on every launch, forever.
+
+       The executable is cross-checked from the publish output rather than the MSI, so the check
+       is skipped when PublishRoot holds no executable. -->
+  <Target Name="VerifyReleaseArtefacts" AfterTargets="WriteVersionManifest" DependsOnTargets="WriteVersionManifest" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <BuiltMsiPath>$(OutputPath)$(OutputName).msi</BuiltMsiPath>
+      <UpdateApplicationId Condition="'$(UpdateApplicationId)' == ''">query-builder</UpdateApplicationId>
+      <PackagedExePath>$(PublishRoot)PayRunIO.QueryBuilder.exe</PackagedExePath>
+      <VerifyExeArgument Condition="Exists('$(PackagedExePath)')"> -ExePath "$(PackagedExePath)"</VerifyExeArgument>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)Test-ReleaseArtefacts.ps1&quot; -MsiPath &quot;$(BuiltMsiPath)&quot; -ApplicationId &quot;$(UpdateApplicationId)&quot;$(VerifyExeArgument)" Condition="Exists('$(BuiltMsiPath)')" />
+  </Target>
 </Project>

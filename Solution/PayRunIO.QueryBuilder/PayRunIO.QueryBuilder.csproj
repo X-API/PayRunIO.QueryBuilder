@@ -14,12 +14,24 @@
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
-    <!-- Baseline for the first MSI release. Every previously distributed 1.0.x copy is
-         strictly older, so installed copies are offered the upgrade. CI overrides the
-         patch field via -p:BuildNumber so that each build produces an upgradeable MSI. -->
+    <!-- The assembly version MUST match the version the installer advertises, because the
+         update client compares the manifest's latestVersion against the running assembly's
+         version. If the assembly reports an older version than the package that installed it,
+         every launch is offered the update it has already applied - an endless prompt loop.
+
+         CI passes the same value to both projects:
+
+           dotnet publish ... -p:PackageVersion=%build.number%
+           dotnet build   ... -p:PackageVersion=%build.number%   (installer)
+
+         PackageVersion is the shared name so a single build server parameter feeds both. The
+         legacy -p:BuildNumber form is still honoured for local builds, where it appends a patch
+         field to VersionPrefix. BuildNumber cannot express a build number whose minor field
+         moves (1.2.1234.0), which is why PackageVersion takes precedence. -->
     <VersionPrefix>1.1.0</VersionPrefix>
     <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
-    <Version>$(VersionPrefix).$(BuildNumber)</Version>
+    <Version Condition="'$(PackageVersion)' != ''">$(PackageVersion)</Version>
+    <Version Condition="'$(Version)' == ''">$(VersionPrefix).$(BuildNumber)</Version>
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <FileVersion>$(Version)</FileVersion>
     <Company>PayRun.io Ltd</Company>

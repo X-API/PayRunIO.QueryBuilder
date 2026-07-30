@@ -308,11 +308,122 @@ Two ICE warnings are expected and benign:
 - **ICE91** â€” notes that a per user directory does not vary by `ALLUSERS`. That is the
   intended behaviour for a per user package.
 
-## Related
+## Publishing a release
 
-The published version is advertised to installed applications through the update manifest
-at `https://developer.payrun.io/content/files/utilities/versions.json`. After publishing a
-release, update that manifest (in the `docs` repository under
-`devportal/content/files/utilities/`) with the new version, download URL, SHA-256 hash and
-size, or installed copies will not be offered the upgrade.
+**Releases are published by hand.** The build produces the artefacts; nothing is uploaded
+automatically, so a successful build is not a release and the version that reaches users stays
+a deliberate decision.
+
+Installed applications discover upgrades through a **per application manifest** in the
+public-read `prio-utilities` bucket, named after the application identifier:
+
+| Application | Manifest URL |
+| ----------- | ------------ |
+| Query Builder | `https://prio-utilities.s3.eu-west-2.amazonaws.com/query-builder.json` |
+| Data Explorer | `…/data-explorer.json` |
+| Import Mapper | `…/import-mapper.json` |
+| Journal Manager | `…/journal-manager.json` |
+
+One file per application means publishing one utility never involves merging or re-uploading
+another's entry, and a malformed manifest can only affect the application it belongs to. The
+client derives the URL from the `applicationId` it already passes to `StartBackgroundCheck`, so
+there is no extra configuration to keep in step.
+
+### Build artefacts
+
+`New-VersionManifest.ps1` runs automatically from the `WriteVersionManifest` target, so a plain
+`dotnet build` of the installer emits both files side by side in `bin\Release`:
+
+```
+PayRunIO.QueryBuilder-1.1.300.msi
+query-builder.json
+```
+
+The version, SHA-256 and size are read from the built package, so the MSI is the single source
+of truth. To generate the manifest by hand — or with a different identifier when this is reused
+for another utility:
+
+```powershell
+pwsh .\New-VersionManifest.ps1 -MsiPath bin\Release\PayRunIO.QueryBuilder-1.1.300.msi
+pwsh .\New-VersionManifest.ps1 -MsiPath <msi> -ApplicationId data-explorer -ApplicationName 'PayRun.io Data Explorer'
+```
+
+Pass `-Mandatory` to remove the user's option to skip or postpone, or `-MinimumSupportedVersion`
+to force an upgrade for anything older.
+
+### TeamCity
+
+**No extra build step is needed.** `New-VersionManifest.ps1` and `Test-ReleaseArtefacts.ps1` both
+run from targets inside the `.wixproj`, so the existing installer build produces and verifies the
+manifest. No AWS credentials or CLI are required on the agent.
+
+Two things must be configured:
+
+**1. Pass the same version to both projects.** The application publish needs it too, not just the
+installer:
+
+```powershell
+dotnet publish PayRunIO.QueryBuilder\PayRunIO.QueryBuilder.csproj -c Release -r win-x64 `
+    --self-contained true -p:PackageVersion=%build.number%
+
+dotnet build PayRunIO.QueryBuilder.Installer\PayRunIO.QueryBuilder.Installer.wixproj -c Release `
+    -p:PackageVersion=%build.number% -p:PublishRoot=<absolute path>\
+```
+
+The update client compares the manifest against the **running assembly's** version, so if the
+application is published without `PackageVersion` it reports `1.1.0.0` regardless of the package
+that installed it, and every launch is offered the update it already applied. The
+`VerifyReleaseArtefacts` target fails the build if the two diverge, so this cannot ship silently.
+
+**2. Pin the artifact rules to the build number**, rather than using a wildcard:
+
+```
+PayRunIO.QueryBuilder.Installer\bin\Release\PayRunIO.QueryBuilder-%build.number%.msi => .
+PayRunIO.QueryBuilder.Installer\bin\Release\query-builder.json => .
+```
+
+A wildcard (`PayRunIO.QueryBuilder-*.msi`) collects every package left in the output directory on
+a non-clean agent checkout, while there is only ever **one** `query-builder.json` — describing the
+newest. That yields several MSIs and a manifest matching just one of them, with nothing to
+indicate which. Pinning the name means a rule that stops matching fails the build visibly instead.
+
+Note that the build number's fourth field is truncated from the *package* version (Windows
+Installer ignores it) but kept in the *assembly* version, so a build number of `1.2.1234.0`
+produces `PayRunIO.QueryBuilder-1.2.1234.msi` advertising `latestVersion` `1.2.1234.0`. The
+version comparison treats the two forms as equal, so this is consistent rather than a mismatch.
+
+### Uploading
+
+Download both artefacts from the build and upload them to the **bucket root**.
+
+**Upload the MSI first.** The manifest is what advertises the release, so publishing it first
+offers clients a download that 403s until the package upload finishes.
+
+Set `Content-Type: application/json` on the manifest, and a short `Cache-Control` such as
+`max-age=300`: S3 sends no cache headers by default, and an intermediate proxy holding a stale
+manifest would hide the release.
+
+### Details that are load-bearing
+
+- **The manifest is UTF-8 without a BOM.** `Set-Content -Encoding utf8` on Windows PowerShell
+  emits a BOM, S3 serves it back verbatim, and `System.Text.Json` throws
+  `'0xEF' is an invalid start of a value`. Since `CheckForUpdateAsync` swallows every exception,
+  a BOM disables updates for every client *silently*. The script writes via `UTF8Encoding($false)`
+  for this reason — do not "tidy" it back to `Set-Content`.
+- **`WriteVersionManifest` runs after `FixExitDialogCheckBox`**, which rewrites the MSI in place.
+  Hashing the package before that edit advertises a hash no download can ever match, and the
+  client discards a package that fails verification.
+- **The object name carries the version**, so a release is never overwritten in place.
+  Overwriting breaks clients that already read the previous hash: the download succeeds and
+  then fails verification.
+- **Never edit a published manifest to point at a different build** without changing the hash.
+  The hash is the only integrity control until the packages are Authenticode signed.
+
+Note that the bucket denies listing, so S3 answers a request for a missing object with **403,
+not 404**. A mistyped URL, a permissions fault, an unpublished application and an offline
+machine are all indistinguishable to the client — which is why `UpdateService` traces its
+failures rather than discarding them. Attach a debugger or run DebugView to see the trace.
+
+The stale copy at `docs/devportal/content/files/utilities/versions.json` is superseded and no
+longer read by any client.
 
