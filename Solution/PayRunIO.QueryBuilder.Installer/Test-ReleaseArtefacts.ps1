@@ -43,6 +43,84 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+<#
+.SYNOPSIS
+    Compares two version strings, treating omitted trailing fields as zero.
+.DESCRIPTION
+    [version]"1.1.256" -ne [version]"1.1.256.0" in .NET, because an unspecified Revision is -1
+    rather than 0. Both forms describe the same release here - a three field PackageVersion
+    yields a three field FileVersion but a four field managed AssemblyVersion - so the missing
+    fields are normalised before comparing.
+#>
+function Test-VersionsEqual {
+    param([string] $Left, [string] $Right)
+
+    function Expand([string] $value) {
+        $parsed = [version]$value
+
+        return [version]::new(
+            [Math]::Max($parsed.Major, 0),
+            [Math]::Max($parsed.Minor, 0),
+            [Math]::Max($parsed.Build, 0),
+            [Math]::Max($parsed.Revision, 0))
+    }
+
+    return (Expand $Left) -eq (Expand $Right)
+}
+
+<#
+.SYNOPSIS
+    Gets the managed assembly version of a published application.
+.DESCRIPTION
+    Reads the version the update client will see at run time, which is the *managed* assembly
+    version rather than the Win32 FileVersion resource.
+
+    A self contained single file publish bundles the managed assembly inside a native host, so
+    AssemblyName.GetAssemblyName cannot read the published .exe and the publish directory holds
+    no .dll to read instead. The pre-bundle assembly one directory above the publish folder is
+    therefore the reliable source, and it carries exactly the value the client will report.
+
+    Falls back to the Win32 FileVersion only when no managed assembly can be found: that value
+    may be short by a field, which the caller's comparison normalises.
+#>
+function Get-AssemblyVersion {
+    param([string] $Path)
+
+    $fileName = [System.IO.Path]::GetFileNameWithoutExtension($Path)
+    $publishDirectory = Split-Path -Parent $Path
+
+    $candidates = @(
+        # Sibling managed assembly: a framework dependent or non bundled publish.
+        (Join-Path $publishDirectory "$fileName.dll"),
+        # Pre-bundle assembly: the single file case, one level above the publish directory.
+        (Join-Path (Split-Path -Parent $publishDirectory) "$fileName.dll"))
+
+    foreach ($candidate in $candidates) {
+        if (-not (Test-Path -LiteralPath $candidate)) {
+            continue
+        }
+
+        try {
+            return [System.Reflection.AssemblyName]::GetAssemblyName($candidate).Version.ToString()
+        }
+        catch {
+            continue
+        }
+    }
+
+    if (Test-Path -LiteralPath $Path) {
+        $fileVersion = (Get-Item -LiteralPath $Path).VersionInfo.FileVersion
+
+        if ($fileVersion) {
+            Write-Host "  (no managed assembly found; falling back to FileVersion $fileVersion)"
+
+            return $fileVersion
+        }
+    }
+
+    return $null
+}
+
 if (-not (Test-Path -LiteralPath $MsiPath)) {
     throw "Installer not found: $MsiPath"
 }
@@ -97,12 +175,20 @@ if ($ExePath) {
         $failures += "executable not found for version cross-check: $ExePath"
     }
     else {
-        $fileVersion = (Get-Item -LiteralPath $ExePath).VersionInfo.FileVersion
+        # Read the managed assembly version, because that is what the update client compares:
+        # it calls Assembly.GetEntryAssembly().GetName().Version. The Win32 FileVersion resource
+        # is NOT interchangeable - a three field PackageVersion such as 1.1.256 produces a
+        # FileVersion of "1.1.256" while the managed AssemblyVersion is always padded to four
+        # fields as 1.1.256.0. Comparing against FileVersion therefore failed a build whose
+        # artefacts were perfectly consistent.
+        $assemblyVersion = Get-AssemblyVersion -Path $ExePath
 
-        # Compare as versions so that 1.2.1234 and 1.2.1234.0 are treated as equal.
-        if ([version]$fileVersion -ne [version]$entry.latestVersion) {
+        if (-not $assemblyVersion) {
+            $failures += "could not read the assembly version from $ExePath"
+        }
+        elseif (-not (Test-VersionsEqual $assemblyVersion $entry.latestVersion)) {
             $failures += "version mismatch: manifest advertises $($entry.latestVersion) but the " +
-                         "packaged executable reports $fileVersion. The installed application " +
+                         "packaged assembly reports $assemblyVersion. The installed application " +
                          'would be offered this update forever. Pass the same -p:PackageVersion ' +
                          'to both the application publish and the installer build.'
         }
@@ -120,4 +206,4 @@ Write-Host "Release artefacts verified: $($msi.Name)"
 Write-Host "  version : $($entry.latestVersion)"
 Write-Host "  sha256  : $actualHash"
 Write-Host "  size    : $($msi.Length) bytes"
-if ($ExePath) { Write-Host "  exe     : $((Get-Item -LiteralPath $ExePath).VersionInfo.FileVersion)" }
+if ($assemblyVersion) { Write-Host "  assembly: $assemblyVersion" }
