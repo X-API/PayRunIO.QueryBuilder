@@ -51,11 +51,12 @@
 
     <UI>
       <!-- Overrides the stock Welcome -> LicenseAgreementDlg navigation. A higher Ordering
-           than the built in event wins, giving Welcome -> Confirm -> Install -> Finish. -->
+           than the built in event wins, giving
+           Welcome -> Shortcuts -> Confirm -> Install -> Finish. -->
       <Publish Dialog="WelcomeDlg"
                Control="Next"
                Event="NewDialog"
-               Value="VerifyReadyDlg"
+               Value="ShortcutOptionsDlg"
                Order="10"
                Condition="NOT Installed" />
 
@@ -63,9 +64,80 @@
       <Publish Dialog="VerifyReadyDlg"
                Control="Back"
                Event="NewDialog"
-               Value="WelcomeDlg"
+               Value="ShortcutOptionsDlg"
                Order="10"
                Condition="NOT Installed" />
+
+      <!--
+        Offers the optional desktop shortcut. Authoring a new dialog is legal, unlike
+        amending one from WixToolset.UI.wixext: a library dialog's Control rows are one
+        indivisible symbol set and redefining it fails to link with WIX0091. See README.
+
+        Geometry matches the stock pages so the wizard does not shift between steps:
+        370x270 with the banner across the top 44 units, BottomLine at 234 and the button
+        row at Y=243. Attributes 39 = Visible + Modal + Minimize + KeepModeless, and the
+        dialog is only reachable on a fresh install, so no maintenance variants are needed.
+      -->
+      <Dialog Id="ShortcutOptionsDlg" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44"
+                 TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+
+        <!-- X=15/25 keeps the text clear of the logo pinned to the right of the banner. -->
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15"
+                 Transparent="yes" NoPrefix="yes"
+                 Text="{\WixUI_Font_Title}Shortcuts" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15"
+                 Transparent="yes" NoPrefix="yes"
+                 Text="Choose where [ProductName] can be started from." />
+
+        <Control Id="StartMenuText" Type="Text" X="25" Y="65" Width="320" Height="15"
+                 Transparent="yes" NoPrefix="yes"
+                 Text="A Start menu entry is always created under PayRun.io." />
+
+        <!--
+          The checkbox is 12x12 with its caption in a separate transparent Text control.
+          Windows Installer never applies the transparent window style to a checkbox, so a
+          full width control paints a grey block over the white part of the banner area.
+          Authoring it this way here avoids needing a second post-build fix-up: only
+          ExitDialog, whose checkbox belongs to the imported dialog set, still needs one.
+          See Fix-ExitDialogCheckBox.ps1 and the README.
+        -->
+        <Control Id="DesktopShortcutCheckBox" Type="CheckBox" X="25" Y="90" Width="12" Height="12"
+                 Property="INSTALLDESKTOPSHORTCUT" CheckBoxValue="1" />
+        <Control Id="DesktopShortcutLabel" Type="Text" X="40" Y="90" Width="300" Height="17"
+                 Transparent="yes" NoPrefix="yes"
+                 Text="Create a shortcut on the desktop" />
+
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17"
+                 Text="&amp;Back">
+          <Publish Event="NewDialog" Value="WelcomeDlg" />
+        </Control>
+        <!--
+          Leaving the page records the answer as an explicit 0 or 1 rather than the empty
+          string an unticked checkbox leaves behind. This is what makes the wizard's answer
+          survive into the execute sequence: the seeding actions treat an empty property as
+          "not yet decided" and apply the default of 1, so an unticked box would otherwise
+          be indistinguishable from no choice at all and the shortcut would be created
+          anyway. Silent installs never hit this, because they pass a non-empty value.
+
+          Both events are ordered before the NewDialog so the property is set while the
+          dialog is still current.
+        -->
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17"
+                 Default="yes" Text="&amp;Next">
+          <Publish Property="INSTALLDESKTOPSHORTCUT" Value="0" Order="1"
+                   Condition="NOT INSTALLDESKTOPSHORTCUT" />
+          <Publish Property="INSTALLDESKTOPSHORTCUT" Value="1" Order="2"
+                   Condition="INSTALLDESKTOPSHORTCUT = 1" />
+          <Publish Event="NewDialog" Value="VerifyReadyDlg" Order="3" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17"
+                 Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
 
       <!-- Runs the launch action only when the user leaves the checkbox ticked, and only on
            a fresh install or upgrade rather than on repair or uninstall. -->
@@ -80,6 +152,112 @@
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT"
               Value="Launch PayRun.io Query Builder" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <!--
+      Drives the optional desktop shortcut. Public (upper case) so it survives the
+      InstallUISequence -> InstallExecuteSequence boundary and can be set for a silent
+      install: msiexec /i ... INSTALLDESKTOPSHORTCUT=0
+
+      Deliberately declared with no value. The default of 1 is applied by
+      DefaultDesktopShortcut below, conditioned on the property being empty, so that an
+      explicit command line value is never overwritten. Giving it a value here instead
+      makes a command line 0 indistinguishable from the default at the point the seeding
+      actions run, and the carry-forward action then stamps it back to 1. That is what an
+      earlier revision did, silently ignoring INSTALLDESKTOPSHORTCUT=0 on an upgrade.
+
+      An unticked checkbox sets the property to nothing rather than 0, hence the component
+      condition tests for "= 1" rather than for absence.
+    -->
+    <Property Id="INSTALLDESKTOPSHORTCUT" Secure="yes" />
+
+    <!--
+      Carries the previous choice across a major upgrade. Without this the property falls
+      back to its default on every update, so a user who declined the desktop shortcut has
+      one appear again on the next release, and the reinstall of a component whose
+      condition has flipped is what decides whether the shortcut is added or removed.
+
+      The registry value is the desktop component's key path, written only while that
+      component is installed, so its presence is exactly the previous answer. The upgrade
+      runs the UI, so the wizard shows the box already reflecting the installed state.
+    -->
+    <Property Id="DESKTOPSHORTCUTINSTALLED">
+      <RegistrySearch Id="SearchDesktopShortcut"
+                      Root="HKCU"
+                      Key="Software\PayRun.io\QueryBuilder"
+                      Name="desktopShortcut"
+                      Type="raw" />
+    </Property>
+
+    <!--
+      Distinguishes "declined the shortcut" from "installed before the shortcut existed".
+      Both leave no desktopShortcut value, but they must behave differently: a declined
+      shortcut should stay declined, whereas an upgrade from a release that never offered
+      one should get the default like a first install, rather than silently opting the user
+      out of a feature they were never shown.
+
+      This value is written by the desktop shortcut's sibling component below and so exists
+      on any install that offered the choice, whichever way it was answered.
+    -->
+    <Property Id="SHORTCUTCHOICERECORDED">
+      <RegistrySearch Id="SearchShortcutChoiceRecorded"
+                      Root="HKCU"
+                      Key="Software\PayRun.io\QueryBuilder"
+                      Name="shortcutChoiceRecorded"
+                      Type="raw" />
+    </Property>
+
+    <!--
+      Carries a previous install's answer into this one, so an upgrade neither reinstates a
+      shortcut the user declined nor drops one they asked for.
+
+      Every action below is conditioned on INSTALLDESKTOPSHORTCUT being empty, which is what
+      makes an explicitly supplied value authoritative: the property is declared with no
+      value, so it is empty unless the command line or the wizard checkbox set it, and none
+      of this seeding can then overwrite a deliberate choice. Dropping that guard is how an
+      earlier revision came to ignore INSTALLDESKTOPSHORTCUT=0 on an upgrade.
+
+      All three must run after AppSearch, which is what populates the registry searches.
+      FindRelatedProducts is sequenced at 25 and AppSearch at 50, so scheduling against
+      FindRelatedProducts would test a search result before the search had run.
+
+      Note this only carries the answer for a silent upgrade. When the UI runs, the wizard
+      shows the checkbox seeded from these same properties and whatever the user leaves it
+      set to wins, because the checkbox writes the property directly.
+    -->
+    <SetProperty Id="INSTALLDESKTOPSHORTCUT"
+                 Action="KeepDesktopShortcutFromPreviousInstall"
+                 Value="1"
+                 After="AppSearch"
+                 Sequence="both"
+                 Condition="NOT INSTALLDESKTOPSHORTCUT AND DESKTOPSHORTCUTINSTALLED" />
+
+    <!--
+      A declined shortcut leaves no desktopShortcut value, which is indistinguishable from a
+      release predating the feature unless the marker is consulted: SHORTCUTCHOICERECORDED
+      gates this to installs that actually offered the choice, so an upgrade from an older
+      release still gets the default rather than being silently opted out.
+
+      This sets the property to a literal 0 rather than clearing it, so that the default
+      below can tell "decided against" from "not yet decided". The component condition tests
+      for "= 1", so 0 and empty both suppress the shortcut.
+    -->
+    <SetProperty Id="INSTALLDESKTOPSHORTCUT"
+                 Action="DropDesktopShortcutFromPreviousInstall"
+                 Value="0"
+                 After="KeepDesktopShortcutFromPreviousInstall"
+                 Sequence="both"
+                 Condition="NOT INSTALLDESKTOPSHORTCUT AND WIX_UPGRADE_DETECTED AND SHORTCUTCHOICERECORDED AND NOT DESKTOPSHORTCUTINSTALLED" />
+
+    <!-- Applies the default of ticked to everything the two actions above left undecided: a
+         first install, or an upgrade from a release that predates the feature. Authored as
+         an action rather than a value on the Property element so that it runs after the
+         command line has been seen, leaving an explicit 0 intact. -->
+    <SetProperty Id="INSTALLDESKTOPSHORTCUT"
+                 Action="DefaultDesktopShortcut"
+                 Value="1"
+                 After="DropDesktopShortcutFromPreviousInstall"
+                 Sequence="both"
+                 Condition="NOT INSTALLDESKTOPSHORTCUT" />
 
     <!-- WixShellExecTarget identifies what the launch action starts. It is resolved from the
          installed file rather than a hard coded path so it follows INSTALLFOLDER. -->
@@ -111,9 +289,15 @@
       <Directory Id="AppShortcutFolder" Name="PayRun.io" />
     </StandardDirectory>
 
+    <!-- Per user scope resolves this to %UserProfile%\Desktop, so the shortcut needs no
+         elevation. The folder is not created or removed by the package, only written to. -->
+    <StandardDirectory Id="DesktopFolder" />
+
     <Feature Id="Main">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="ShortcutChoiceMarker" />
     </Feature>
   </Package>
 
@@ -204,6 +388,59 @@
       <RegistryValue Root="HKCU"
                      Key="Software\PayRun.io\QueryBuilder"
                      Name="installed"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+  </Fragment>
+
+  <Fragment>
+    <!--
+      The optional desktop shortcut, offered by ShortcutOptionsDlg and controlled by
+      INSTALLDESKTOPSHORTCUT. The condition is evaluated per install, so clearing the box on
+      a later upgrade removes an existing shortcut rather than leaving it orphaned.
+
+      Note there is deliberately no taskbar equivalent. Taskbar pinning has not been
+      programmable since Windows 7: the taskbarpin verb was removed from the shell, and the
+      pinned list is validated against a hash under HKCU\...\Taskband, so a shortcut written
+      into the User Pinned\TaskBar folder is discarded by Explorer. The supported route is
+      TaskbarLayoutModification.xml, which is machine wide Group Policy applied at logon and
+      needs administrator rights, so it does not fit a per user package. Pinning is left to
+      the user.
+    -->
+    <Component Id="DesktopShortcut"
+               Directory="DesktopFolder"
+               Guid="1378F758-B2B5-473F-93AB-3D3B16DC122E"
+               Condition="INSTALLDESKTOPSHORTCUT = 1">
+      <Shortcut Id="QueryBuilderDesktopShortcut"
+                Name="PayRun.io Query Builder"
+                Target="[INSTALLFOLDER]PayRunIO.QueryBuilder.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon" />
+      <!-- A per user component requires an HKCU registry key path. This value is also what
+           DESKTOPSHORTCUTINSTALLED searches for, so the previous choice is carried across an
+           upgrade: it exists only while the component is installed. -->
+      <RegistryValue Root="HKCU"
+                     Key="Software\PayRun.io\QueryBuilder"
+                     Name="desktopShortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+    </Component>
+
+    <!--
+      Records that this install offered the shortcut choice at all, which the desktop
+      component above cannot do: it is conditional, so its absence is ambiguous between a
+      declined shortcut and a release that predates the feature. This component is
+      unconditional, so the marker is present either way, and SHORTCUTCHOICERECORDED can
+      tell the two apart on a later upgrade.
+    -->
+    <Component Id="ShortcutChoiceMarker"
+               Directory="INSTALLFOLDER"
+               Guid="D4F1B0C8-6E1A-4A2C-9F3D-7B5E8C0A1D62">
+      <RegistryValue Root="HKCU"
+                     Key="Software\PayRun.io\QueryBuilder"
+                     Name="shortcutChoiceRecorded"
                      Type="integer"
                      Value="1"
                      KeyPath="yes" />

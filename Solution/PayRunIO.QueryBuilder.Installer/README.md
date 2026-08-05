@@ -80,20 +80,103 @@ installed one; changing it would leave both versions installed side by side.
 | `UpgradeCode` (product identity) | `5C41A2E9-0F80-4DB6-A49E-6BB156F0E7E8` |
 | `MainExecutable` component | `45CC3CE8-23DB-4836-B00F-2BB2F3FF013A` |
 | `StartMenuShortcut` component | `90C8E3A3-0C1A-45BA-A0E3-E04CD2EABA64` |
+| `DesktopShortcut` component | `1378F758-B2B5-473F-93AB-3D3B16DC122E` |
+| `ShortcutChoiceMarker` component | `D4F1B0C8-6E1A-4A2C-9F3D-7B5E8C0A1D62` |
 
 `ProductCode` is deliberately left to be generated per build, which is what a major upgrade
 requires.
 
+## Shortcuts
+
+A **Start menu** entry under `PayRun.io` is always installed. A **desktop** shortcut is
+optional, offered by the `ShortcutOptionsDlg` page and ticked by default.
+
+There is deliberately **no taskbar option**. Taskbar pinning has not been programmable since
+Windows 7: the `taskbarpin` verb was removed from the shell, and the pinned list is validated
+against a hash under `HKCU\...\Taskband`, so a `.lnk` written into
+`…\User Pinned\TaskBar` is discarded by Explorer. The only supported route is
+`TaskbarLayoutModification.xml`, which is machine-wide Group Policy applied at logon and
+needs administrator rights — the opposite of what this per-user package is for. Pinning is
+left to the user.
+
+### Controlling it from the command line
+
+`INSTALLDESKTOPSHORTCUT` is a public property, so a silent install can set it either way:
+
+```powershell
+msiexec /i PayRunIO.QueryBuilder-<version>.msi /qn INSTALLDESKTOPSHORTCUT=0
+```
+
+Omitting it installs the shortcut, matching the wizard's default.
+
+### How the choice survives an upgrade
+
+Three registry values under `HKCU\Software\PayRun.io\QueryBuilder` drive this, and the
+distinction between them is the whole design:
+
+| Value | Written by | Means |
+| ----- | ---------- | ----- |
+| `desktopShortcut` | `DesktopShortcut` (conditional) | this install has the shortcut |
+| `shortcutChoiceRecorded` | `ShortcutChoiceMarker` (unconditional) | this install *offered* the choice |
+
+`desktopShortcut` alone is ambiguous: it is absent both for a user who declined the shortcut
+and for anyone still on a release that predates the feature. Treating those the same silently
+opts existing users out of a feature they were never shown. `shortcutChoiceRecorded` is what
+tells them apart — hence a second component that exists only to write one registry value.
+
+Three `SetProperty` actions apply this, all scheduled **after `AppSearch`** (which populates
+the searches) and all conditioned on `INSTALLDESKTOPSHORTCUT` being *empty*:
+
+1. `KeepDesktopShortcutFromPreviousInstall` — previous install had it, so keep it.
+2. `DropDesktopShortcutFromPreviousInstall` — previous install offered it and it was
+   declined, so set an explicit `0`.
+3. `DefaultDesktopShortcut` — everything left undecided (first install, or upgrade from a
+   pre-feature release) gets the default of `1`.
+
+Two traps, both of which shipped as bugs during development and are covered by the table
+below:
+
+- **The property must be declared with no value.** Putting `Value="1"` on the `Property`
+  element makes a command-line `0` indistinguishable from the default by the time these
+  actions run, and step 1 stamps it back to `1` — silently ignoring
+  `INSTALLDESKTOPSHORTCUT=0` on an upgrade.
+- **An unticked checkbox clears its property rather than setting `0`.** Empty is exactly the
+  "not yet decided" state step 3 keys off, so the default was re-applied *after* the user had
+  unticked the box and the shortcut appeared anyway. The `Next` button therefore publishes an
+  explicit `0` or `1` before navigating. Silent installs never hit this, because they always
+  pass a non-empty value — so this is invisible to any test that does not drive the wizard.
+
+### Verifying
+
+Both the silent and the UI paths need checking; they fail differently, as above.
+
+| Scenario | Expected |
+| -------- | -------- |
+| Fresh install, defaults | shortcut created |
+| Fresh install, `INSTALLDESKTOPSHORTCUT=0` | no shortcut |
+| Wizard, box left ticked | shortcut created |
+| Wizard, box unticked | **no shortcut** |
+| Upgrade over an install that had it | still there |
+| Upgrade over an install that declined it | still absent |
+| Upgrade passing an explicit value | the explicit value wins |
+| Upgrade from a pre-feature release | shortcut created (the default) |
+| Uninstall | shortcut and both registry values removed |
+
 ## Installer UI
 
-The wizard is Welcome â†’ Confirm â†’ Install â†’ Finish.
+The wizard is Welcome â†’ Shortcuts â†’ Confirm â†’ Install â†’ Finish.
 
 **There is deliberately no licence agreement page.** Every stock WiX dialog set includes one
 (`WixUI_Minimal` via `WelcomeEulaDlg`, `WixUI_InstallDir` and `WixUI_FeatureTree` via
 `LicenseAgreementDlg`), and when no licence file is supplied WiX displays its own placeholder
 text â€” which is where the lorem ipsum came from. Rather than ship a licence nobody needs, the
-Welcome page's Next button is repointed at `VerifyReadyDlg` with `Order="10"`, which outranks
-the stock `Order="1"` navigation and leaves `LicenseAgreementDlg` unreachable.
+Welcome page's Next button is repointed at `ShortcutOptionsDlg` with `Order="10"`, which
+outranks the stock `Order="1"` navigation and leaves `LicenseAgreementDlg` unreachable.
+`VerifyReadyDlg`'s Back is repointed to match, so the shortened path works in both directions.
+
+`ShortcutOptionsDlg` is authored directly in `Package.wxs`. That is legal because it is a
+**new** dialog — the `WIX0091` conflict described below applies only to redefining one that
+already exists in `WixToolset.UI.wixext`.
 
 `LicenseAgreementDlg` still exists in the MSI's Dialog table, because it is part of the
 imported dialog set. That is expected and harmless: nothing navigates to it. If you ever do
@@ -205,6 +288,13 @@ The script is roughly 40 lines of intent-revealing SQL against two rows, applied
 MSBuild target so a plain `dotnet build` still produces a finished package. If the wizard ever
 needs deeper customisation than this one control, option 2 becomes the better trade and the
 script should be retired rather than extended.
+
+**The script covers `ExitDialog` only, and should stay that way.** The desktop shortcut
+checkbox on `ShortcutOptionsDlg` has exactly the same Windows Installer limitation, but that
+dialog is authored here rather than imported, so the same workaround is expressed natively:
+a 12x12 `CheckBox` with no caption beside a `Transparent="yes"` `Text` control. Author any
+future checkbox that way and the script stays a single-purpose fix-up for the one control
+that cannot be reached from `.wxs`.
 
 To re-check the geometry for another application, query the built MSI:
 
