@@ -217,6 +217,7 @@ namespace PayRunIO.ReportBuilder.Logging
                 {
                     ["correlationId"] = this.diagnostics.CorrelationId,
                     ["userSubject"] = this.diagnostics.UserSubject,
+                    ["prioIdentity"] = this.diagnostics.PrioIdentity,
                 };
 
         private Dictionary<string, object?> DiagnosticProperties(

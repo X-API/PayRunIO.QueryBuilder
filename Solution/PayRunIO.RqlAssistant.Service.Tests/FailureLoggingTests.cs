@@ -126,6 +126,91 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Assert.That(Property(this.SingleEvent(), "userSubject"), Is.EqualTo("user-123"));
         }
 
+        /// <summary>
+        /// Builds a principal shaped like the one KeyCloak yields after sign in: an authenticated
+        /// identity whose name claim type is "preferred_username" (as configured in Program.cs),
+        /// plus the issuer claim from the token.
+        /// </summary>
+        private static ClaimsPrincipal KeyCloakPrincipal(
+            string? userName = "UserNameA",
+            string? issuer = "https://issuer.auth.com")
+        {
+            var claims = new List<Claim> { new("sub", "user-123") };
+
+            if (userName != null)
+            {
+                claims.Add(new Claim("preferred_username", userName));
+            }
+
+            if (issuer != null)
+            {
+                claims.Add(new Claim("iss", issuer));
+            }
+
+            // The "authType" argument is what makes IsAuthenticated true.
+            return new ClaimsPrincipal(
+                new ClaimsIdentity(claims, "oidc", "preferred_username", ClaimTypes.Role));
+        }
+
+        [Test]
+        public void PrioIdentity_IsIssuerAndUserNameSeparatedByDoubleTilde()
+        {
+            this.diagnostics.Capture(KeyCloakPrincipal());
+
+            var log = new QueryFailureLog(this.diagnostics);
+
+            log.QueryRejected("<Query />", 400, "Bad Request", "boom", QueryOrigin.Assistant);
+
+            Assert.That(
+                Property(this.SingleEvent(), "prioIdentity"),
+                Is.EqualTo("https://issuer.auth.com~~UserNameA"));
+        }
+
+        [Test]
+        public void PrioIdentity_IsNullWhenNotSignedIn()
+        {
+            var log = new QueryFailureLog(this.diagnostics);
+
+            log.QueryRejected("<Query />", 400, "Bad Request", "boom", QueryOrigin.Assistant);
+
+            // Never captured: an unauthenticated event must carry no identity at all rather than a
+            // half formed one, which would look like a real value when filtering in BetterStack.
+            Assert.That(Property(this.SingleEvent(), "prioIdentity"), Is.Null);
+        }
+
+        [Test]
+        public void PrioIdentity_IsNullWhenEitherHalfIsMissing()
+        {
+            this.diagnostics.Capture(KeyCloakPrincipal(userName: null));
+
+            Assert.That(this.diagnostics.PrioIdentity, Is.Null, "A bare issuer identifies no one.");
+
+            this.diagnostics.Capture(KeyCloakPrincipal(issuer: null));
+
+            // No "iss" claim, and claims created in memory carry the LOCAL AUTHORITY issuer rather
+            // than a real one — so the fallback must not be asserted to equal the KeyCloak issuer.
+            Assert.That(
+                this.diagnostics.PrioIdentity,
+                Does.EndWith("~~UserNameA"),
+                "The claim issuer is the documented fallback when no 'iss' claim is present.");
+        }
+
+        [Test]
+        public void PrioIdentity_IsStampedOnAssistantAndConversationEventsToo()
+        {
+            this.diagnostics.Capture(KeyCloakPrincipal());
+
+            // The identity is only useful if it is on every event type, not just query failures —
+            // all three logs share the same BaseProperties shape.
+            var log = new AssistantFailureLog(this.diagnostics);
+
+            log.ProviderFailed(new InvalidOperationException("boom"), "chat");
+
+            Assert.That(
+                Property(this.SingleEvent(), "prioIdentity"),
+                Is.EqualTo("https://issuer.auth.com~~UserNameA"));
+        }
+
         [Test]
         public void AmbientContext_IsNotMutated()
         {
