@@ -123,6 +123,13 @@
                 No report yet — describe the report you need in the assistant panel and it will be built for you.
             </div>
         }
+        else if (isRunning)
+        {
+            <div class="standard-placeholder running">
+                <span class="placeholder-spinner" aria-hidden="true"></span>
+                Running your report — waiting for the response. Larger reports can take a while.
+            </div>
+        }
         else if (!ModeStore.IsAdvanced && Session.Result == null)
         {
             <div class="standard-placeholder ready">
