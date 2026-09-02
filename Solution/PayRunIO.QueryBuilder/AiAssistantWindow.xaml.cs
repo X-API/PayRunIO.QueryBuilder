@@ -91,8 +91,13 @@
             }
         }
 
+        /// <summary>Maximum number of activity lines kept in <see cref="ActivityLog"/>. Older lines are
+        /// discarded so the busy overlay stays a fixed height instead of growing past the window bounds.</summary>
+        private const int MaxActivityLogEntries = 7;
+
         /// <summary>Progress lines reported by the agent loop for the in-flight request (tool
-        /// calls, model round trips) — cleared at the start of each question.</summary>
+        /// calls, model round trips) — cleared at the start of each question. Capped at
+        /// <see cref="MaxActivityLogEntries"/> most recent entries.</summary>
         public ObservableCollection<string> ActivityLog { get; } = new ObservableCollection<string>();
 
         private AiSettingsWindow settingsWindow;
@@ -250,9 +255,19 @@
         }
 
         /// <summary>Progress sink passed to the agent loop. AskQuestion runs on thread-pool threads
-        /// (ConfigureAwait(false)), so marshal onto the UI thread before touching ActivityLog.</summary>
+        /// (ConfigureAwait(false)), so marshal onto the UI thread before touching ActivityLog. Only the
+        /// most recent <see cref="MaxActivityLogEntries"/> lines are retained.</summary>
         private void ReportActivity(string activity) =>
-            this.Dispatcher.InvokeAsync(() => this.ActivityLog.Add(activity));
+            this.Dispatcher.InvokeAsync(
+                () =>
+                {
+                    this.ActivityLog.Add(activity);
+
+                    while (this.ActivityLog.Count > MaxActivityLogEntries)
+                    {
+                        this.ActivityLog.RemoveAt(0);
+                    }
+                });
 
         /// <summary>
         /// Extracts the first <c>&lt;Query&gt;</c> XML fenced block, validates it against the RQL XSD, and on

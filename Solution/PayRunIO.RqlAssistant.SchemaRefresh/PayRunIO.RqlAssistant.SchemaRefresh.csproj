@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PayRunIO.CSharp.SDK" Version="26.27.2.94" />
+    <PackageReference Include="PayRunIO.CSharp.SDK" Version="26.27.3.100" />
   </ItemGroup>
 
   <ItemGroup>
