@@ -148,7 +148,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests.Wire
         public void ParseResponse_NoUsableOutput_Throws()
         {
             Assert.Throws<OpenAiException>(
-                new TestDelegate(() => new OpenAiResponsesWireFormat().ParseResponse("{\"output\":[]}", HttpStatusCode.OK)));
+                () => new OpenAiResponsesWireFormat().ParseResponse("{\"output\":[]}", HttpStatusCode.OK));
         }
 
         [Test]

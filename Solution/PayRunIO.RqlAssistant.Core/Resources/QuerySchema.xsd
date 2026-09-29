@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<xsd:schema version="26.27.2.94" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xsd:schema version="26.27.4.14" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
     <!-- ===== Query.xsd ===== -->
 <xsd:element name="Query" type="Query" />
@@ -926,7 +926,7 @@
             <xsd:enumeration value="Primitive" />
             <xsd:enumeration value="Rate" />
             <xsd:enumeration value="Salary" />
-            <xsd:enumeration value="BasePay" />
+            <xsd:enumeration value="ContractualPay" />
             <xsd:enumeration value="EmployerRate" />
         </xsd:restriction>
     </xsd:simpleType>

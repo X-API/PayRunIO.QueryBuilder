@@ -6645,5 +6645,230 @@
     ],
     "ResponseCode": 200,
     "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "GetEmployerBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/BankAccount/{bankAccountId}",
+    "OperationId": "GetEmployerBankAccount",
+    "Verb": "GET",
+    "Summary": "Get the employer bank account",
+    "Description": "Gets the specified bank account from the employer\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "BankAccount"
+  },
+  {
+    "ClassName": "GetEmployerBankAccountsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/BankAccounts",
+    "OperationId": "GetEmployerBankAccounts",
+    "Verb": "GET",
+    "Summary": "Get the employer bank accounts",
+    "Description": "Gets links to all bank accounts in the employer\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employer"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "PutEmployerBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/BankAccount/{bankAccountId}",
+    "OperationId": "PutEmployerBankAccount",
+    "Verb": "PUT",
+    "Summary": "Insert/update employer bank account",
+    "Description": "Creates or updates a bank account at the given resource location in the employer\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employer"
+    ],
+    "ResponseCode": 201,
+    "ResponseType": "BankAccount"
+  },
+  {
+    "ClassName": "PostEmployerBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/BankAccounts",
+    "OperationId": "PostEmployerBankAccount",
+    "Verb": "POST",
+    "Summary": "Create a new employer bank account",
+    "Description": "Creates a new bank account using an auto generated resource location key in the employer\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employer"
+    ],
+    "ResponseCode": 201,
+    "ResponseType": "Link"
+  },
+  {
+    "ClassName": "DeleteEmployerBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/BankAccount/{bankAccountId}",
+    "OperationId": "DeleteEmployerBankAccount",
+    "Verb": "DELETE",
+    "Summary": "Delete employer bank account",
+    "Description": "Deletes a bank account from the employer\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employer"
+    ],
+    "ResponseCode": 204,
+    "ResponseType": "null"
+  },
+  {
+    "ClassName": "GetEmployeeBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/BankAccount/{bankAccountId}",
+    "OperationId": "GetEmployeeBankAccount",
+    "Verb": "GET",
+    "Summary": "Get the employee bank account",
+    "Description": "Gets the specified bank account from the employee\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "BankAccount"
+  },
+  {
+    "ClassName": "GetEmployeeBankAccountsRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/BankAccounts",
+    "OperationId": "GetEmployeeBankAccounts",
+    "Verb": "GET",
+    "Summary": "Get the employee bank accounts",
+    "Description": "Gets links to all bank accounts in the employee\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "PutEmployeeBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/BankAccount/{bankAccountId}",
+    "OperationId": "PutEmployeeBankAccount",
+    "Verb": "PUT",
+    "Summary": "Insert/update employee bank account",
+    "Description": "Creates or updates a bank account at the given resource location in the employee\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employee"
+    ],
+    "ResponseCode": 201,
+    "ResponseType": "BankAccount"
+  },
+  {
+    "ClassName": "PostEmployeeBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/BankAccounts",
+    "OperationId": "PostEmployeeBankAccount",
+    "Verb": "POST",
+    "Summary": "Create a new employee bank account",
+    "Description": "Creates a new bank account using an auto generated resource location key in the employee\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employee"
+    ],
+    "ResponseCode": 201,
+    "ResponseType": "Link"
+  },
+  {
+    "ClassName": "DeleteEmployeeBankAccountRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/BankAccount/{bankAccountId}",
+    "OperationId": "DeleteEmployeeBankAccount",
+    "Verb": "DELETE",
+    "Summary": "Delete employee bank account",
+    "Description": "Deletes a bank account from the employee\u0027s bank account collection",
+    "Tags": [
+      "BankAccount",
+      "Employee"
+    ],
+    "ResponseCode": 204,
+    "ResponseType": "null"
+  },
+  {
+    "ClassName": "GetContractualPayFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/ContractualPay/{contractualPayId}",
+    "OperationId": "GetContractualPayFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get contractual pay from employee",
+    "Description": "Gets the specified contractual pay from the employee",
+    "Tags": [
+      "ContractualPay",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "ContractualPay"
+  },
+  {
+    "ClassName": "GetContractualPaysFromEmployeeRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/ContractualPays",
+    "OperationId": "GetContractualPaysFromEmployee",
+    "Verb": "GET",
+    "Summary": "Get contractual pays from employee",
+    "Description": "Gets all contractual pays from the specified employee",
+    "Tags": [
+      "ContractualPay",
+      "Employee"
+    ],
+    "ResponseCode": 200,
+    "ResponseType": "LinkCollection"
+  },
+  {
+    "ClassName": "DeleteContractualPayRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/ContractualPay/{contractualPayId}",
+    "OperationId": "DeleteContractualPay",
+    "Verb": "DELETE",
+    "Summary": "Deletes a contractual pay",
+    "Description": "Deletes the specified contractual pay from the employee",
+    "Tags": [
+      "ContractualPay",
+      "Employee"
+    ],
+    "ResponseCode": 204,
+    "ResponseType": "null"
+  },
+  {
+    "ClassName": "PutContractualPayRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/ContractualPay/{contractualPayId}",
+    "OperationId": "PutContractualPay",
+    "Verb": "PUT",
+    "Summary": "Update a contractual pay",
+    "Description": "Create or update a contractual pay at the given resource location",
+    "Tags": [
+      "ContractualPay",
+      "Employee"
+    ],
+    "ResponseCode": 201,
+    "ResponseType": "ContractualPay"
+  },
+  {
+    "ClassName": "PostContractualPayRoute",
+    "Route": "RouteTemplate",
+    "RouteSignature": "/Employer/{employerId}/Employee/{employeeId}/ContractualPays",
+    "OperationId": "PostContractualPay",
+    "Verb": "POST",
+    "Summary": "Create a new contractual pay",
+    "Description": "Create a new contractual pay object using an auto generated resource location key",
+    "Tags": [
+      "ContractualPay",
+      "Employee"
+    ],
+    "ResponseCode": 201,
+    "ResponseType": "Link"
   }
 ]

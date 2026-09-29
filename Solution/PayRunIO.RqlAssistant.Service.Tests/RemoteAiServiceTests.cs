@@ -98,7 +98,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         /// Test that: Given a null or empty question, when asking a question, then an ArgumentException is thrown
         /// </summary>
         [Test]
-        public void GivenNullOrEmptyQuestion_WhenAskingQuestion_ThenThrowsArgumentException()
+        public async Task GivenNullOrEmptyQuestion_WhenAskingQuestion_ThenThrowsArgumentException()
         {
             // Arrange
             var service = ServiceFactory.CreateService(config.Object, httpClient);
@@ -106,15 +106,15 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> func2 = () => service.AskQuestion("   ");
 
             // Act & Assert
-            Assert.ThrowsAsync<ArgumentException>(func);
-            Assert.ThrowsAsync<ArgumentException>(func2);
+            await Assert.ThrowsAsync<ArgumentException>(func);
+            await Assert.ThrowsAsync<ArgumentException>(func2);
         }
 
         /// <summary>
         /// Test that: Given an error response from the API, when asking a question, then an OpenAiException is thrown with the error message
         /// </summary>
         [Test]
-        public void GivenErrorResponse_WhenAskingQuestion_ThenThrowsOpenAiExceptionWithErrorMessage()
+        public async Task GivenErrorResponse_WhenAskingQuestion_ThenThrowsOpenAiExceptionWithErrorMessage()
         {
             // Arrange
             var errorJson = "{\"error\":{\"message\":\"Test error\"}}";
@@ -129,7 +129,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> func = async () => await service.AskQuestion("test question");
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(func);
+            var ex = await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Is.EqualTo("Test error"));
             Assert.That(ex.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
         }
@@ -138,7 +138,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         /// Test that: Given a malformed JSON response, when asking a question, then an OpenAiException is thrown
         /// </summary>
         [Test]
-        public void GivenMalformedJsonResponse_WhenAskingQuestion_ThenThrowsOpenAiException()
+        public async Task GivenMalformedJsonResponse_WhenAskingQuestion_ThenThrowsOpenAiException()
         {
             // Arrange
             SetupHttpResponse(_ => new HttpResponseMessage(HttpStatusCode.OK)
@@ -151,7 +151,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> func = async () => await service.AskQuestion("test question");
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(func);
+            var ex = await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Does.Contain("Failed to parse the provider's response JSON"));
         }
 
@@ -159,7 +159,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         /// Test that: Given a response without choices, when asking a question, then an OpenAiException is thrown
         /// </summary>
         [Test]
-        public void GivenResponseWithoutChoices_WhenAskingQuestion_ThenThrowsOpenAiException()
+        public async Task GivenResponseWithoutChoices_WhenAskingQuestion_ThenThrowsOpenAiException()
         {
             // Arrange
             SetupHttpResponse(_ => new HttpResponseMessage(HttpStatusCode.OK)
@@ -172,7 +172,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> func = async () => await service.AskQuestion("test question");
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(func);
+            var ex = await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Does.Contain("Response JSON missing 'choices[0].message.content'"));
         }
 
@@ -219,7 +219,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         /// Test that: Given an unrelated error, when asking a question, then no retry happens.
         /// </summary>
         [Test]
-        public void GivenUnrelatedError_WhenAskingQuestion_ThenNoRetry()
+        public async Task GivenUnrelatedError_WhenAskingQuestion_ThenNoRetry()
         {
             // Arrange
             var callCount = 0;
@@ -237,7 +237,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> func = async () => await service.AskQuestion("test question");
 
             // Act & Assert
-            Assert.ThrowsAsync<OpenAiException>(func);
+            await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(callCount, Is.EqualTo(1));
         }
 
@@ -245,7 +245,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         /// Test that: Given a network error, when asking a question, then an OpenAiException is thrown
         /// </summary>
         [Test]
-        public void GivenNetworkError_WhenAskingQuestion_ThenThrowsOpenAiException()
+        public async Task GivenNetworkError_WhenAskingQuestion_ThenThrowsOpenAiException()
         {
             // Arrange
             handler.Protected()
@@ -260,7 +260,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> func = async () => await service.AskQuestion("test question");
 
             // Act & Assert
-            var ex = Assert.ThrowsAsync<OpenAiException>(func);
+            var ex = await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex.Message, Does.Contain("HTTP request to the AI provider failed."));
         }
     }

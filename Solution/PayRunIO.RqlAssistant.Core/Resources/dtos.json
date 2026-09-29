@@ -684,6 +684,11 @@
           "Description": ""
         },
         {
+          "Name": "FullAccountName",
+          "Type": "string",
+          "Description": ""
+        },
+        {
           "Name": "AccountNumber",
           "Type": "string",
           "Description": ""
@@ -697,6 +702,26 @@
           "Name": "Reference",
           "Type": "string",
           "Description": ""
+        },
+        {
+          "Name": "LastUpdatedBy",
+          "Type": "string",
+          "Description": "The last updated by user identifier. This value is read out only and inputs are ignored."
+        },
+        {
+          "Name": "LastUpdated",
+          "Type": "DateTime?",
+          "Description": "The timestamp of the last update. This value is read out only and inputs are ignored."
+        },
+        {
+          "Name": "CreatedBy",
+          "Type": "string",
+          "Description": "The created by user identifier. This value is read out only and inputs are ignored."
+        },
+        {
+          "Name": "Created",
+          "Type": "DateTime?",
+          "Description": "The timestamp of the entity creation. This value is read out only and inputs are ignored."
         }
       ]
     },
@@ -1976,6 +2001,37 @@
       ]
     },
     {
+      "ClassName": "ContractualPay",
+      "Description": "Represents a period-scoped employee contractual pay entry, identifying the contractual pay type and value that applies for a defined period.",
+      "Properties": [
+        {
+          "Name": "ContractualPayType",
+          "Type": "ContractualPayType",
+          "Description": "The type of contractual pay."
+        },
+        {
+          "Name": "Value",
+          "Type": "decimal?",
+          "Description": "The contractual pay value amount. Required for contractual pay types of Annual Salary or Hourly Rate (and mutually exclusive with Employer Rate)."
+        },
+        {
+          "Name": "EmployerRate",
+          "Type": "string",
+          "Description": "The name of the referenced employer rate. Required when the contractual pay is defined by an Employer Rate (and mutually exclusive with Value)."
+        },
+        {
+          "Name": "StartDate",
+          "Type": "DateTime",
+          "Description": "The date the contractual pay comes into effect."
+        },
+        {
+          "Name": "EndDate",
+          "Type": "DateTime?",
+          "Description": "The date the contractual pay ceases to apply. Note: Open ended contractual pay entries are applicable until a later entry begins."
+        }
+      ]
+    },
+    {
       "ClassName": "Count",
       "Description": "The aggregate output count type. Outputs the number of matched entities.",
       "Properties": [
@@ -2360,11 +2416,6 @@
           "Description": "The employee\u0027s partner details; used when paying ShPP"
         },
         {
-          "Name": "EmployeeBasePay",
-          "Type": "EmployeeBasePay",
-          "Description": "The employee\u0027s base pay details."
-        },
-        {
           "Name": "CostSplits",
           "Type": "EmployeeCostSplit",
           "Description": "The employee\u0027s cost split details."
@@ -2413,6 +2464,11 @@
           "Name": "TransferDate",
           "Type": "DateTime?",
           "Description": "The transfer date, used when notifying an employee. This date will be reported to HMRC as a new start date in the next FPS."
+        },
+        {
+          "Name": "ScheduleMigrationDate",
+          "Type": "DateTime?",
+          "Description": "The date the employee was migrated onto the current pay schedule mid-period. When set within the period of a templated pay run, the generated pay instructions will start on this date."
         },
         {
           "Name": "Groups",
@@ -2478,93 +2534,6 @@
           "Name": "Created",
           "Type": "DateTime?",
           "Description": "The timestamp of the entity creation. This value is read out only and inputs are ignored."
-        }
-      ]
-    },
-    {
-      "ClassName": "EmployeeBasePay",
-      "Description": "The details of the employee\u0027s Base Pay.",
-      "Properties": [
-        {
-          "Name": "BasePayType",
-          "Type": "BasePayType",
-          "Description": "The type of base pay."
-        },
-        {
-          "Name": "Value",
-          "Type": "decimal?",
-          "Description": "The base pay value amount. Required for base pay types of Annual Salary or Hourly Rate."
-        },
-        {
-          "Name": "EmployerRate",
-          "Type": "string",
-          "Description": "The name of the employer rate. Required when base pay type Employer Rate is selected."
-        }
-      ]
-    },
-    {
-      "ClassName": "EmployeeBasePayInstruction",
-      "Description": "",
-      "Properties": [
-        {
-          "Name": "Code",
-          "Type": "string",
-          "Description": "The code that represents the pay type and tax treatment."
-        },
-        {
-          "Name": "HoursWorkedOverride",
-          "Type": "decimal?",
-          "Description": "The hours worked override is used to specify an amount of hours that overrides the calculated per period hours [Optional]."
-        },
-        {
-          "Name": "RoundingOption",
-          "Type": "RoundingOption?",
-          "Description": "The rounding option is used to control how calculated value rounding [Optional]."
-        },
-        {
-          "Name": "ProRataMethod",
-          "Type": "ProRataMethod?",
-          "Description": "Determines the method of pro-rata used for instructions that only cover partial pay periods [Optional]."
-        },
-        {
-          "Name": "StartDate",
-          "Type": "DateTime",
-          "Description": ""
-        },
-        {
-          "Name": "EndDate",
-          "Type": "DateTime?",
-          "Description": ""
-        },
-        {
-          "Name": "Description",
-          "Type": "string",
-          "Description": ""
-        },
-        {
-          "Name": "PayLineTag",
-          "Type": "string",
-          "Description": ""
-        },
-        {
-          "Name": "LastUpdatedBy",
-          "Type": "string",
-          "Description": ""
-        },
-        {
-          "Name": "LastUpdated",
-          "Type": "DateTime?",
-          "Description": ""
-        },
-        {
-          "Name": "CreatedBy",
-          "Type": "string",
-          "Description": ""
-        },
-        {
-          "Name": "Created",
-          "Type": "DateTime?",
-          "Description": ""
         }
       ]
     },
@@ -2790,11 +2759,6 @@
           "Name": "Groups",
           "Type": "Collection\u003CLink\u003E",
           "Description": "List of groups associated with this employee instance."
-        },
-        {
-          "Name": "EmployeeBasePay",
-          "Type": "EmployeeBasePay",
-          "Description": "The employee\u0027s base pay details."
         },
         {
           "Name": "Status",
@@ -5000,11 +4964,6 @@
           "Description": ""
         }
       ]
-    },
-    {
-      "ClassName": "MetaDataCommonKeys",
-      "Description": "",
-      "Properties": []
     },
     {
       "ClassName": "MetaDataItem",
@@ -8716,6 +8675,16 @@
           "Description": "The calculated date type for this rule."
         },
         {
+          "Name": "OffsetDays",
+          "Type": "int?",
+          "Description": "The number of days (positive or negative) by which the context date is shifted before the rule is applied."
+        },
+        {
+          "Name": "OffsetContext",
+          "Type": "PeriodDateOffsetContext",
+          "Description": "The reference date from which the OffsetDays value is measured. Defaults to \u0022ContextDate\u0022."
+        },
+        {
           "Name": "LastUpdatedBy",
           "Type": "string",
           "Description": "The last updated by user identifier. This value is read out only and inputs are ignored."
@@ -9003,9 +8972,9 @@
           "Description": "The employees normal number of hours worked per week (irrespective of pay frequency)."
         },
         {
-          "Name": "EmployeeBasePay",
-          "Type": "EmployeeBasePay",
-          "Description": "The employee base pay details."
+          "Name": "ContractualPay",
+          "Type": "ContractualPay",
+          "Description": "The employee contractual pay details active on the row\u0027s effective date."
         },
         {
           "Name": "Items",

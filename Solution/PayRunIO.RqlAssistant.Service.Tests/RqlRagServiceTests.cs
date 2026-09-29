@@ -45,7 +45,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
                 };
 
         [Test]
-        public void AskQuestion_NullOrWhitespaceQuestion_ThrowsArgumentException()
+        public async Task AskQuestion_NullOrWhitespaceQuestion_ThrowsArgumentException()
         {
             var service = this.CreateService();
 
@@ -53,9 +53,9 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             Func<Task<string>> funcB = () => service.AskQuestion(string.Empty);
             Func<Task<string>> funcC = () => service.AskQuestion("   ");
 
-            Assert.ThrowsAsync<ArgumentException>(funcA);
-            Assert.ThrowsAsync<ArgumentException>(funcB);
-            Assert.ThrowsAsync<ArgumentException>(funcC);
+            await Assert.ThrowsAsync<ArgumentException>(funcA);
+            await Assert.ThrowsAsync<ArgumentException>(funcB);
+            await Assert.ThrowsAsync<ArgumentException>(funcC);
         }
 
         [Test]
@@ -204,7 +204,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
         }
 
         [Test]
-        public void AskQuestion_ExceedsIterationCap_ThrowsOpenAiException()
+        public async Task AskQuestion_ExceedsIterationCap_ThrowsOpenAiException()
         {
             // Always return a tool call — never a final reply. After MaxIterations (=15) the service must give up.
             this.remote
@@ -219,14 +219,14 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             Func<Task<string>> func = () => service.AskQuestion("q");
 
-            var ex = Assert.ThrowsAsync<OpenAiException>(func);
+            var ex = await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex!.Message, Does.Contain("maximum"));
 
             this.remote.Verify(r => r.GetChatResponseAsync(It.IsAny<string>(), default), Times.Exactly(15));
         }
 
         [Test]
-        public void AskQuestion_RemoteAiServiceThrows_PropagatesException()
+        public async Task AskQuestion_RemoteAiServiceThrows_PropagatesException()
         {
             this.remote
                 .Setup(r => r.GetChatResponseAsync(It.IsAny<string>(), default))
@@ -236,7 +236,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
 
             Func<Task<string>> func = () => service.AskQuestion("q");
 
-            var ex = Assert.ThrowsAsync<OpenAiException>(func);
+            var ex = await Assert.ThrowsAsync<OpenAiException>(func);
             Assert.That(ex!.Message, Is.EqualTo("network failure"));
         }
     }
