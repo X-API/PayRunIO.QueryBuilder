@@ -430,7 +430,7 @@ namespace PayRunIO.RqlAssistant.Service.Tests
             var xml = Query(
                 "<Variables><Variable Name=\"[TaxYear]\" Value=\"2024\" /></Variables>"
                 + "<Groups>"
-                + "<Group GroupName=\"Periods\" ItemName=\"Period\" LoopExpression=\"AllTaxMonths\">"
+                + "<Group GroupName=\"Periods\" LoopExpression=\"AllTaxMonths\">"
                 + "<Output xsi:type=\"RenderValue\" Name=\"TaxMonth\" Value=\"[TaxPeriod]\" />"
                 + "<Output xsi:type=\"RenderValue\" Name=\"StartDate\" Value=\"[TaxPeriodStart]\" Format=\"yyyy-MM-dd\" />"
                 + "<Output xsi:type=\"RenderValue\" Name=\"EndDate\" Value=\"[TaxPeriodEnd]\" Format=\"yyyy-MM-dd\" />"
@@ -438,6 +438,90 @@ namespace PayRunIO.RqlAssistant.Service.Tests
                 + "</Groups>");
 
             Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Lint_ItemNameOnSelectorlessLoop_WarnsAndNamesTheFix()
+        {
+            // The real defective shape: the loop repeats, but with no Selector the engine never
+            // creates the 'Row' item, so every column lands directly inside <Rows>.
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables><Variable Name=\"[TaxYear]\" Value=\"2026\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Headers\"><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"Tax Month\" /></Group>"
+                + "<Group GroupName=\"Rows\" ItemName=\"Row\" LoopExpression=\"AllTaxMonths\">"
+                + "<Group><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"[TaxPeriod]\" /></Group>"
+                + "</Group>"
+                + "</Groups></Query>";
+
+            var diagnostic = this.linter.Lint(xml).Single(d => d.Code == "ItemNameWithoutSelector");
+
+            Assert.That(diagnostic.Message, Does.Contain("<Group GroupName=\"Row\">"));
+        }
+
+        [Test]
+        public void Lint_ItemNameOnStaticGroup_WarnsItemNameWithoutSelector()
+        {
+            var xml = Query(
+                "<Groups><Group GroupName=\"Footer\" ItemName=\"Row\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"Total\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml).Select(d => d.Code), Has.Member("ItemNameWithoutSelector"));
+        }
+
+        [Test]
+        public void Lint_ItemNameOnLoopWithSelector_IsNotFlagged()
+        {
+            // With a Selector the matched entity is rendered per iteration, so ItemName is honoured.
+            var xml = Query(
+                "<Variables><Variable Name=\"[EmployerKey]\" Value=\"ER001\" /></Variables>"
+                + "<Groups><Group GroupName=\"Items\" ItemName=\"Item\" Selector=\"/Employer/[EmployerKey]\" LoopExpression=\"CSV:A,B\">"
+                + "<Output xsi:type=\"RenderValue\" Name=\"Name\" Value=\"[LoopVariable]\" />"
+                + "</Group></Groups>");
+
+            Assert.That(this.linter.Lint(xml).Select(d => d.Code), Has.No.Member("ItemNameWithoutSelector"));
+        }
+
+        [Test]
+        public void Lint_TableQuery_LoopRowsWithNestedRowGroup_NoDiagnostics()
+        {
+            var xml =
+                "<Query xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">"
+                + "<RootNodeName>Table</RootNodeName>"
+                + "<Variables><Variable Name=\"[TaxYear]\" Value=\"2026\" /></Variables>"
+                + "<Groups>"
+                + "<Group GroupName=\"Headers\"><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"Tax Month\" /></Group>"
+                + "<Group GroupName=\"Rows\" LoopExpression=\"AllTaxMonths\">"
+                + "<Group GroupName=\"Row\"><Output xsi:type=\"RenderValue\" Name=\"col\" Value=\"[TaxPeriod]\" /></Group>"
+                + "</Group>"
+                + "</Groups></Query>";
+
+            Assert.That(this.linter.Lint(xml), Is.Empty);
+        }
+
+        [Test]
+        public void Examples_NeverUseItemNameWithoutSelector()
+        {
+            foreach (var example in new RqlExampleIndex().Examples)
+            {
+                var start = example.Body.IndexOf("```xml", System.StringComparison.Ordinal);
+
+                if (start < 0)
+                {
+                    continue;
+                }
+
+                var end = example.Body.IndexOf("```", start + 6, System.StringComparison.Ordinal);
+                var xml = example.Body.Substring(start + 6, end - start - 6).Trim();
+
+                Assert.That(
+                    this.linter.Lint(xml).Select(d => d.Code),
+                    Has.No.Member("ItemNameWithoutSelector"),
+                    $"'{example.Slug}' teaches an ItemName the engine ignores.");
+            }
         }
 
         [Test]

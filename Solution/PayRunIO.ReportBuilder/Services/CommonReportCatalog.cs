@@ -107,7 +107,7 @@ namespace PayRunIO.ReportBuilder.Services
                             <Output xsi:type="RenderValue" Name="col" Value="[Net]" Format="0.00" />
                           </Group>
                         </Group>
-                        <Group GroupName="Footer" ItemName="Row">
+                        <Group GroupName="Footer">
                           <Output xsi:type="RenderValue" Name="col" Value="" />
                           <Output xsi:type="RenderValue" Name="col" Value="Total" />
                           <Output xsi:type="RenderValue" Name="col" Value="[TotalGross]" Format="0.00" />

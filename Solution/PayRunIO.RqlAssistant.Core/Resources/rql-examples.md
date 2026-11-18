@@ -472,10 +472,12 @@ group including nested groups. `<Condition>` elements must be the first children
     <Variable Name="[TaxYear]" Value="2025" />
   </Variables>
   <Groups>
-    <Group GroupName="Periods" ItemName="Period" LoopExpression="AllTaxMonths">
-      <Output xsi:type="RenderValue" Name="TaxMonth" Value="[TaxPeriod]" />
-      <Output xsi:type="RenderValue" Name="StartDate" Value="[TaxPeriodStart]" Format="yyyy-MM-dd" />
-      <Output xsi:type="RenderValue" Name="EndDate" Value="[TaxPeriodEnd]" Format="yyyy-MM-dd" />
+    <Group GroupName="Periods" LoopExpression="AllTaxMonths">
+      <Group GroupName="Period">
+        <Output xsi:type="RenderValue" Name="TaxMonth" Value="[TaxPeriod]" />
+        <Output xsi:type="RenderValue" Name="StartDate" Value="[TaxPeriodStart]" Format="yyyy-MM-dd" />
+        <Output xsi:type="RenderValue" Name="EndDate" Value="[TaxPeriodEnd]" Format="yyyy-MM-dd" />
+      </Group>
     </Group>
   </Groups>
 </Query>
@@ -484,7 +486,8 @@ group including nested groups. `<Condition>` elements must be the first children
 **Notes:** `AllTaxMonths` requires the `[TaxYear]` variable and sets `[TaxPeriod]`,
 `[TaxPeriodStart]`, `[TaxPeriodEnd]` — it does **not** set `[LoopVariable]`. Other loop forms:
 `AllPaySchedulePeriods`, `CSV:a,b,c` and `Range:1-52`, which expose the current value as
-`[LoopVariable]`.
+`[LoopVariable]`. `ItemName` is ignored on a group with no `Selector`, so the nested
+`<Group GroupName="Period">` is what creates one element per iteration.
 
 ## Tabular gross-to-net report
 
@@ -908,10 +911,10 @@ legal in a group `Predicate`. To test existence without knowing the name at auth
     <Variable Name="[ItemNames]" Value="" />
   </Variables>
   <Groups>
-    <Group GroupName="Employees" ItemName="Employee" Selector="/Employer/[EmployerKey]/Employees">
+    <Group GroupName="Employees" ItemName="Employee" Selector="/Employer/[EmployerKey]/Employees" UniqueKeyVariable="[EmployeeKey]">
       <Output xsi:type="RenderProperty" Name="Code" Property="Code" />
       <Output xsi:type="RenderProperty" Output="Variable" Name="[ItemNames]" Property="MetaData.AllItemNames" />
-      <Group GroupName="MetaDataItems" ItemName="Item" LoopExpression="CSV:[ItemNames]">
+      <Group GroupName="MetaDataItems" ItemName="Item" Selector="/Employer/[EmployerKey]/Employee/[EmployeeKey]" LoopExpression="CSV:[ItemNames]">
         <Output xsi:type="RenderValue" Name="ItemName" Value="[LoopVariable]" />
         <Output xsi:type="RenderProperty" Name="ItemValue" Property="MetaData.[LoopVariable]" />
       </Group>
@@ -925,5 +928,6 @@ every meta data item name on the entity (e.g. `NameA,NameB,NameC`). Captured int
 feeds a `CSV:` loop expression directly, giving one iteration per item with the name exposed as
 `[LoopVariable]`. The value is then read back with `MetaData.[LoopVariable]` — the variable is
 substituted into the pseudo property path before resolution, which is what makes name-agnostic
-meta data reporting possible. `AllItemNames` is **not valid in a group `Predicate`** because it has
+meta data reporting possible. The loop group selects the employee again because `RenderProperty`
+and `ItemName` both need a matched entity in that group. `AllItemNames` is **not valid in a group `Predicate`** because it has
 no direct SQL translation; keep it in `Output`, `Filter` and `Condition` positions.

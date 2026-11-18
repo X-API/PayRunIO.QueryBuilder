@@ -29,7 +29,8 @@ This pattern produces a tabular report as an XML or JSON response, structured in
  * These groups run once per query (typically single entity matched).
 - Rows Group
  * The row group must have a group name of "Rows"
- * The row group must have an item name of "Row"
+ * A row group with a Selector must have an item name of "Row"
+ * A row group driven by a loop expression has no Selector, so it needs a nested group named "Row" instead (see "Loop-Driven Rows")
  * The core repeating group representing each data row (e.g., each employee).
  * Selector points to the collection of entities to iterate over.
  * UniqueKeyVariable stores the unique key of each entity for nested selectors.
@@ -53,7 +54,7 @@ This pattern produces a tabular report as an XML or JSON response, structured in
  * Uses consistent output names and formatting (e.g., decimal precision).
  * May negate values for display purposes (e.g., tax and deductions).
 - Footer Group (optional)
- * A static group named "Footer" with an item name of "Row", placed **after** the Rows group and directly under the root `<Groups>`.
+ * A static group named "Footer" with no item name, placed **after** the Rows group and directly under the root `<Groups>`.
  * Renders a single trailing row of `col` values — commonly report column totals — in the same column order and count as the Headers and data rows.
  * Totals are accumulated across the data rows using running-total variables:
    - Initialise each total variable to `0` in an entity-less group *before* the Rows group (so accumulation starts clean).
@@ -145,7 +146,7 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 			</Group>
 		</Group>
 		<!-- Optional: footer row of totals, after the Rows group -->
-		<Group GroupName="Footer" ItemName="Row">
+		<Group GroupName="Footer">
 			<Output xsi:type="RenderValue" Name="col" Value=""/>
 			<Output xsi:type="RenderValue" Name="col" Value="Total"/>
 			<Output xsi:type="RenderValue" Name="col" Value="[TotalAgg1]" Format="0.00"/>
@@ -155,8 +156,43 @@ This pattern produces a tabular report as an XML or JSON response, structured in
 </Query>
 ```
  
+## Loop-Driven Rows
+
+Use this shape when each row represents a loop iteration rather than an entity, such as one row per
+tax month in a year to date report.
+
+`ItemName` only creates an element for each entity matched by the group's own `Selector`. A loop group
+with no `Selector` matches no entities, so `ItemName="Row"` is ignored and every `col` lands directly
+inside `<Rows>`. Leave `ItemName` off the loop group and render the columns in a nested group named
+`Row`, which creates one `<Row>` element per iteration:
+
+```xml
+<Group>
+	<Output xsi:type="RenderValue" Output="Variable" Name="[RunningTotal]" Value="0"/>
+</Group>
+<Group GroupName="Rows" LoopExpression="AllTaxMonths">
+	<!-- Reset per-row variables -->
+	<Output xsi:type="RenderValue" Output="Variable" Name="[PeriodValue]" Value="0"/>
+	<!-- Gather the data for this iteration -->
+	<Group Selector="/MainCollection/[Filter1]">
+		<Filter xsi:type="Between" Property="DateProperty" Value="[TaxPeriodStart]" Value2="[TaxPeriodEnd]"/>
+		<Output xsi:type="Count" Output="Variable" Name="[PeriodValue]"/>
+	</Group>
+	<!-- Render exactly one row for this iteration -->
+	<Group GroupName="Row">
+		<Output xsi:type="RenderValue" Output="VariableSum" Name="[RunningTotal]" Value="[PeriodValue]"/>
+		<Output xsi:type="RenderValue" Name="col" Value="[TaxPeriod]"/>
+		<Output xsi:type="RenderValue" Name="col" Value="[PeriodValue]"/>
+		<Output xsi:type="RenderValue" Name="col" Value="[RunningTotal]"/>
+	</Group>
+</Group>
+```
+
 ## Common Mistakes to Avoid
 
+- **Putting `ItemName="Row"` on a group with no `Selector`.**
+  The engine ignores it, including on a group with a `LoopExpression`, so the report has no `Row`
+  elements. Use the nested `<Group GroupName="Row">` shown in "Loop-Driven Rows".
 - **Referencing `[RowKey]` (or any per-row key) without declaring it.**
   A nested selector such as `/Employer/[EmployerKey]/Employee/[RowKey]/PayLines` only works when the
   Rows group declares `UniqueKeyVariable="[RowKey]"`. Without it, substitution leaves the literal text

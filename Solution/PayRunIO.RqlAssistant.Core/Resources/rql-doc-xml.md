@@ -738,11 +738,13 @@ Selectors determine **what data gets retrieved**, before filters or output gener
 ### Special Cases
 
 - **Optional Selector**: If a `<Group>` omits the `Selector`, it will still be processed. This is useful for generating headers, summaries, or wrapper nodes.
-- **Looping Contexts**: When combined with `LoopExpression`, the `Selector` is re-evaluated per loop iteration using `[LoopVariable]`.
+- **Looping Contexts**: A `Selector` on the same group as a `LoopExpression` is resolved **once, before the loop starts**, and the entities it loads are rendered again on each iteration. `[LoopVariable]` therefore cannot change that group's own `Selector`. To load different entities per iteration, put the `Selector` on a nested group.
 
 --CodeTabs--
 ```xml
-<Group LoopExpression="[EmployerCodes]" Selector="/Employer/[LoopVariable]/Employees" />
+<Group LoopExpression="CSV:[EmployerCodes]">
+  <Group Selector="/Employer/[LoopVariable]/Employees" />
+</Group>
 ```
 --/CodeTabs--
 
@@ -2693,6 +2695,21 @@ Expression: Range:1-100
 
 --/CodeTabs--
 
+**Creating An Element For Each Iteration**
+
+`ItemName` only creates an element for each entity matched by the group's own `Selector`. On a loop group with no `Selector` it is ignored, and all iterations write directly into the `GroupName` element, as the results above show. To wrap each iteration in its own element, render the outputs inside a nested group with a `GroupName`:
+
+--CodeTabs--
+```xml
+<Group GroupName="Periods" LoopExpression="AllTaxMonths">
+  <Group GroupName="Period">
+    <Output xsi:type="RenderValue" Name="TaxMonth" Value="[TaxPeriod]" />
+  </Group>
+</Group>
+```
+
+--/CodeTabs--
+
 ## Data Types and Formatting
 
 RQL queries interact with a variety of entity properties and output values. These can represent strings, numbers, dates, booleans, and other simple data types. This section explains the expected data types, supported formatting options, and where each can be applied.
@@ -3007,7 +3024,8 @@ Because `AllItemNames` is a string, a `Contain` filter selects entities carrying
 
 Capture `AllItemNames` into a variable, then feed that variable into a `CSV:` loop expression. Each
 iteration exposes one item name as `[LoopVariable]`, which is substituted into the pseudo property
-path to read the matching value:
+path to read the matching value. The loop group selects the employer again because `RenderProperty`
+and `ItemName` both need a matched entity in that group:
 
 ```xml
 <Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -3016,10 +3034,10 @@ path to read the matching value:
     <Variable Name="[ItemNames]" Value="" />
   </Variables>
   <Groups>
-    <Group GroupName="Employers" ItemName="Employer" Selector="/Employers">
+    <Group GroupName="Employers" ItemName="Employer" Selector="/Employers" UniqueKeyVariable="[EmployerKey]">
       <Output xsi:type="RenderProperty" Name="Name" Property="Name" />
       <Output xsi:type="RenderProperty" Output="Variable" Name="[ItemNames]" Property="MetaData.AllItemNames" />
-      <Group GroupName="MetaDataItems" ItemName="Item" LoopExpression="CSV:[ItemNames]">
+      <Group GroupName="MetaDataItems" ItemName="Item" Selector="/Employer/[EmployerKey]" LoopExpression="CSV:[ItemNames]">
         <Output xsi:type="RenderValue" Name="ItemName" Value="[LoopVariable]" />
         <Output xsi:type="RenderProperty" Name="ItemValue" Property="MetaData.[LoopVariable]" />
       </Group>

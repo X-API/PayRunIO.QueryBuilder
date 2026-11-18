@@ -147,6 +147,7 @@ namespace PayRunIO.RqlAssistant.Service
             CheckVariableAssignments(root, diagnostics);
             CheckLoopVariableUsage(root, diagnostics);
             CheckEntityLessGroupOperations(root, diagnostics);
+            CheckItemNameWithoutSelector(root, diagnostics);
             this.CheckTabularCollectionRenders(root, diagnostics);
             CheckTabularRowsPlacement(root, diagnostics);
 
@@ -537,6 +538,37 @@ namespace PayRunIO.RqlAssistant.Service
                         + $"{(kind == "Order" ? "order" : "filter")} and is silently ignored. Move it into the group "
                         + "whose Selector loads the entities it should apply to."));
                 }
+            }
+        }
+
+        /// <summary>
+        /// The engine only creates an ItemName element for each entity matched by the group's own
+        /// Selector. A group with no Selector matches no entities, so its ItemName is silently ignored
+        /// even when a LoopExpression repeats the group: every iteration writes straight into the
+        /// GroupName element, and a Table query loses its 'Row' elements.
+        /// </summary>
+        private static void CheckItemNameWithoutSelector(XElement root, List<ValidationDiagnostic> diagnostics)
+        {
+            foreach (var group in root.Descendants("Group"))
+            {
+                var itemName = group.Attribute("ItemName")?.Value;
+
+                if (string.IsNullOrWhiteSpace(itemName)
+                    || !string.IsNullOrWhiteSpace(group.Attribute("Selector")?.Value))
+                {
+                    continue;
+                }
+
+                var fix = string.IsNullOrWhiteSpace(group.Attribute("LoopExpression")?.Value)
+                              ? "Remove ItemName, and use GroupName if the group needs its own element."
+                              : $"To emit one <{itemName}> per loop iteration, remove ItemName from the loop group and "
+                                + $"render each iteration's outputs inside a nested <Group GroupName=\"{itemName}\">.";
+
+                diagnostics.Add(Warn(
+                    group,
+                    "ItemNameWithoutSelector",
+                    $"ItemName '{itemName}' is ignored because this group has no Selector: item elements are only "
+                    + $"created for matched entities. {fix}"));
             }
         }
 
