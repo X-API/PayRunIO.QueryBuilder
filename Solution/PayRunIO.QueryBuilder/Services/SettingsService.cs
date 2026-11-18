@@ -45,6 +45,9 @@ namespace PayRunIO.QueryBuilder.Services
         public UserSettings UserSettings => this.userSettings;
 
         /// <inheritdoc />
+        public string UserSettingsPath => this.userSettingsPath;
+
+        /// <inheritdoc />
         public void SaveUserSettings()
         {
             try

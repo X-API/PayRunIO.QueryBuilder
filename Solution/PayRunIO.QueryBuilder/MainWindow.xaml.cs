@@ -8,7 +8,6 @@
     using System.ComponentModel;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using System.Text;
     using System.Windows;
     using System.Windows.Controls;
@@ -704,18 +703,8 @@
 
         private void About_OnClick(object sender, RoutedEventArgs e)
         {
-            var assemblyName = Assembly.GetExecutingAssembly().GetName();
-
-            var fullName = assemblyName.Name;
-
-            var version = assemblyName.Version?.ToString() ?? "?????";
-
-            MessageBox.Show(
-                this,
-                $"PayRun.io Query Builder - Version: {version}",
-                $"About - {fullName}",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            var aboutWindow = new AboutWindow(this.settingsService) { Owner = this };
+            aboutWindow.ShowDialog();
         }
 
         private void FileSelection_OnChange(object sender, SelectionChangedEventArgs e)

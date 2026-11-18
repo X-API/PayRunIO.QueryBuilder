@@ -21,6 +21,11 @@ namespace PayRunIO.QueryBuilder.Services
         UserSettings UserSettings { get; }
 
         /// <summary>
+        /// Gets the full path of the persisted user settings file.
+        /// </summary>
+        string UserSettingsPath { get; }
+
+        /// <summary>
         /// Saves the current user settings to persistent storage.
         /// </summary>
         void SaveUserSettings();
